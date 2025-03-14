@@ -69,16 +69,16 @@ jobs:
                   coverage: pcov
 
             - name: Checkout
-              uses: actions/checkout@v2
+              uses: actions/checkout@v3
 
             - name: Composer get cache directory
               id: composer-cache
-              run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+              run: echo "cache_files_dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
             - name: Composer cache dependencies
               uses: actions/cache@v4.2.0
               with:
-                  path: ${{ steps.composer-cache.outputs.dir }}
+                  path: ${{ steps.composer-cache.outputs.cache_files_dir }}
                   key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
                   restore-keys: ${{ runner.os }}-composer-
 
@@ -153,12 +153,12 @@ jobs:
             - name: Composer get cache directory
               id: composer-cache
               run: |
-                  echo "::set-output name=dir::$(composer config cache-files-dir)"
+                  echo "cache_files_dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
             - name: Composer cache
               uses: actions/cache@v4.2.0
               with:
-                  path: ${{ steps.composer-cache.outputs.dir }}
+                  path: ${{ steps.composer-cache.outputs.cache_files_dir }}
                   key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
                   restore-keys: |
                       ${{ runner.os }}-composer-
