@@ -82,9 +82,9 @@ jobs:
               uses: actions/cache@v4.2.0
               with:
                   path: ${{ steps.composer-cache.outputs.cache_files_dir }}
-                  key: ${{ runner.os }}-composer-php:${{ matrix.php-version }}-symfony:${{ matrix.symfony-version }}
+                  key: ${{ runner.os }}-composer-php:${{ matrix.php-version }}-symfony:${{ matrix.symfony-version }}-${{ matrix.db-type}}
                   restore-keys: |
-                      ${{ runner.os }}-composer-php:${{ matrix.php-version }}-symfony:${{ matrix.symfony-version }}
+                      ${{ runner.os }}-composer-php:${{ matrix.php-version }}-symfony:${{ matrix.symfony-version }}-
                       ${{ runner.os }}-composer-php:${{ matrix.php-version }}-
                       ${{ runner.os }}-composer-
 
@@ -162,9 +162,9 @@ jobs:
               uses: actions/cache@v4.2.0
               with:
                   path: ${{ steps.composer-cache.outputs.cache_files_dir }}
-                  key: ${{ runner.os }}-composer-php:8.1-symfony:6-max
+                  key: ${{ runner.os }}-composer-php:8.1-symfony:6-max-style
                   restore-keys: |
-                      ${{ runner.os }}-composer-php:8.1-symfony:6-max
+                      ${{ runner.os }}-composer-php:8.1-symfony:6-max-
                       ${{ runner.os }}-composer-php:8.1-
                       ${{ runner.os }}-composer-
 
