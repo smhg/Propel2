@@ -140,7 +140,7 @@ jobs:
                   flags: ${{ matrix.php-version }}, ${{ matrix.db-type }}, ${{ matrix.symfony-version }}
                   file: tests/coverage.xml
 
-    code-style-and-static-analysis:
+    static-analysis:
         runs-on: ubuntu-24.04
         steps:
             - name: Setup PHP
@@ -162,7 +162,7 @@ jobs:
               uses: actions/cache@v4.2.0
               with:
                   path: ${{ steps.composer-cache.outputs.cache_files_dir }}
-                  key: ${{ runner.os }}-composer-php:8.1-symfony:6-max-style
+                  key: ${{ runner.os }}-composer-php:8.1-symfony:6-max-sa
                   restore-keys: |
                       ${{ runner.os }}-composer-php:8.1-symfony:6-max-
                       ${{ runner.os }}-composer-php:8.1-
@@ -181,6 +181,40 @@ jobs:
 
             - name: Psalm
               run: composer psalm -- --php-version=${{ steps.setup-php.outputs.php-version }}
+
+    code-style:
+        runs-on: ubuntu-24.04
+        steps:
+            - name: Setup PHP
+              id: setup-php
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.1'
+                  extensions: json, libxml, pdo, pdo_mysql, pdo_sqlite, pdo_pgsql, sqlite3
+                  coverage: pcov
+
+            - uses: actions/checkout@v2
+
+            - name: Composer get cache directory
+              id: composer-cache
+              run: |
+                  echo "cache_files_dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+            - name: Composer cache
+              uses: actions/cache@v4.2.0
+              with:
+                  path: ${{ steps.composer-cache.outputs.cache_files_dir }}
+                  key: ${{ runner.os }}-composer-php:8.1-symfony:6-max-cs
+                  restore-keys: |
+                      ${{ runner.os }}-composer-php:8.1-symfony:6-max-
+                      ${{ runner.os }}-composer-php:8.1-
+                      ${{ runner.os }}-composer-
+
+            - name: Composer validate
+              run: composer validate
+
+            - name: Composer install
+              run: composer install --prefer-dist --no-interaction
 
             - name: Code Style
               run: composer cs-check
