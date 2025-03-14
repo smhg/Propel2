@@ -41,7 +41,6 @@ class ArrayFormatterWithTest extends BookstoreEmptyTestBase
     {
         $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
         $book = $c->findOne($con);
-        $count = $con->getQueryCount();
         $this->assertEquals($book['Title'], 'Don Juan', 'Main object is correctly hydrated ' . $msg);
         $author = $book['Author'];
         $this->assertEquals($author['LastName'], 'Byron', 'Related object is correctly hydrated ' . $msg);
