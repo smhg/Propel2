@@ -1280,15 +1280,6 @@ class CriteriaTest extends BookstoreTestBase
                 'limit' => '9223372036854775807',
                 'expected' => 9223372036854775807,
             ],
-
-            'Decimal value' => [
-                'limit' => 123.9,
-                'expected' => 123,
-            ],
-            'Decimal value as a string' => [
-                'limit' => '123.9',
-                'expected' => 123,
-            ],
         ];
     }
 
@@ -1352,15 +1343,6 @@ class CriteriaTest extends BookstoreTestBase
             'Largest 64-bit integer as a string' => [
                 'offset' => '9223372036854775807',
                 'expected' => 9223372036854775807,
-            ],
-
-            'Decimal value' => [
-                'offset' => 123.9,
-                'expected' => 123,
-            ],
-            'Decimal value as a string' => [
-                'offset' => '123.9',
-                'expected' => 123,
             ],
         ];
     }

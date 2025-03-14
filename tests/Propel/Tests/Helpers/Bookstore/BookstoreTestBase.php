@@ -59,7 +59,7 @@ abstract class BookstoreTestBase extends TestCaseFixturesDatabase
         // and we don't want to call ConnectionInterface::commit() in that case
         // since it will trigger an exception on its own
         // ('Cannot commit because a nested transaction was rolled back')
-        if (null !== $this->con) {
+        if ($this->con !== null) {
             if ($this->con->isCommitable()) {
                 $this->con->commit();
             }
