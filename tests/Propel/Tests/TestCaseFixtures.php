@@ -260,24 +260,26 @@ class TestCaseFixtures extends TestCase
      */
     protected function getFixturesConnectionDsn()
     {
-        if ('sqlite' === strtolower(getenv('DB'))) {
-            $path = __DIR__ . '/../../test.sq3';
-            if (!file_exists($path)) {
-                touch($path);
+        $db = strtolower(getenv('DB'));
+
+        if ($db === 'sqlite') {
+            $dbFilePath = realpath(getenv('DB_FILE') ?: __DIR__ . '/../../test.sq3');
+
+            if (!file_exists($dbFilePath)) {
+                touch($dbFilePath);
             }
 
-            return 'sqlite:' . realpath($path);
+            return 'sqlite:' . realpath($dbFilePath);
         }
 
-        $db = strtolower(getenv('DB'));
-        if (!$db || 'agnostic' === $db) {
+        if (!$db || $db === 'agnostic') {
             $db = 'mysql';
         }
 
-        $dsn = $db . ':host=' . (getenv('DB_HOSTNAME') ?: '127.0.0.1' ) . ';dbname=';
-        $dsn .= getenv('DB_NAME') ?: 'test';
+        $host = getenv('DB_HOSTNAME') ?: '127.0.0.1';
+        $dbName = getenv('DB_NAME') ?: 'test';
 
-        return $dsn;
+        return "$db:host=$host;dbname=$dbName";
     }
 
     /**
@@ -289,7 +291,7 @@ class TestCaseFixtures extends TestCase
     {
         $driver = $this->con ? $this->con->getAttribute(PDO::ATTR_DRIVER_NAME) : null;
 
-        if (null === $driver && $currentDSN = $this->getBuiltDsn()) {
+        if ($driver === null && $currentDSN = $this->getBuiltDsn()) {
             $driver = explode(':', $currentDSN)[0];
         }
 
