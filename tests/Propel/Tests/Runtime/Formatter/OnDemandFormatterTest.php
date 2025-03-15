@@ -90,15 +90,13 @@ class OnDemandFormatterTest extends BookstoreEmptyTestBase
      */
     public function testFormatNoCriteria()
     {
-        $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
-
-        $stmt = $con->query('SELECT * FROM book');
         $formatter = new OnDemandFormatter();
+        $this->expectException(PropelException::class, 'should throw exception when called with no valid criteria');
         try {
-            $books = $formatter->format($stmt);
-            $this->fail('OnDemandFormatter::format() trows an exception when called with no valid criteria');
-        } catch (PropelException $e) {
-            $this->assertTrue(true, 'OnDemandFormatter::format() trows an exception when called with no valid criteria');
+            $stmt = $this->con->query('SELECT * FROM book');
+            $formatter->format($stmt);
+        } finally {
+            $stmt->close();
         }
     }
 

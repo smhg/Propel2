@@ -40,15 +40,16 @@ class StatementFormatterTest extends BookstoreEmptyTestBase
      */
     public function testFormatNoCriteria()
     {
-        $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
-
-        $stmt = $con->query('SELECT * FROM book');
         $formatter = new StatementFormatter();
         try {
-            $books = $formatter->format($stmt);
+            $stmt = $this->con->query('SELECT * FROM book');
+            $formatter->format($stmt);
             $this->assertTrue(true, 'StatementFormatter::format() does not trow an exception when called with no valid criteria');
+
         } catch (PropelException $e) {
             $this->fail('StatementFormatter::format() does not trow an exception when called with no valid criteria');
+        } finally {
+            $stmt->close();
         }
     }
 
@@ -110,15 +111,15 @@ class StatementFormatterTest extends BookstoreEmptyTestBase
      */
     public function testFormatoneNoCriteria()
     {
-        $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
-
-        $stmt = $con->query('SELECT * FROM book');
         $formatter = new StatementFormatter();
         try {
+            $stmt = $this->con->query('SELECT * FROM book');
             $books = $formatter->formatOne($stmt);
             $this->assertTrue(true, 'StatementFormatter::formatOne() does not trow an exception when called with no valid criteria');
         } catch (PropelException $e) {
             $this->fail('StatementFormatter::formatOne() does not trow an exception when called with no valid criteria');
+        } finally {
+            $stmt->close();
         }
     }
 
