@@ -41,6 +41,8 @@ class SimpleArrayFormatter extends AbstractFormatter
         $collection = $this->getCollection();
 
         if ($this->isWithOneToMany() && $this->hasLimit) {
+            $dataFetcher->close();
+
             throw new LogicException('Cannot use limit() in conjunction with with() on a one-to-many relationship. Please remove the with() call, or the limit() call.');
         }
 
@@ -76,6 +78,8 @@ class SimpleArrayFormatter extends AbstractFormatter
         $result = null;
 
         if ($this->isWithOneToMany() && $this->hasLimit) {
+            $dataFetcher->close();
+
             throw new LogicException('Cannot use limit() in conjunction with with() on a one-to-many relationship. Please remove the with() call, or the limit() call.');
         }
 
