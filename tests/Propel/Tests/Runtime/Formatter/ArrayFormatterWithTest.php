@@ -37,15 +37,13 @@ class ArrayFormatterWithTest extends BookstoreEmptyTestBase
     /**
      * @return void
      */
-    protected function assertCorrectHydration1($c, $msg)
+    protected function assertCorrectHydration(ModelCriteria $c, $msg)
     {
-        $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
-        $book = $c->findOne($con);
+        $book = $c->findOne($this->con);
+
         $this->assertEquals($book['Title'], 'Don Juan', 'Main object is correctly hydrated ' . $msg);
-        $author = $book['Author'];
-        $this->assertEquals($author['LastName'], 'Byron', 'Related object is correctly hydrated ' . $msg);
-        $publisher = $book['Publisher'];
-        $this->assertEquals($publisher['Name'], 'Penguin', 'Related object is correctly hydrated ' . $msg);
+        $this->assertEquals($book['Author']['LastName'], 'Byron', 'Related object is correctly hydrated ' . $msg);
+        $this->assertEquals($book['Publisher']['Name'], 'Penguin', 'Related object is correctly hydrated ' . $msg);
     }
 
     /**
@@ -56,14 +54,16 @@ class ArrayFormatterWithTest extends BookstoreEmptyTestBase
         BookstoreDataPopulator::populate();
         BookTableMap::clearInstancePool();
         AuthorTableMap::clearInstancePool();
-        $c = new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book');
-        $c->setFormatter(ModelCriteria::FORMAT_ARRAY);
-        $c->orderBy('Propel\Tests\Bookstore\Book.Title');
-        $c->join('Propel\Tests\Bookstore\Book.Author');
-        $c->with('Author');
-        $c->join('Propel\Tests\Bookstore\Book.Publisher');
-        $c->with('Publisher');
-        $this->assertCorrectHydration1($c, 'without instance pool');
+        $c = (new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book'))
+            ->setFormatter(ModelCriteria::FORMAT_ARRAY)
+            ->orderBy('Propel\Tests\Bookstore\Book.Title')
+            ->join('Propel\Tests\Bookstore\Book.Author')
+            ->with('Author')
+            ->join('Propel\Tests\Bookstore\Book.Publisher')
+            ->with('Publisher')
+            ;
+
+        $this->assertCorrectHydration($c, 'without instance pool');
     }
 
     /**
@@ -74,14 +74,17 @@ class ArrayFormatterWithTest extends BookstoreEmptyTestBase
         BookstoreDataPopulator::populate();
         BookTableMap::clearInstancePool();
         AuthorTableMap::clearInstancePool();
-        $c = new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book');
-        $c->setFormatter(ModelCriteria::FORMAT_ARRAY);
-        $c->orderBy('Propel\Tests\Bookstore\Book.Title');
-        $c->join('Propel\Tests\Bookstore\Book.Author a');
-        $c->with('a');
-        $c->join('Propel\Tests\Bookstore\Book.Publisher p');
-        $c->with('p');
-        $this->assertCorrectHydration1($c, 'with alias');
+
+        $c = (new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book'))
+            ->setFormatter(ModelCriteria::FORMAT_ARRAY)
+            ->orderBy('Propel\Tests\Bookstore\Book.Title')
+            ->join('Propel\Tests\Bookstore\Book.Author a')
+            ->with('a')
+            ->join('Propel\Tests\Bookstore\Book.Publisher p')
+            ->with('p')
+            ;
+
+        $this->assertCorrectHydration($c, 'with alias');
     }
 
     /**
@@ -92,15 +95,17 @@ class ArrayFormatterWithTest extends BookstoreEmptyTestBase
         BookstoreDataPopulator::populate();
         BookTableMap::clearInstancePool();
         AuthorTableMap::clearInstancePool();
-        $c = new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book');
-        $c->setFormatter(ModelCriteria::FORMAT_ARRAY);
-        $c->setModelAlias('b', true);
-        $c->orderBy('b.Title');
-        $c->join('b.Author a');
-        $c->with('a');
-        $c->join('b.Publisher p');
-        $c->with('p');
-        $this->assertCorrectHydration1($c, 'with main alias');
+
+        $c = (new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book'))
+            ->setFormatter(ModelCriteria::FORMAT_ARRAY)
+            ->setModelAlias('b', true)
+            ->orderBy('b.Title')
+            ->join('b.Author a')
+            ->with('a')
+            ->join('b.Publisher p')
+            ->with('p')
+        ;
+        $this->assertCorrectHydration($c, 'with main alias');
     }
 
     /**
@@ -110,14 +115,15 @@ class ArrayFormatterWithTest extends BookstoreEmptyTestBase
     {
         BookstoreDataPopulator::populate();
         // instance pool contains all objects by default, since they were just populated
-        $c = new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book');
-        $c->setFormatter(ModelCriteria::FORMAT_ARRAY);
-        $c->orderBy('Propel\Tests\Bookstore\Book.Title');
-        $c->join('Propel\Tests\Bookstore\Book.Author');
-        $c->with('Author');
-        $c->join('Propel\Tests\Bookstore\Book.Publisher');
-        $c->with('Publisher');
-        $this->assertCorrectHydration1($c, 'with instance pool');
+        $c = (new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book'))
+            ->setFormatter(ModelCriteria::FORMAT_ARRAY)
+            ->orderBy('Propel\Tests\Bookstore\Book.Title')
+            ->join('Propel\Tests\Bookstore\Book.Author')
+            ->with('Author')
+            ->join('Propel\Tests\Bookstore\Book.Publisher')
+            ->with('Publisher')
+        ;
+        $this->assertCorrectHydration($c, 'with instance pool');
     }
 
     /**
@@ -192,7 +198,7 @@ class ArrayFormatterWithTest extends BookstoreEmptyTestBase
         $c->with('Author');
         $books = $c->find();
 
-        $this->assertEquals(2, count($books));
+        $this->assertCount(2, $books);
         $firstBook = $books[0];
         $this->assertTrue(isset($firstBook['Author']));
         $secondBook = $books[1];

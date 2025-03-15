@@ -20,6 +20,7 @@ class PropelTest extends BaseTestCase
     
     public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         static::$initialServiceContainer = Propel::getServiceContainer();
     }
     

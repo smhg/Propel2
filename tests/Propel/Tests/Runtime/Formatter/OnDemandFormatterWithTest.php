@@ -291,7 +291,7 @@ class OnDemandFormatterWithTest extends BookstoreEmptyTestBase
         $c->add(BookTableMap::COL_ISBN, '043935806X');
         $c->leftJoin('Propel\Tests\Bookstore\Book.Review');
         $c->with('Review');
-        $books = $c->find();
+        $c->find();
     }
 
     /**

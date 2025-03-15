@@ -24,6 +24,7 @@ class OutputGroupBehaviorTest extends TestCase
      */
     public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         if (!class_exists('OgEmployee')) {
             static::buildLocalSchemaClasses();
         }

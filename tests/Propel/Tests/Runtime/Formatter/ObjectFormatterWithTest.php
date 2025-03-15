@@ -373,7 +373,7 @@ class ObjectFormatterWithTest extends BookstoreEmptyTestBase
         $c->leftJoin('Book.Review');
         $c->with('Review');
         $c->limit(5);
-        $books = $c->find();
+        $c->find();
     }
 
     /**
@@ -400,7 +400,7 @@ class ObjectFormatterWithTest extends BookstoreEmptyTestBase
         $this->assertEquals(2, count($reviews), 'Related objects are correctly hydrated');
         try {
             $book->save();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->fail('with() does not force objects to be new');
         }
     }

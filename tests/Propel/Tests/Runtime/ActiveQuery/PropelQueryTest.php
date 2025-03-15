@@ -92,9 +92,9 @@ class PropelQueryTest extends BookstoreTestBase
     {
         // find by single id
         $book = PropelQuery::from('\Propel\Tests\Bookstore\Book b')
-              ->where('b.Title like ?', 'Don%')
-              ->orderBy('b.ISBN', 'desc')
-              ->findOne();
+            ->where('b.Title like ?', 'Don%')
+            ->orderBy('b.ISBN', 'desc')
+            ->findOne();
 
         $c = BookQuery::create()->filterById($book->getId());
 
@@ -109,8 +109,8 @@ class PropelQueryTest extends BookstoreTestBase
             ->find();
 
         $booksIn = BookQuery::create()
-          ->filterById([$booksAll[1]->getId(), $booksAll[2]->getId()])
-          ->find();
+            ->filterById([$booksAll[1]->getId(), $booksAll[2]->getId()])
+            ->find();
 
         $this->assertTrue($booksIn[0] == $booksAll[1]);
         $this->assertTrue($booksIn[1] == $booksAll[2]);
@@ -130,10 +130,10 @@ class PropelQueryTest extends BookstoreTestBase
         $booksIn = null;
 
         $booksIn = BookQuery::create()
-          ->filterById(
-              ['max' => $booksAll[1]->getId()]
-          )
-          ->find();
+            ->filterById(
+                ['max' => $booksAll[1]->getId()]
+            )
+            ->find();
 
         $this->assertTrue($booksIn[1] == $booksAll[1]);
 
@@ -143,22 +143,18 @@ class PropelQueryTest extends BookstoreTestBase
         // SELECT  FROM `book` WHERE (book.id>=:p1 AND book.id<=:p2)
 
         $minMax = BookQuery::create()
-          ->filterById(
-              [
-              'min' => $booksAll[1]->getId(),
-                'max' => $booksAll[2]->getId()]
-          )
-          ->find();
+            ->filterById([
+                'min' => $booksAll[1]->getId(),
+                'max' => $booksAll[2]->getId()
+            ])->find();
 
         $In = BookQuery::create()
-          ->filterById(
-              [$booksAll[1]->getId(),
-                $booksAll[2]->getId()]
-          )
-          ->find();
+            ->filterById([
+                $booksAll[1]->getId(),
+                $booksAll[2]->getId()
+            ])->find();
 
-        $this->assertTrue($minMax[0] === $In[0]);
-        $this->assertTrue(count($minMax->getData()) === count($In->getData()));
+        $this->assertEquals($minMax->getData(), $In->getData());
     }
 
     /**
@@ -166,14 +162,17 @@ class PropelQueryTest extends BookstoreTestBase
      */
     public function testInstancePool()
     {
-        $object = new Table6();
-        $object->setTitle('test');
+        \Propel\Runtime\Propel::enableInstancePooling();
+        
+        $object = (new Table6())
+            ->setTitle('test')
+        ;
         $object->save();
         $key = $object->getId();
 
         $this->assertSame($object, Table6TableMap::getInstanceFromPool($key));
         Table6TableMap::removeInstanceFromPool($object);
-        $this->assertNull(Table6TableMap::getInstanceFromPool($key));
+        $this->assertNull(Table6TableMap::getInstanceFromPool($key), 'should have cleared instance pool');
 
         $object = Table6Query::create()->findPk($key);
         $this->assertSame($object, Table6TableMap::getInstanceFromPool($key));
@@ -202,14 +201,13 @@ class PropelQueryTest extends BookstoreTestBase
         $queryTypes = [
             ['query' => BookQuery::create(), 'returnType' => ObjectCollection::class],
             ['query' => BookQuery::create()->select(['id']), 'returnType' => ArrayCollection::class],
-            
         ];
-        foreach($queryTypes as ['query' => $query, 'returnType' => $returnType]){
+        foreach ($queryTypes as ['query' => $query, 'returnType' => $returnType]) {
             $result = call_user_func([$query, $findMethodName], $findMethodArg);
             $this->assertInstanceOf($returnType, $result);
         }
     }
-    
+
     public function findMethodsProvider()
     {
         return [

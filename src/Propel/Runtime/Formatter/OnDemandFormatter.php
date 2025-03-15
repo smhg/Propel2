@@ -61,6 +61,8 @@ class OnDemandFormatter extends ObjectFormatter
         }
 
         if ($this->isWithOneToMany()) {
+            $dataFetcher->close();
+
             throw new LogicException('OnDemandFormatter cannot hydrate related objects using a one-to-many relationship. Try removing with() from your query.');
         }
 

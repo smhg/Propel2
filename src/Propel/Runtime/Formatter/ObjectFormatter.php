@@ -45,6 +45,8 @@ class ObjectFormatter extends AbstractFormatter
 
         if ($this->isWithOneToMany()) {
             if ($this->hasLimit) {
+                $dataFetcher->close();
+
                 throw new LogicException('Cannot use limit() in conjunction with with() on a one-to-many relationship. Please remove the with() call, or the limit() call.');
             }
             foreach ($dataFetcher as $row) {

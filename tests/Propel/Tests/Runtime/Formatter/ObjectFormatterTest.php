@@ -43,15 +43,13 @@ class ObjectFormatterTest extends BookstoreEmptyTestBase
      */
     public function testFormatNoCriteria()
     {
-        $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
-
-        $stmt = $con->query('SELECT * FROM book');
         $formatter = new ObjectFormatter();
+        $this->expectException(PropelException::class, 'should throw exception when called with no valid criteria');
         try {
-            $books = $formatter->format($stmt);
-            $this->fail('ObjectFormatter::format() trows an exception when called with no valid criteria');
-        } catch (PropelException $e) {
-            $this->assertTrue(true, 'ObjectFormatter::format() trows an exception when called with no valid criteria');
+            $dataFetcher = $this->con->query('SELECT * FROM book');
+            $formatter->format($dataFetcher);
+        } finally {
+            $dataFetcher->close();
         }
     }
 
@@ -85,9 +83,7 @@ class ObjectFormatterTest extends BookstoreEmptyTestBase
      */
     public function testFormatManyResults()
     {
-        $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
-
-        $stmt = $con->query('SELECT * FROM book');
+        $stmt = $this->con->query('SELECT * FROM book');
         $formatter = new ObjectFormatter();
         $formatter->init(new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book'));
         $books = $formatter->format($stmt);
@@ -104,9 +100,7 @@ class ObjectFormatterTest extends BookstoreEmptyTestBase
      */
     public function testFormatOneResult()
     {
-        $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
-
-        $stmt = $con->query("SELECT id, title, isbn, price, publisher_id, author_id FROM book WHERE book.TITLE = 'Quicksilver'");
+        $stmt = $this->con->query("SELECT id, title, isbn, price, publisher_id, author_id FROM book WHERE book.TITLE = 'Quicksilver'");
         $formatter = new ObjectFormatter();
         $formatter->init(new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book'));
         $books = $formatter->format($stmt);
@@ -123,9 +117,7 @@ class ObjectFormatterTest extends BookstoreEmptyTestBase
      */
     public function testFormatNoResult()
     {
-        $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
-
-        $stmt = $con->query("SELECT * FROM book WHERE book.TITLE = 'foo'");
+        $stmt = $this->con->query("SELECT * FROM book WHERE book.TITLE = 'foo'");
         $formatter = new ObjectFormatter();
         $formatter->init(new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book'));
         $books = $formatter->format($stmt);
@@ -139,15 +131,13 @@ class ObjectFormatterTest extends BookstoreEmptyTestBase
      */
     public function testFormatOneNoCriteria()
     {
-        $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
-
-        $stmt = $con->query('SELECT * FROM book');
         $formatter = new ObjectFormatter();
+        $this->expectException(PropelException::class, 'should throw exception when called with no valid criteria');
         try {
-            $book = $formatter->formatOne($stmt);
-            $this->fail('ObjectFormatter::formatOne() throws an exception when called with no valid criteria');
-        } catch (PropelException $e) {
-            $this->assertTrue(true, 'ObjectFormatter::formatOne() throws an exception when called with no valid criteria');
+            $stmt = $this->con->query('SELECT * FROM book');
+            $formatter->formatOne($stmt);
+        } finally {
+            $stmt->close();
         }
     }
 
@@ -156,9 +146,7 @@ class ObjectFormatterTest extends BookstoreEmptyTestBase
      */
     public function testFormatOneManyResults()
     {
-        $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
-
-        $stmt = $con->query('SELECT * FROM book');
+        $stmt = $this->con->query('SELECT * FROM book');
         $formatter = new ObjectFormatter();
         $formatter->init(new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book'));
         $book = $formatter->formatOne($stmt);
@@ -171,9 +159,7 @@ class ObjectFormatterTest extends BookstoreEmptyTestBase
      */
     public function testFormatOneNoResult()
     {
-        $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
-
-        $stmt = $con->query("SELECT * FROM book WHERE book.TITLE = 'foo'");
+        $stmt = $this->con->query("SELECT * FROM book WHERE book.TITLE = 'foo'");
         $formatter = new ObjectFormatter();
         $formatter->init(new ModelCriteria('bookstore', '\Propel\Tests\Bookstore\Book'));
         $book = $formatter->formatOne($stmt);
