@@ -19,6 +19,7 @@ class GeneratedTableMapOutputGroupTest extends TestCase
      */
     public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         if (!class_exists('GeneratedTableMapOutputGroupTestTable')) {
             static::buildLocalSchemaClasses();
         }

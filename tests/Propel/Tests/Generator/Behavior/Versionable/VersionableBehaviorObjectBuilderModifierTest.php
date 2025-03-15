@@ -54,6 +54,7 @@ class VersionableBehaviorObjectBuilderModifierTest extends TestCase
      */
     public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         $schema = <<<EOF
 <database name="versionable_behavior_test_1">
     <table name="versionable_behavior_test_1">
