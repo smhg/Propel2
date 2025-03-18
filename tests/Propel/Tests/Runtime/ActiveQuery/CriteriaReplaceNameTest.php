@@ -194,7 +194,7 @@ class CriteriaReplaceNameTest extends TestCase
         ->withColumn('numberOfBooks.NumberOfBooks', 'NumberOfBooks');
 
         $replacedColumns = $this->replaceColumns($authorQuery, $joinCondition);        
-        $this->assertEquals('author.id = numberOfBooks.AuthorId', $joinCondition, 'Aliases from subquery should not be replaced');
+        $this->assertEquals('author.id = numberOfBooks.author_id', $joinCondition, 'Aliases from subquery should not be replaced');
 
         $authorIdColumnMap = $authorQuery->getTableMap()->getColumnByPhpName('Id');
         $this->assertCount(1, $replacedColumns);

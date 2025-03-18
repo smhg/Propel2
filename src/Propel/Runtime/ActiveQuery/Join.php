@@ -8,8 +8,8 @@
 
 namespace Propel\Runtime\ActiveQuery;
 
-use Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion;
 use Propel\Runtime\ActiveQuery\Criterion\CriterionFactory;
+use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\ActiveQuery\Join as ActiveQueryJoin;
 use Propel\Runtime\Adapter\AdapterInterface;
 use Propel\Runtime\Exception\LogicException;
@@ -114,7 +114,7 @@ class Join
     protected $rightTableAlias;
 
     /**
-     * @var \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|null
+     * @var \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|null
      */
     protected $joinCondition;
 
@@ -695,11 +695,11 @@ class Join
     /**
      * Set a custom join condition
      *
-     * @param \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion $joinCondition a Join condition
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface $joinCondition a Join condition
      *
      * @return void
      */
-    public function setJoinCondition(AbstractCriterion $joinCondition): void
+    public function setJoinCondition(ColumnFilterInterface $joinCondition): void
     {
         $this->joinCondition = $joinCondition;
     }
@@ -707,9 +707,9 @@ class Join
     /**
      * Get the custom join condition, if previously set
      *
-     * @return \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|null
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|null
      */
-    public function getJoinCondition(): ?AbstractCriterion
+    public function getJoinCondition(): ?ColumnFilterInterface
     {
         return $this->joinCondition;
     }
@@ -719,9 +719,9 @@ class Join
      *
      * @throws \Propel\Runtime\Exception\LogicException
      *
-     * @return \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface
      */
-    public function getJoinConditionOrFail(): AbstractCriterion
+    public function getJoinConditionOrFail(): ColumnFilterInterface
     {
         $joinCondition = $this->getJoinCondition();
 
@@ -741,7 +741,7 @@ class Join
      */
     public function buildJoinCondition(Criteria $c): void
     {
-        /** @var \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|null $joinCondition */
+        /** @var \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|null $joinCondition */
         $joinCondition = null;
         for ($i = 0; $i < $this->count; $i++) {
             if ($this->leftValues[$i]) {
@@ -808,8 +808,7 @@ class Join
             }
             $joinCondition = sprintf('(%s)', implode(' AND ', $conditions));
         } else {
-            $joinCondition = '';
-            $this->getJoinCondition()->appendPsTo($joinCondition, $params);
+            $joinCondition = $this->getJoinCondition()->buildStatement($params);
         }
 
         $rightTableName = $this->getRightTableWithAlias();

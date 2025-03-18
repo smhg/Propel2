@@ -554,7 +554,7 @@ class ModelCriteriaTest extends BookstoreTestBase
             ['table' => 'book', 'column' => 'title', 'value' => 'foo'],
         ];
 
-        $params = $c->getParams();
+        $params = $c->buildBindParams();
 
         $this->assertEquals($expectedParams, $params, 'test getting parameters with a simple criterion');
 

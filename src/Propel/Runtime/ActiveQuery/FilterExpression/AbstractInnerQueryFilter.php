@@ -1,0 +1,151 @@
+<?php
+
+/**
+ * MIT License. This file is part of the Propel package.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Propel\Runtime\ActiveQuery\FilterExpression;
+
+use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
+use Propel\Runtime\ActiveQuery\Util\ResolvedColumn;
+use Propel\Runtime\Exception\PropelException;
+use Propel\Runtime\Map\RelationMap;
+
+/**
+ * Abstract filter for nested filter expression, that bind an inner query
+ * with an operator like IN, EXISTS
+ *
+ * @phpstan-consistent-constructor
+ */
+abstract class AbstractInnerQueryFilter extends AbstractFilter
+{
+    /**
+     * @var \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|null Left side of the operator, can be empty.
+     */
+    protected $queryColumn;
+
+    /**
+     * @var string|null The sql operator expression, i.e. "IN" or "NOT IN".
+     */
+    protected $sqlOperator;
+
+    /**
+     * @var \Propel\Runtime\ActiveQuery\Criteria
+     */
+    protected $innerQuery;
+
+    /**
+     * Resolves the operator as given by the user to the SQL operator statement.
+     *
+     * @param string $operatorDeclaration
+     *
+     * @return string
+     */
+    abstract protected function resolveOperator(string $operatorDeclaration): string;
+
+    /**
+     * Allows to edit or replace the inner query before it is turned to SQL.
+     *
+     * @return \Propel\Runtime\ActiveQuery\Criteria
+     */
+    abstract protected function processInnerQuery(): Criteria;
+
+    /**
+     * Entry point for child classes to add information about the relation to the query.
+     *
+     * @param \Propel\Runtime\ActiveQuery\ModelCriteria $outerQuery
+     * @param \Propel\Runtime\Map\RelationMap $relation
+     *
+     * @return void
+     */
+    abstract protected function initForRelation(ModelCriteria $outerQuery, RelationMap $relation): void;
+
+    /**
+     * Allows to edit or replace the inner query before it is turned to SQL.
+     *
+     * @param mixed $outerQuery
+     * @param \Propel\Runtime\Map\RelationMap $relationMap
+     * @param string|null $operator
+     * @param \Propel\Runtime\ActiveQuery\ModelCriteria $innerQuery
+     *
+     * @return self
+     */
+    public static function createForRelation($outerQuery, RelationMap $relationMap, ?string $operator, ModelCriteria $innerQuery): self
+    {
+        $filter = new static($outerQuery, null, $operator, $innerQuery);
+        $filter->initForRelation($outerQuery, $relationMap);
+
+        return $filter;
+    }
+
+    /**
+     * @param \Propel\Runtime\ActiveQuery\Criteria $outerQuery
+     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|null $queryColumn Left side of the operator, usually a column name or empty.
+     * @param string|null $operator The operator, like IN, NOT IN, EXISTS, NOT EXISTS
+     * @param \Propel\Runtime\ActiveQuery\Criteria $innerQuery
+     */
+    final public function __construct(
+        $outerQuery,
+        ?ResolvedColumn $queryColumn,
+        ?string $operator,
+        Criteria $innerQuery
+    ) {
+        parent::__construct($outerQuery, null);
+
+        if ($operator) {
+            $operator = trim($operator); // Criteria::IN is padded with spaces
+        }
+
+        $this->queryColumn = $queryColumn;
+        $this->sqlOperator = $this->resolveOperator($operator);
+        $this->innerQuery = $innerQuery;
+    }
+
+    /**
+     * Collects a Prepared Statement representation of the Criterion onto the buffer
+     *
+     * @param array $paramCollector A list to which Prepared Statement parameters will be appended
+     *
+     * @return string
+     */
+    protected function buildFilterClause(array &$paramCollector): string
+    {
+        $leftHandOperator = '';
+        if ($this->queryColumn) {
+            $leftHandOperator = $this->queryColumn->getQueryColumnLiteral() . ' ';
+        }
+        $innerQuery = $this->processInnerQuery()->createSelectSql($paramCollector);
+        $this->query->replaceNames($innerQuery); // fixup column names from outer query
+
+        return "{$leftHandOperator}$this->sqlOperator ($innerQuery}";
+    }
+
+    /**
+     * @param \Propel\Runtime\ActiveQuery\ModelCriteria $outerQuery
+     * @param \Propel\Runtime\Map\RelationMap $relationMap where outer query is on the left side
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface
+     */
+    protected function buildJoinCondition($outerQuery, RelationMap $relationMap): ColumnFilterInterface
+    {
+        if (!$this->innerQuery instanceof ModelCriteria) {
+            throw new PropelException('Cannot build join on regular condition');
+        }
+        $join = new ModelJoin();
+        $outerAlias = $outerQuery->getModelAlias();
+        $innerAlias = $this->innerQuery->getModelAlias();
+        $join->setRelationMap($relationMap, $outerAlias, $innerAlias);
+        $join->buildJoinCondition($outerQuery);
+
+        $joinCondition = $join->getJoinCondition();
+//        $joinCondition->setTable($this->innerQuery->getTableNameInQuery());
+
+        return $joinCondition;
+    }
+}

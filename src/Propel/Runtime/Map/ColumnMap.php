@@ -136,11 +136,23 @@ class ColumnMap
     }
 
     /**
+     * @deprecated use aptly named getTableMap().
+     *
      * Get the table map this column belongs to.
      *
      * @return \Propel\Runtime\Map\TableMap
      */
     public function getTable(): TableMap
+    {
+        return $this->getTableMap();
+    }
+
+    /**
+     * Get the table map this column belongs to.
+     *
+     * @return \Propel\Runtime\Map\TableMap
+     */
+    public function getTableMap(): TableMap
     {
         return $this->table;
     }

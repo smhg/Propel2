@@ -11,6 +11,8 @@ namespace Propel\Runtime\ActiveQuery;
 use Exception;
 use Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion;
 use Propel\Runtime\ActiveQuery\Criterion\CriterionFactory;
+use Propel\Runtime\ActiveQuery\FilterExpression\AbstractColumnFilter;
+use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\ActiveQuery\QueryExecutor\CountQueryExecutor;
 use Propel\Runtime\ActiveQuery\QueryExecutor\DeleteAllQueryExecutor;
 use Propel\Runtime\ActiveQuery\QueryExecutor\DeleteQueryExecutor;
@@ -18,10 +20,12 @@ use Propel\Runtime\ActiveQuery\QueryExecutor\InsertQueryExecutor;
 use Propel\Runtime\ActiveQuery\QueryExecutor\SelectQueryExecutor;
 use Propel\Runtime\ActiveQuery\QueryExecutor\UpdateQueryExecutor;
 use Propel\Runtime\ActiveQuery\SqlBuilder\SelectQuerySqlBuilder;
+use Propel\Runtime\Adapter\AdapterInterface;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\DataFetcher\DataFetcherInterface;
 use Propel\Runtime\Exception\LogicException;
 use Propel\Runtime\Map\ColumnMap;
+use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\Util\PropelConditionalProxy;
 
@@ -270,7 +274,7 @@ class Criteria
     /**
      * Storage of conditions data. Collection of Criterion objects.
      *
-     * @var array<\Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion>
+     * @var array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
      */
     protected $map = [];
 
@@ -291,7 +295,7 @@ class Criteria
     /**
      * Storage of having data.
      *
-     * @var \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|null
+     * @var \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|null
      */
     protected $having;
 
@@ -365,7 +369,7 @@ class Criteria
     /**
      * Storage for Criterions expected to be combined
      *
-     * @var array<string, \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion>
+     * @var array<string, \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
      */
     protected $namedCriterions = [];
 
@@ -402,11 +406,21 @@ class Criteria
     }
 
     /**
-     * Get the criteria map, i.e. the array of Criterions
+     * @deprecated use aptly named Criteria::getColumnFilter().
      *
-     * @return array<\Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion>
+     * @return array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
      */
     public function getMap(): array
+    {
+        return $this->getColumnFilter();
+    }
+
+    /**
+     * Get the criteria map, i.e. the array of Criterions
+     *
+     * @return array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
+     */
+    public function getColumnFilter(): array
     {
         return $this->map;
     }
@@ -582,6 +596,8 @@ class Criteria
     }
 
     /**
+     * @deprecated use Criteria::hasFilterOnColumn
+     *
      * Does this Criteria object contain the specified key?
      *
      * @param string $column [table.]column
@@ -590,9 +606,21 @@ class Criteria
      */
     public function containsKey(string $column): bool
     {
+        return $this->hasFilterOnColumn($column);
+    }
+
+    /**
+     * Does this Criteria object contain the specified key?
+     *
+     * @param string $columnName [table.]column
+     *
+     * @return bool True if this Criteria object contain the specified key.
+     */
+    public function hasFilterOnColumn(string $columnName): bool
+    {
         // must use array_key_exists() because the key could
         // exist but have a NULL value (that'd be valid).
-        return isset($this->map[$column]);
+        return isset($this->map[$columnName]);
     }
 
     /**
@@ -606,7 +634,7 @@ class Criteria
     {
         // must use array_key_exists() because the key could
         // exist but have a NULL value (that'd be valid).
-        return isset($this->map[$column]) && $this->map[$column]->getValue() !== null;
+        return isset($this->map[$column]) && $this->map[$column]->hasValue();
     }
 
     /**
@@ -659,9 +687,9 @@ class Criteria
      *
      * @param string $column Column name.
      *
-     * @return \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion A Criterion object.
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface A Criterion object.
      */
-    public function getCriterion(string $column): AbstractCriterion
+    public function getCriterion(string $column): ColumnFilterInterface
     {
         return $this->map[$column];
     }
@@ -669,9 +697,9 @@ class Criteria
     /**
      * Method to return the latest Criterion in a table.
      *
-     * @return \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|null A Criterion or null no Criterion is added.
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|null A Criterion or null no Criterion is added.
      */
-    public function getLastCriterion(): ?AbstractCriterion
+    public function getLastCriterion(): ?ColumnFilterInterface
     {
         $count = count($this->map);
         if ($count) {
@@ -692,27 +720,11 @@ class Criteria
      * @param mixed|null $value
      * @param string|int|null $comparison Criteria comparison constant or PDO binding type
      *
-     * @return \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface
      */
-    public function getNewCriterion(string $column, $value = null, $comparison = null): AbstractCriterion
+    public function getNewCriterion(string $column, $value = null, $comparison = null): ColumnFilterInterface
     {
         return CriterionFactory::build($this, $column, $comparison, $value);
-    }
-
-    /**
-     * Method to return a String table name.
-     *
-     * @param string $name Name of the key.
-     *
-     * @return string|null The value of the object at key.
-     */
-    public function getColumnName(string $name): ?string
-    {
-        if (isset($this->map[$name])) {
-            return $this->map[$name]->getColumn();
-        }
-
-        return null;
     }
 
     /**
@@ -748,6 +760,14 @@ class Criteria
     public function getComparison(string $key): ?string
     {
         if (isset($this->map[$key])) {
+            $filter = $this->map[$key];
+
+            if ($filter instanceof AbstractColumnFilter) {
+                return $filter->getOperator();
+            } elseif ($filter instanceof AbstractCriterion) {
+                return $filter->getComparison();
+            }
+
             return $this->map[$key]->getComparison();
         }
 
@@ -762,6 +782,14 @@ class Criteria
     public function getDbName(): string
     {
         return $this->dbName;
+    }
+
+    /**
+     * @return \Propel\Runtime\Adapter\AdapterInterface
+     */
+    public function getAdapter(): AdapterInterface
+    {
+        return Propel::getServiceContainer()->getAdapter($this->getDbName());
     }
 
     /**
@@ -821,7 +849,7 @@ class Criteria
     public function getTableName(string $name): ?string
     {
         if (isset($this->map[$name])) {
-            return $this->map[$name]->getTable();
+            return $this->map[$name]->getTableAlias();
         }
 
         return null;
@@ -893,7 +921,7 @@ class Criteria
     {
         if (is_array($t)) {
             foreach ($t as $key => $value) {
-                if ($value instanceof AbstractCriterion) {
+                if ($value instanceof ColumnFilterInterface) {
                     $this->map[$key] = $value;
                 } else {
                     $this->put($key, $value);
@@ -921,7 +949,7 @@ class Criteria
      * The name of the table must be used implicitly in the column name,
      * so the Column name must be something like 'TABLE.id'.
      *
-     * @param \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|string $p1 The column to run the comparison on, or a Criterion object.
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|string $p1 The column to run the comparison on, or a Criterion object.
      * @param mixed $value
      * @param string|int|null $comparison A String.
      *
@@ -930,7 +958,10 @@ class Criteria
     public function add($p1, $value = null, $comparison = null)
     {
         if ($p1 instanceof AbstractCriterion) {
-            $this->map[$p1->getTable() . '.' . $p1->getColumn()] = $p1;
+            $this->map[$p1->getTableAlias() . '.' . $p1->getColumn()] = $p1;
+        } elseif ($p1 instanceof ColumnFilterInterface) {
+            $key = $p1->getLocalColumnName();
+            $this->map[$key] = $p1;
         } else {
             $this->map[$p1] = $this->getCriterionForCondition($p1, $value, $comparison);
         }
@@ -963,7 +994,7 @@ class Criteria
      * so the Column name must be something like 'TABLE.id'.
      *
      * @param string $name name to combine the criterion later
-     * @param \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|string $p1 The column to run the comparison on, or AbstractCriterion object.
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|string $p1 The column to run the comparison on, or AbstractCriterion object.
      * @param mixed|null $value
      * @param string|null $comparison A String.
      *
@@ -1710,9 +1741,9 @@ class Criteria
     /**
      * Get Having Criterion.
      *
-     * @return \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|null A Criterion object that is the having clause.
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|null A Criterion object that is the having clause.
      */
-    public function getHaving(): ?AbstractCriterion
+    public function getHaving(): ?ColumnFilterInterface
     {
         return $this->having;
     }
@@ -1730,10 +1761,10 @@ class Criteria
             return null;
         }
 
-        /** @var \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|null $removed */
+        /** @var \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|null $removed */
         $removed = $this->map[$key];
         unset($this->map[$key]);
-        if ($removed instanceof AbstractCriterion) {
+        if ($removed instanceof ColumnFilterInterface) {
             return $removed->getValue();
         }
 
@@ -1809,7 +1840,7 @@ class Criteria
                 && $this->aliases === $criteria->getAliases()
             ) { // what about having ??
                 foreach ($criteria->keys() as $key) {
-                    if ($this->containsKey($key)) {
+                    if ($this->hasFilterOnColumn($key)) {
                         $a = $this->getCriterion($key);
                         $b = $criteria->getCriterion($key);
                         if (!$a->equals($b)) {
@@ -1915,7 +1946,7 @@ class Criteria
             if ($isFirstCondition && $this->defaultCombineOperator === self::LOGICAL_OR) {
                 $this->addOr($criterion, null, null, false);
                 $this->defaultCombineOperator = self::LOGICAL_AND;
-            } elseif ($this->containsKey($key)) {
+            } elseif ($this->hasFilterOnColumn($key)) {
                 $this->addAnd($criterion);
             } else {
                 $this->add($criterion);
@@ -1986,15 +2017,15 @@ class Criteria
      *  - Otherwise, create a classic Criterion based on a column name and a comparison.
      *    <code>$c->getCriterionForCondition(BookTableMap::TITLE, 'War%', Criteria::LIKE);</code>
      *
-     * @param \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|string $p1 A Criterion, or a SQL clause with a question mark placeholder, or a column name
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|string $p1 A Criterion, or a SQL clause with a question mark placeholder, or a column name
      * @param mixed|null $value The value to bind in the condition
      * @param string|int|null $comparison A Criteria class constant, or a PDO::PARAM_ class constant
      *
-     * @return \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface
      */
-    protected function getCriterionForCondition($p1, $value = null, $comparison = null): AbstractCriterion
+    protected function getCriterionForCondition($p1, $value = null, $comparison = null): ColumnFilterInterface
     {
-        if ($p1 instanceof AbstractCriterion) {
+        if ($p1 instanceof ColumnFilterInterface) {
             // it's already a Criterion, so ignore $value and $comparison
             return $p1;
         }
@@ -2016,28 +2047,18 @@ class Criteria
      *  - addAnd(column, value)
      *  - addAnd(Criterion)
      *
-     * @param \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|string $p1
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|string $p1
      * @param mixed|null $value
      * @param mixed|null $condition
      * @param bool $preferColumnCondition
      *
-     * @return $this A modified Criteria object.
+     * @return static A modified Criteria object.
      */
     public function addAnd($p1, $value = null, $condition = null, bool $preferColumnCondition = true)
     {
         $criterion = $this->getCriterionForCondition($p1, $value, $condition);
 
-        $key = $criterion->getTable() . '.' . $criterion->getColumn();
-        if ($preferColumnCondition && $this->containsKey($key)) {
-            // FIXME: addAnd() operates preferably on existing conditions on the same column
-            // this may cause unexpected results, but it's there for BC with Propel 14
-            $this->getCriterion($key)->addAnd($criterion);
-        } else {
-            // simply add the condition to the list - this is the expected behavior
-            $this->add($criterion);
-        }
-
-        return $this;
+        return $this->addFilter(self::LOGICAL_AND, $criterion, $preferColumnCondition);
     }
 
     /**
@@ -2051,26 +2072,40 @@ class Criteria
      *  - addOr(column, value)
      *  - addOr(Criterion)
      *
-     * @param \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|string $p1
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|string $p1
      * @param mixed $value
      * @param mixed $condition
      * @param bool $preferColumnCondition
      *
-     * @return $this A modified Criteria object.
+     * @return static A modified Criteria object.
      */
     public function addOr($p1, $value = null, $condition = null, bool $preferColumnCondition = true)
     {
-        $rightCriterion = $this->getCriterionForCondition($p1, $value, $condition);
+        $criterion = $this->getCriterionForCondition($p1, $value, $condition);
 
-        $leftCriterion = $this->getLastCriterion();
+        return $this->addFilter(self::LOGICAL_OR, $criterion, $preferColumnCondition);
+    }
 
-        if ($leftCriterion !== null) {
-            // combine the given criterion with the existing one with an 'OR'
-            $leftCriterion->addOr($rightCriterion);
+    /**
+     * @param string $andOr
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface $filter
+     * @param bool $preferColumnCondition
+     *
+     * @return static
+     */
+    protected function addFilter(string $andOr, ColumnFilterInterface $filter, bool $preferColumnCondition = true)
+    {
+        if ($andOr === self::LOGICAL_OR) {
+            $parentFilter = $this->getLastCriterion();
         } else {
-            // nothing to do OR / AND with, so make it first condition
-            $this->add($rightCriterion);
+            $key = $filter->getLocalColumnName();
+            $parentFilter = $preferColumnCondition && $this->hasFilterOnColumn($key) ? $this->getCriterion($key) : null;
         }
+
+        if (!$parentFilter) {
+            return $this->add($filter);
+        }
+        ($andOr === self::LOGICAL_OR) ? $parentFilter->addOr($filter) : $parentFilter->addAnd($filter);
 
         return $this;
     }
@@ -2080,28 +2115,24 @@ class Criteria
      *
      * @see Criteria::add()
      *
-     * @param \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|string $p1 The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|string $p1 The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
      * @param mixed $value
      * @param string|null $operator A String, like Criteria::EQUAL.
      * @param bool $preferColumnCondition If true, the condition is combined with an existing condition on the same column
      * (necessary for Propel 1.4 compatibility).
      * If false, the condition is combined with the last existing condition.
      *
-     * @return $this A modified Criteria object.
+     * @return static A modified Criteria object.
      */
     public function addUsingOperator($p1, $value = null, ?string $operator = null, bool $preferColumnCondition = true)
     {
         if ($this->defaultCombineOperator === self::LOGICAL_OR) {
             $this->defaultCombineOperator = self::LOGICAL_AND;
 
-            $this->addOr($p1, $value, $operator, $preferColumnCondition);
-
-            return $this;
+            return $this->addOr($p1, $value, $operator, $preferColumnCondition);
         }
 
-        $this->addAnd($p1, $value, $operator, $preferColumnCondition);
-
-        return $this;
+        return $this->addAnd($p1, $value, $operator, $preferColumnCondition);
     }
 
     /**
@@ -2125,18 +2156,8 @@ class Criteria
     }
 
     /**
-     * This method does only quote identifier, the method doReplaceNameInExpression of child ModelCriteria class does more.
+     * @deprecated resolve the tableMap yourself and use Criteria::quoteColumnIdentifier().
      *
-     * @param array $matches Matches found by preg_replace_callback
-     *
-     * @return string the column name replacement
-     */
-    protected function doReplaceNameInExpression(array $matches): string
-    {
-        return $this->quoteIdentifier($matches[0]);
-    }
-
-    /**
      * Quotes identifier based on $this->isIdentifierQuotingEnabled() and $tableMap->isIdentifierQuotingEnabled.
      *
      * @param string $string
@@ -2147,9 +2168,7 @@ class Criteria
     public function quoteIdentifier(string $string, string $tableName = ''): string
     {
         if ($this->isIdentifierQuotingEnabled()) {
-            $adapter = Propel::getServiceContainer()->getAdapter($this->getDbName());
-
-            return $adapter->quote($string);
+            return $this->getAdapter()->quote($string);
         }
 
         //find table name and ask tableMap if quoting is enabled
@@ -2165,14 +2184,29 @@ class Criteria
             if ($dbMap->hasTable($tableMapName)) {
                 $tableMap = $dbMap->getTable($tableMapName);
                 if ($tableMap->isIdentifierQuotingEnabled()) {
-                    $adapter = Propel::getServiceContainer()->getAdapter($this->getDbName());
-
-                    return $adapter->quote($string);
+                    return $this->getAdapter()->quote($string);
                 }
             }
         }
 
         return $string;
+    }
+
+    /**
+     * Quotes identifier based on $this->isIdentifierQuotingEnabled() and $tableMap->isIdentifierQuotingEnabled.
+     *
+     * @param string $string
+     * @param \Propel\Runtime\Map\TableMap|null $tableMap
+     *
+     * @return string
+     */
+    public function quoteColumnIdentifier(string $string, ?TableMap $tableMap = null): string
+    {
+        if (!$this->isIdentifierQuotingEnabled() && !($tableMap && $tableMap->isIdentifierQuotingEnabled())) {
+            return $string;
+        }
+
+        return $this->getAdapter()->quote($string);
     }
 
     /**

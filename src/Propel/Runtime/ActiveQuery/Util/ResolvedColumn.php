@@ -6,17 +6,19 @@
  * file that was distributed with this source code.
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Propel\Runtime\ActiveQuery\Util;
 
+use LogicException;
 use Propel\Runtime\Map\ColumnMap;
+use Propel\Runtime\Map\TableMap;
 
 class ResolvedColumn
 {
- /**
-  * @var \Propel\Runtime\Map\ColumnMap|null
-  */
+    /**
+     * @var \Propel\Runtime\Map\ColumnMap|null
+     */
     protected $columnMap;
 
     /**
@@ -57,6 +59,49 @@ class ResolvedColumn
     }
 
     /**
+     * @throws \LogicException
+     *
+     * @return string
+     */
+    public function getQueryColumnLiteral(): string
+    {
+        if (!$this->localColumnName) {
+            throw new LogicException('Trying to build statement from empty column.');
+        }
+
+        return $this->localColumnName;
+    }
+
+    /**
+     * @return \Propel\Runtime\Map\TableMap|null
+     */
+    public function getTableMap(): ?TableMap
+    {
+        return $this->columnMap ? $this->columnMap->getTableMap() : null;
+    }
+
+    /**
+     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn $otherColumn
+     *
+     * @return bool
+     */
+    public function equals(ResolvedColumn $otherColumn): bool
+    {
+        return $otherColumn instanceof static
+            && $this->localColumnName === $otherColumn->localColumnName
+            && $this->columnMap === $otherColumn->columnMap
+            && $this->tableAlias === $otherColumn->tableAlias;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEmptyResolvedColumn(): bool
+    {
+        return $this->localColumnName === null;
+    }
+
+    /**
      * @return string|null
      */
     public function getLocalColumnName(): ?string
@@ -78,6 +123,14 @@ class ResolvedColumn
     public function getTableAlias(): ?string
     {
         return $this->tableAlias;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getLocalTableName(): ?string
+    {
+        return $this->tableAlias ?? $this->columnMap ? $this->columnMap->getTableName() : null;
     }
 
     /**

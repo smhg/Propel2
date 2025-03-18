@@ -9,7 +9,7 @@
 namespace Propel\Runtime\ActiveQuery\SqlBuilder;
 
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion;
+use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 
 /**
  * This class produces the base object class (e.g. BaseMyTable) which contains
@@ -111,8 +111,7 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
      */
     protected function buildFromClause(?array &$params, array $sourceTableNames, array $joinClause): string
     {
-        $sourceTableNames = array_filter($sourceTableNames);
-        $sourceTableNames = array_unique($sourceTableNames);
+        $sourceTableNames = array_unique(array_filter($sourceTableNames));
 
         $joinTableNames = $this->getJoinTableNames();
         if ($joinTableNames) {
@@ -219,7 +218,7 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
      */
     protected function buildWhereClause(?array &$params, array &$sourceTableNamesCollector): ?string
     {
-        $columnNameToCriterions = $this->criteria->getMap();
+        $columnNameToCriterions = $this->criteria->getColumnFilter();
         if (!$columnNameToCriterions) {
             return null;
         }
@@ -227,8 +226,8 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
         $whereClause = [];
 
         foreach ($columnNameToCriterions as $criterion) {
-            foreach ($criterion->getAttachedCriterion() as $attachedCriterion) {
-                $rawTableName = $attachedCriterion->getTable();
+            foreach ($criterion->getAttachedFilter() as $attachedCriterion) {
+                $rawTableName = $attachedCriterion->getTableAlias();
                 if (!$rawTableName) {
                     continue;
                 }
@@ -246,12 +245,12 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
     /**
      * Set the criterion to be case insensitive if requested.
      *
-     * @param \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion $criterion
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface $criterion
      * @param string $realTableName
      *
      * @return void
      */
-    protected function setCriterionsIgnoreCase(AbstractCriterion $criterion, string $realTableName): void
+    protected function setCriterionsIgnoreCase(ColumnFilterInterface $criterion, string $realTableName): void
     {
         if (!$this->criteria->isIgnoreCase()) {
             return;

@@ -26,7 +26,9 @@ use Propel\Runtime\ActiveQuery\Criterion\RawModelCriterion;
 use Propel\Runtime\ActiveQuery\Criterion\SeveralModelCriterion;
 use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
 use Propel\Runtime\ActiveQuery\Exception\UnknownRelationException;
+use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\ActiveQuery\ModelCriteria as ActiveQueryModelCriteria;
+use Propel\Runtime\ActiveQuery\Util\ResolvedColumn;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\DataFetcher\DataFetcherInterface;
 use Propel\Runtime\Exception\ClassNotFoundException;
@@ -79,6 +81,8 @@ class ModelCriteria extends BaseModelCriteria
     public const FORMAT_ON_DEMAND = '\Propel\Runtime\Formatter\OnDemandFormatter';
 
     /**
+     * Parent query (i.e. this is a useQuery)
+     *
      * @var \Propel\Runtime\ActiveQuery\ModelCriteria|null
      */
     protected $primaryCriteria;
@@ -167,16 +171,16 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @see Criteria::add()
      *
-     * @param string $column A string representing thecolumn phpName, e.g. 'AuthorId'
+     * @param string $columnName A string representing thecolumn phpName, e.g. 'AuthorId'
      * @param mixed $value A value for the condition
      * @param string|null $comparison What to use for the column comparison, defaults to Criteria::EQUAL or Criteria::IN for subqueries
      *
      * @return $this The current object, for fluid interface
      */
-    public function filterBy(string $column, $value, ?string $comparison = null)
+    public function filterBy(string $columnName, $value, ?string $comparison = null)
     {
-        $columnName = $this->getRealColumnName($column);
-        $this->map[$columnName] = CriterionFactory::build($this, $columnName, $comparison, $value);
+        $columnMap = $this->getColumnMapByColumnName($columnName);
+        $this->filterColumn($columnMap, $value, $comparison);
 
         return $this;
     }
@@ -2097,9 +2101,9 @@ class ModelCriteria extends BaseModelCriteria
      * @param array $conditions The list of condition names, e.g. array('cond1', 'cond2')
      * @param string|null $operator An operator, Criteria::LOGICAL_AND (default) or Criteria::LOGICAL_OR
      *
-     * @return \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion A Criterion or ModelCriterion object
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface A Criterion or ModelCriterion object
      */
-    protected function getCriterionForConditions(array $conditions, ?string $operator = null): AbstractCriterion
+    protected function getCriterionForConditions(array $conditions, ?string $operator = null): ColumnFilterInterface
     {
         $operator = ($operator === null) ? Criteria::LOGICAL_AND : $operator;
         $this->combine($conditions, $operator, 'propel_temp_name');
@@ -2203,7 +2207,7 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
-     * @deprecated Use ColumnResolver::resolveColumn()
+     * @deprecated Use ModelCriteria::resolveColumn()
      *
      * @param string $columnName String representing the column name in a pseudo SQL clause, e.g. 'Book.Title'
      * @param bool $failSilently
@@ -2212,9 +2216,20 @@ class ModelCriteria extends BaseModelCriteria
      */
     public function getColumnFromName(string $columnName, bool $failSilently = true): array
     {
-        $resolvedColumn = $this->columnResolver->resolveColumn($columnName, $failSilently);
+        $resolvedColumn = $this->resolveColumn($columnName, $failSilently);
 
         return [$resolvedColumn->getColumnMap(), $resolvedColumn->getLocalColumnName()];
+    }
+
+    /**
+     * @param string $columnName
+     * @param bool $failSilently
+     *
+     * @return \Propel\Runtime\ActiveQuery\Util\ResolvedColumn
+     */
+    public function resolveColumn(string $columnName, bool $failSilently = true): ResolvedColumn
+    {
+        return $this->columnResolver->resolveColumn($columnName, $failSilently);
     }
 
     /**
@@ -2314,6 +2329,28 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @throws \Propel\Runtime\ActiveQuery\Exception\UnknownColumnException
      *
+     * @return \Propel\Runtime\Map\ColumnMap
+     */
+    protected function getColumnMapByColumnName(string $columnName): ColumnMap
+    {
+        $tableMap = $this->getTableMapOrFail();
+        if (!$tableMap->hasColumnByPhpName($columnName)) {
+            throw new UnknownColumnException('Unknown column ' . $columnName . ' in model ' . $this->modelName);
+        }
+
+        return $tableMap->getColumnByPhpName($columnName);
+    }
+
+    /**
+     * Return a fully qualified column name corresponding to a simple column phpName
+     * Uses model alias if it exists
+     * Warning: restricted to the columns of the main model
+     * e.g. => 'Title' => 'book.TITLE'
+     *
+     * @param string $columnName the Column phpName, without the table name
+     *
+     * @throws \Propel\Runtime\ActiveQuery\Exception\UnknownColumnException
+     *
      * @return string the fully qualified column name
      */
     protected function getRealColumnName(string $columnName): string
@@ -2365,6 +2402,27 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
+     * @param \Propel\Runtime\Map\ColumnMap $columnMap
+     * @param mixed $value
+     * @param string|null $operator
+     *
+     * @return $this
+     */
+    protected function filterColumn(ColumnMap $columnMap, $value = null, ?string $operator = null)
+    {
+        $tableAlias = $this->getTableNameInQuery();
+        $localColumnName = "$tableAlias." . $columnMap->getName();
+        $resolvedColumn = new ResolvedColumn($localColumnName, $columnMap, $tableAlias);
+
+        $filter = CriterionFactory::build($this, $resolvedColumn, $operator, $value);
+        $this->addUsingOperator($filter);
+
+        return $this;
+    }
+
+    /**
+     * @deprecated use ModelCriteria::buildBindParams()
+     *
      * Get all the parameters to bind to this criteria
      * Does part of the job of createSelectSql() for the cache
      *
@@ -2373,35 +2431,29 @@ class ModelCriteria extends BaseModelCriteria
      */
     public function getParams(): array
     {
+        return $this->buildBindParams();
+    }
+
+    /**
+     * Get all the parameters to bind to this criteria
+     * Does part of the job of createSelectSql() for the cache
+     *
+     * @return array list of parameters, each parameter being an array like
+     *               array('table' => $realtable, 'column' => $column, 'value' => $value)
+     */
+    public function buildBindParams(): array
+    {
         $params = [];
         $dbMap = Propel::getServiceContainer()->getDatabaseMap($this->getDbName());
 
-        foreach ($this->getMap() as $criterion) {
-            $table = null;
-            foreach ($criterion->getAttachedCriterion() as $attachedCriterion) {
-                $tableName = (string)$attachedCriterion->getTable();
-
-                $table = $this->getTableForAlias($tableName);
-                if ($table === null) {
-                    $table = $tableName;
-                }
-
-                if (
-                    ($this->isIgnoreCase() || method_exists($attachedCriterion, 'setIgnoreCase'))
-                    && $dbMap->getTable($table)->getColumn((string)$attachedCriterion->getColumn())->isText()
-                ) {
-                    $attachedCriterion->setIgnoreCase(true);
-                }
-            }
-
-            $sb = '';
-            $criterion->appendPsTo($sb, $params);
+        foreach ($this->getColumnFilter() as $criterion) {
+            $criterion->collectParameters($params);
         }
 
         $having = $this->getHaving();
         if ($having !== null) {
             $sb = '';
-            $having->appendPsTo($sb, $params);
+            $having->collectParameters($params);
         }
 
         return $params;

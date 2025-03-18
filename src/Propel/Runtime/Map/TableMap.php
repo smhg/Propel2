@@ -968,7 +968,7 @@ class TableMap
     public function extractPrimaryKey(Criteria $criteria): ?array
     {
         $pkCols = $this->getPrimaryKeys();
-        if (count($pkCols) !== count($criteria->getMap())) {
+        if (count($pkCols) !== count($criteria->getColumnFilter())) {
             return null;
         }
 
@@ -977,9 +977,9 @@ class TableMap
             $fqName = $pkCol->getFullyQualifiedName();
             $name = $pkCol->getName();
 
-            if ($criteria->containsKey($fqName)) {
+            if ($criteria->hasFilterOnColumn($fqName)) {
                 $value = $criteria->getValue($fqName);
-            } elseif ($criteria->containsKey($name)) {
+            } elseif ($criteria->hasFilterOnColumn($name)) {
                 $value = $criteria->getValue($name);
             } else {
                 return null;

@@ -8,8 +8,10 @@
 
 namespace Propel\Runtime\ActiveQuery\SqlBuilder;
 
+use LogicException;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion;
+use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\Propel;
 
 /**
@@ -99,6 +101,8 @@ abstract class AbstractSqlQueryBuilder
      * @param array<string> $columnNames
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $values
      *
+     * @throws \LogicException
+     *
      * @return array
      */
     public function buildParams(array $columnNames, ?Criteria $values = null): array
@@ -109,15 +113,19 @@ abstract class AbstractSqlQueryBuilder
 
         $params = [];
         foreach ($columnNames as $key) {
-            if (!$values->containsKey($key)) {
+            if (!$values->hasFilterOnColumn($key)) {
                 continue;
             }
             $crit = $values->getCriterion($key);
-            $params[] = [
-                'column' => $crit->getColumn(),
-                'table' => $crit->getTable(),
-                'value' => $crit->getValue(),
-            ];
+            if ($crit instanceof AbstractCriterion) {
+                $params[] = [
+                    'column' => $crit->getColumn(),
+                    'table' => $crit->getTableAlias(),
+                    'value' => $crit->getValue(),
+                ];
+            } else {
+                throw new LogicException('Insert/Update params should only be built by Criterions');
+            }
         }
 
         return $params;
@@ -126,16 +134,13 @@ abstract class AbstractSqlQueryBuilder
     /**
      * Build sql statement from a criteria and add it to the given statement collector.
      *
-     * @param \Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion $criterion
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface $criterion
      * @param array<mixed>|null $params
      *
      * @return string
      */
-    protected function buildStatementFromCriterion(AbstractCriterion $criterion, ?array &$params): string
+    protected function buildStatementFromCriterion(ColumnFilterInterface $criterion, ?array &$params): string
     {
-        $criterionSql = '';
-        $criterion->appendPsTo($criterionSql, $params);
-
-        return $this->criteria->replaceColumnNames($criterionSql);
+        return $criterion->buildStatement($params);
     }
 }
