@@ -175,8 +175,8 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
         }
 
         if (
-            !$filter instanceof AbstractFilter
-            || $this->query !== $filter->query
+            !$filter instanceof static
+            // || $this->query !== $filter->query
             || $this->value !== $filter->value
         ) {
             return false;

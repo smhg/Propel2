@@ -40,14 +40,19 @@ interface ColumnFilterInterface
     public function getLocalColumnName(): string;
 
     /**
-     * @return bool
-     */
-    public function hasValue(): bool;
-
-    /**
      * @return string|null
      */
     public function getTableAlias(): ?string;
+
+    /**
+     * @return string
+     */
+    public function getOperator(): string;
+
+    /**
+     * @return bool
+     */
+    public function hasValue(): bool;
 
     /**
      * @return mixed
@@ -62,7 +67,7 @@ interface ColumnFilterInterface
     /**
      * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface $filter
      *
-     * @return void
+     * @return bool
      */
     public function equals(ColumnFilterInterface $filter): bool;
 

@@ -38,6 +38,7 @@ use Propel\Runtime\Exception\RuntimeException;
 use Propel\Runtime\Exception\UnexpectedValueException;
 use Propel\Runtime\Formatter\SimpleArrayFormatter;
 use Propel\Runtime\Map\ColumnMap;
+use Propel\Runtime\Map\Exception\ColumnNotFoundException;
 use Propel\Runtime\Map\RelationMap;
 use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Propel;
@@ -171,18 +172,17 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @see Criteria::add()
      *
-     * @param string $columnName A string representing thecolumn phpName, e.g. 'AuthorId'
+     * @param string $columnPhpName A string representing thecolumn phpName, e.g. 'AuthorId'
      * @param mixed $value A value for the condition
      * @param string|null $comparison What to use for the column comparison, defaults to Criteria::EQUAL or Criteria::IN for subqueries
      *
-     * @return $this The current object, for fluid interface
+     * @return static The current object, for fluid interface
      */
-    public function filterBy(string $columnName, $value, ?string $comparison = null)
+    public function filterBy(string $columnPhpName, $value, ?string $comparison = null)
     {
-        $columnMap = $this->getColumnMapByColumnName($columnName);
-        $this->filterColumn($columnMap, $value, $comparison);
+        $resolvedColumn = $this->resolveLocalColumnByName($columnPhpName, true);
 
-        return $this;
+        return $this->addUsingOperator($resolvedColumn, $value, $comparison);
     }
 
     /**
@@ -705,7 +705,7 @@ class ModelCriteria extends BaseModelCriteria
      * </code>
      *
      * @param string $name The relation name or alias on which the join was created
-     * @param mixed $condition A Criterion object, or a condition name
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|string $condition A Criterion object, or a condition name
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
@@ -717,7 +717,7 @@ class ModelCriteria extends BaseModelCriteria
             throw new PropelException(sprintf('Setting a condition to a nonexistent join, %s. Try calling join() first.', $name));
         }
 
-        if ($condition instanceof AbstractCriterion) {
+        if ($condition instanceof ColumnFilterInterface) {
             $this->getJoin($name)->setJoinCondition($condition);
         } elseif (isset($this->namedCriterions[$condition])) {
             $this->getJoin($name)->setJoinCondition($this->namedCriterions[$condition]);
@@ -2342,6 +2342,28 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
+     * @param string $columnName
+     * @param bool $isPhpName
+     *
+     * @throws \Propel\Runtime\ActiveQuery\Exception\UnknownColumnException
+     *
+     * @return \Propel\Runtime\ActiveQuery\Util\ResolvedColumn
+     */
+    protected function resolveLocalColumnByName(string $columnName, bool $isPhpName = false): ResolvedColumn
+    {
+        $tableMap = $this->getTableMapOrFail();
+        try {
+            $columnMap = $isPhpName ? $tableMap->getColumnByPhpName($columnName) : $tableMap->getColumn($columnName);
+        } catch (ColumnNotFoundException $e) {
+            throw new UnknownColumnException('Unknown column ' . $columnName . ' in model ', 0, $e); // required in tests
+        }
+        $tableAlias = $this->getTableNameInQuery();
+        $localColumnName = $isPhpName ? "$tableAlias.{$columnMap->getName()}" : "$tableAlias.$columnName";
+
+        return new ResolvedColumn($localColumnName, $columnMap, $tableAlias);
+    }
+
+    /**
      * Return a fully qualified column name corresponding to a simple column phpName
      * Uses model alias if it exists
      * Warning: restricted to the columns of the main model
@@ -2384,38 +2406,90 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
+     * Method to return a Criterion that is not added automatically
+     * to this Criteria. This can be used to chain the
+     * Criterions to form a more complex where clause.
+     *
+     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string|null $column Full name of column (for example TABLE.COLUMN).
+     * @param mixed|null $value
+     * @param string|int|null $comparison Criteria comparison constant or PDO binding type
+     *
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface
+     */
+    public function getNewCriterion($column, $value = null, $comparison = null): ColumnFilterInterface
+    {
+        if (is_string($column)) {
+              $resolvedColumn = $this->resolveColumn($column);
+              $column = $resolvedColumn->isEmptyResolvedColumn() ? $column : $resolvedColumn;
+        }
+
+        return parent::getNewCriterion($column, $value, $comparison);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see Criteria::add()
+     *
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string|null $p1 The column to run the comparison on, or a Criterion object.
+     * @param mixed $value
+     * @param string|int|null $comparison A String.
+     *
+     * @return static A modified Criteria object.
+     */
+    public function add($p1, $value = null, $comparison = null)
+    {
+        if (is_string($p1)) {
+            $resolvedColumn = $this->resolveColumn($p1);
+            if (!$resolvedColumn->isEmptyResolvedColumn()) {
+                $this->map[$p1] = CriterionFactory::build($this, $resolvedColumn, $comparison, $value);
+
+                return $this;
+            }
+        }
+
+        return parent::add($p1, $value, $comparison);
+    }
+
+    /**
+     * @param string $andOr
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string $p1
+     * @param mixed $value
+     * @param string|int|null $condition
+     * @param bool $preferColumnCondition
+     *
+     * @return static
+     */
+    protected function addFilter(string $andOr, $p1, $value = null, $condition = null, bool $preferColumnCondition = true)
+    {
+        if (is_string($p1)) {
+            $resolvedColumn = $this->resolveColumn($p1);
+            if (!$resolvedColumn->isEmptyResolvedColumn()) {
+                $p1 = $resolvedColumn;
+            }
+        }
+
+        return parent::addFilter($andOr, $p1, $value, $condition, $preferColumnCondition);
+    }
+
+    /**
+     * @deprecated just use ModelCriteria::addUsingOperator(), local columns will be resolved anyway.
+     *
      * Overrides Criteria::add() to force the use of a true table alias if it exists
      *
      * @see Criteria::add()
      *
-     * @param string $column The colName of column to run the condition on (e.g. BookTableMap::ID)
+     * @param string $qualifiedColumnName The colName of column to run the condition on (e.g. BookTableMap::ID)
      * @param mixed $value
      * @param string|null $operator A String, like Criteria::EQUAL.
      *
      * @return $this A modified Criteria object.
      */
-    public function addUsingAlias(string $column, $value = null, ?string $operator = null)
+    public function addUsingAlias(string $qualifiedColumnName, $value = null, ?string $operator = null)
     {
-        $this->addUsingOperator($this->getAliasedColName($column), $value, $operator);
-
-        return $this;
-    }
-
-    /**
-     * @param \Propel\Runtime\Map\ColumnMap $columnMap
-     * @param mixed $value
-     * @param string|null $operator
-     *
-     * @return $this
-     */
-    protected function filterColumn(ColumnMap $columnMap, $value = null, ?string $operator = null)
-    {
-        $tableAlias = $this->getTableNameInQuery();
-        $localColumnName = "$tableAlias." . $columnMap->getName();
-        $resolvedColumn = new ResolvedColumn($localColumnName, $columnMap, $tableAlias);
-
-        $filter = CriterionFactory::build($this, $resolvedColumn, $operator, $value);
-        $this->addUsingOperator($filter);
+        $columnName = substr($qualifiedColumnName, (int)strrpos($qualifiedColumnName, '.') + 1);
+        $resolvedColumn = $this->resolveLocalColumnByName($columnName);
+        $this->addUsingOperator($resolvedColumn, $value, $operator);
 
         return $this;
     }

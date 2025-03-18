@@ -40,6 +40,6 @@ class LikeColumnFilter extends ColumnFilter
             }
         }
 
-        return "$field {$this->operator} $bindParam";
+        return "$field{$this->operator}$bindParam";
     }
 }

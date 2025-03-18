@@ -196,6 +196,14 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
     }
 
     /**
+     * @return string A String with the comparison.
+     */
+    public function getOperator(): string
+    {
+        return $this->comparison;
+    }
+
+    /**
      * Get the value.
      *
      * @return mixed An Object with the value.

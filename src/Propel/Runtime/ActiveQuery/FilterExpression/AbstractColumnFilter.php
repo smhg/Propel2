@@ -101,14 +101,24 @@ abstract class AbstractColumnFilter extends AbstractFilter
     }
 
     /**
-     * @return array{table: string, column: string, value: mixed}
+     * @return array{column: string, table: ?string, value: mixed}
      */
     protected function buildParameter(): array
+    {
+        return $this->buildParameterWithValue($this->value);
+    }
+
+    /**
+     * @param mixed $value
+     *
+     * @return array{table: ?string, column: string, value: mixed}
+     */
+    protected function buildParameterWithValue($value): array
     {
         return [
             'table' => $this->queryColumn->getLocalTableName(),
             'column' => $this->queryColumn->getColumnMap()->getName(),
-            'value' => $this->value,
+            'value' => $value,
         ];
     }
 
@@ -136,6 +146,7 @@ abstract class AbstractColumnFilter extends AbstractFilter
     public function equals(?object $filter): bool
     {
         return parent::equals($filter)
+            && $filter instanceof static
             && $this->operator === $filter->operator
             && $this->queryColumn->equals($filter->queryColumn);
     }

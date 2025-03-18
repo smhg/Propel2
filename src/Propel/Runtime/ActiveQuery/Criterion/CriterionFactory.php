@@ -8,11 +8,13 @@
 
 namespace Propel\Runtime\ActiveQuery\Criterion;
 
-use Exception;
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\ActiveQuery\FilterExpression\AbstractColumnFilter;
+use Propel\Runtime\ActiveQuery\FilterExpression\AbstractFilter;
+use Propel\Runtime\ActiveQuery\FilterExpression\BinaryColumnFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
+use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteral;
+use Propel\Runtime\ActiveQuery\FilterExpression\InColumnFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\LikeColumnFilter;
 use Propel\Runtime\ActiveQuery\Util\ResolvedColumn;
 
@@ -23,7 +25,7 @@ class CriterionFactory
 {
     /**
      * @param \Propel\Runtime\ActiveQuery\Criteria $criteria
-     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string $column
+     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string|null $column
      * @param string|int|null $comparison
      * @param mixed $value
      *
@@ -47,49 +49,45 @@ class CriterionFactory
             $comparison = Criteria::EQUAL;
         }
 
-        if ($column instanceof ResolvedColumn) {
-            return static::buildFilterCondition($criteria, $column, $comparison, $value);
-        } else {
+        if (is_string($column)) {
             return static::buildCriterion($criteria, $column, $comparison, $value);
+        } else {
+            return static::buildFilterCondition($criteria, $column, $comparison, $value);
         }
     }
 
     /**
      * @param \Propel\Runtime\ActiveQuery\Criteria $query
-     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn $column
+     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|null $column
      * @param string|null $comparison
      * @param mixed $value
      *
-     * @throws \Exception
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilter
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\AbstractFilter
      */
-    protected static function buildFilterCondition(Criteria $query, ResolvedColumn $column, $comparison = null, $value = null): AbstractColumnFilter
+    protected static function buildFilterCondition(Criteria $query, ?ResolvedColumn $column, $comparison = null, $value = null): AbstractFilter
     {
         switch ($comparison) {
+            case Criteria::IN:
+            case Criteria::NOT_IN:
+                // table.column IN (?, ?) or table.column NOT IN (?, ?)
+                // something like $c->add(BookTableMap::TITLE, array('foo', 'bar'), Criteria::IN);
+                return new InColumnFilter($query, $column, $comparison, $value);
             case Criteria::LIKE:
             case Criteria::NOT_LIKE:
             case Criteria::ILIKE:
             case Criteria::NOT_ILIKE:
                 // table.column LIKE ? or table.column NOT LIKE ?  (or ILIKE for Postgres)
                 // something like $c->add(BookTableMap::TITLE, 'foo%', Criteria::LIKE);
-                return new LikeColumnFilter($query, $column, $value, $comparison);
-            case Criteria::CUSTOM:
-                // custom expression with no parameter binding
-                // something like $c->add(BookTableMap::TITLE, "CONCAT(book.TITLE, 'bar') = 'foobar'", Criteria::CUSTOM);
-                //return new CustomCriterion($criteria, $value);
-            case Criteria::IN:
-            case Criteria::NOT_IN:
-                // table.column IN (?, ?) or table.column NOT IN (?, ?)
-                // something like $c->add(BookTableMap::TITLE, array('foo', 'bar'), Criteria::IN);
-                //return new InCriterion($criteria, $column, $value, $comparison);
-            // like
+                return new LikeColumnFilter($query, $column, $comparison, $value);
             case Criteria::BINARY_NONE:
             case Criteria::BINARY_ALL:
                 // table.column & ? = 0 (Similar to  "NOT IN")
                 // something like $c->add(BookTableMap::SOME_ARRAY_VAR, 26, Criteria::BINARY_NONE);
-                //return new BinaryCriterion($criteria, $column, $value, $comparison);
-                throw new Exception("Op $comparison nyi");
+                return new BinaryColumnFilter($query, $column, $comparison, $value);
+            case Criteria::CUSTOM:
+                // custom expression with no parameter binding
+                // something like $c->add(BookTableMap::TITLE, "CONCAT(book.TITLE, 'bar') = 'foobar'", Criteria::CUSTOM);
+                return new FilterClauseLiteral($query, $value);
             default:
                 // simple comparison
                 // something like $c->add(BookTableMap::PRICE, 12, Criteria::GREATER_THAN);

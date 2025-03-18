@@ -413,4 +413,12 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
 
         return null;
     }
+
+    /**
+     * @return \Propel\Runtime\ActiveQuery\Util\ColumnResolver
+     */
+    public function getColumnResolver(): ColumnResolver
+    {
+        return $this->columnResolver;
+    }
 }

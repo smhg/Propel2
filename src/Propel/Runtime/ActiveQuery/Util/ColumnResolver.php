@@ -54,6 +54,18 @@ class ColumnResolver
     }
 
     /**
+     * @param string $sql SQL clause to inspect (modified by the method)
+     *
+     * @return array<\Propel\Runtime\ActiveQuery\Util\ResolvedColumn>
+     */
+    public function resolveColumns(string &$sql): array
+    {
+        $sql = $this->replaceColumnNames($sql);
+
+        return $this->replacedColumns;
+    }
+
+    /**
      * @deprecated old version of ColumnResolver::replaceColumnNames().
      *
      * @param string $sql SQL clause to inspect (modified by the method)
