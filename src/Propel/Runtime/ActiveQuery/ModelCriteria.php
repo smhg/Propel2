@@ -16,7 +16,6 @@ use Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion;
 use Propel\Runtime\ActiveQuery\Criterion\BasicModelCriterion;
 use Propel\Runtime\ActiveQuery\Criterion\BinaryModelCriterion;
 use Propel\Runtime\ActiveQuery\Criterion\ColumnToQueryOperatorCriterion;
-use Propel\Runtime\ActiveQuery\Criterion\CriterionFactory;
 use Propel\Runtime\ActiveQuery\Criterion\CustomCriterion;
 use Propel\Runtime\ActiveQuery\Criterion\ExistsQueryCriterion;
 use Propel\Runtime\ActiveQuery\Criterion\InModelCriterion;
@@ -27,6 +26,7 @@ use Propel\Runtime\ActiveQuery\Criterion\SeveralModelCriterion;
 use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
 use Propel\Runtime\ActiveQuery\Exception\UnknownRelationException;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
+use Propel\Runtime\ActiveQuery\FilterExpression\FilterFactory;
 use Propel\Runtime\ActiveQuery\ModelCriteria as ActiveQueryModelCriteria;
 use Propel\Runtime\ActiveQuery\Util\ResolvedColumn;
 use Propel\Runtime\Connection\ConnectionInterface;
@@ -2442,7 +2442,7 @@ class ModelCriteria extends BaseModelCriteria
         if (is_string($p1)) {
             $resolvedColumn = $this->resolveColumn($p1);
             if (!$resolvedColumn->isEmptyResolvedColumn()) {
-                $this->map[$p1] = CriterionFactory::build($this, $resolvedColumn, $comparison, $value);
+                $this->map[$p1] = FilterFactory::build($this, $resolvedColumn, $comparison, $value);
 
                 return $this;
             }

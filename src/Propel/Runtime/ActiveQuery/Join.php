@@ -8,8 +8,8 @@
 
 namespace Propel\Runtime\ActiveQuery;
 
-use Propel\Runtime\ActiveQuery\Criterion\CriterionFactory;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
+use Propel\Runtime\ActiveQuery\FilterExpression\FilterFactory;
 use Propel\Runtime\ActiveQuery\Join as ActiveQueryJoin;
 use Propel\Runtime\Adapter\AdapterInterface;
 use Propel\Runtime\Exception\LogicException;
@@ -745,21 +745,21 @@ class Join
         $joinCondition = null;
         for ($i = 0; $i < $this->count; $i++) {
             if ($this->leftValues[$i]) {
-                $criterion = CriterionFactory::build(
+                $criterion = FilterFactory::build(
                     $c,
                     $this->getLeftColumn($i),
                     self::EQUAL,
                     $this->leftValues[$i],
                 );
             } elseif ($this->rightValues[$i]) {
-                $criterion = CriterionFactory::build(
+                $criterion = FilterFactory::build(
                     $c,
                     $this->getRightColumn($i),
                     self::EQUAL,
                     $this->rightValues[$i],
                 );
             } else {
-                $criterion = CriterionFactory::build(
+                $criterion = FilterFactory::build(
                     $c,
                     $this->getLeftColumn($i),
                     Criteria::CUSTOM,

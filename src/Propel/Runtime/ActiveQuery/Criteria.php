@@ -10,9 +10,9 @@ namespace Propel\Runtime\ActiveQuery;
 
 use Exception;
 use Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion;
-use Propel\Runtime\ActiveQuery\Criterion\CriterionFactory;
 use Propel\Runtime\ActiveQuery\FilterExpression\AbstractColumnFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
+use Propel\Runtime\ActiveQuery\FilterExpression\FilterFactory;
 use Propel\Runtime\ActiveQuery\QueryExecutor\CountQueryExecutor;
 use Propel\Runtime\ActiveQuery\QueryExecutor\DeleteAllQueryExecutor;
 use Propel\Runtime\ActiveQuery\QueryExecutor\DeleteQueryExecutor;
@@ -724,7 +724,7 @@ class Criteria
      */
     public function getNewCriterion($column, $value = null, $comparison = null): ColumnFilterInterface
     {
-        return CriterionFactory::build($this, $column, $comparison, $value);
+        return FilterFactory::build($this, $column, $comparison, $value);
     }
 
     /**
@@ -1167,7 +1167,7 @@ class Criteria
             $conditionClause .= $rightTableAlias ? $rightTableAlias . '.' : ($rightTableName ? $rightTableName . '.' : '');
             $conditionClause .= $rightColumnName;
             $fullColumnName = $leftTableName . '.' . $leftColumnName;
-            $criterion = CriterionFactory::build($this, $fullColumnName, self::CUSTOM, $conditionClause);
+            $criterion = FilterFactory::build($this, $fullColumnName, self::CUSTOM, $conditionClause);
 
             if ($joinCondition === null) {
                 $joinCondition = $criterion;
@@ -2029,7 +2029,7 @@ class Criteria
 
         // $comparison is one of Criteria's constants, or a PDO binding type
         // something like $c->add(BookTableMap::TITLE, 'War%', Criteria::LIKE);
-        return CriterionFactory::build($this, $p1, $comparison, $value);
+        return FilterFactory::build($this, $p1, $comparison, $value);
     }
 
     /**

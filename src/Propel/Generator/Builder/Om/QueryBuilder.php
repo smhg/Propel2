@@ -170,7 +170,7 @@ class QueryBuilder extends AbstractOMBuilder
             '\Propel\Runtime\Propel',
             '\Propel\Runtime\ActiveQuery\ModelCriteria',
             '\Propel\Runtime\ActiveQuery\Criteria',
-            '\Propel\Runtime\ActiveQuery\Criterion\CriterionFactory',
+            '\Propel\Runtime\ActiveQuery\FilerExpression\FilterFactory',
             '\Propel\Runtime\ActiveQuery\ModelJoin',
             '\Exception',
             '\Propel\Runtime\Exception\PropelException',
