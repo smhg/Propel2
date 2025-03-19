@@ -201,15 +201,9 @@ class ColumnResolver
         }
 
         if (!$isColumnFound && $query instanceof ModelCriteria && $query->getPrimaryCriteria()) {
-            // Propel does not use alias on topmost query, so $prefix might be an unused alias - FIXME: use alias if specified
-            $parentQuery = $query->getPrimaryCriteria();
-            while ($parentQuery->getPrimaryCriteria()) {
-                $parentQuery = $parentQuery->getPrimaryCriteria();
-            }
-            if ($prefix === $parentQuery->getModelAlias()) {
-                $tableAlias = $parentQuery->getTableMap()->getName();
-
-                return new ResolvedColumn("$tableAlias.$columnName", null, $tableAlias);
+            $resolvedColumn = $this->getQueryFromOuterQuery($query, $prefix, $columnName);
+            if ($resolvedColumn) {
+                return $resolvedColumn;
             }
         }
 
@@ -235,6 +229,45 @@ class ColumnResolver
         } else {
             throw new UnknownColumnException(sprintf('Unknown column "%s" on model, alias or table "%s"', $columnName, $prefix));
         }
+    }
+
+    /**
+     * @param \Propel\Runtime\ActiveQuery\ModelCriteria $query
+     * @param string $prefix
+     * @param string $columnName
+     *
+     * @return \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|null
+     */
+    protected function getQueryFromOuterQuery(ModelCriteria $query, string $prefix, string $columnName): ?ResolvedColumn
+    {
+        // HACK - Propel does not use alias on topmost query, so $prefix might be an unused alias - FIXME: use alias if specified
+
+        if (!$query->getPrimaryCriteria()) {
+            return null;
+        }
+
+        $tableAlias = null;
+        $tableMap = null;
+        $parentQuery = $query;
+        while (!$tableAlias && $parentQuery->getPrimaryCriteria()) {
+            $parentQuery = $parentQuery->getPrimaryCriteria();
+            [$tableAlias, $tableMap] = $this->findTableForColumnIdentifierInQuery($prefix, $parentQuery);
+        }
+
+        if (!$tableAlias) {
+            return null;
+        }
+
+        if (!$parentQuery->getPrimaryCriteria() && $prefix === $parentQuery->getModelAlias() && $tableMap) {
+            $tableAlias = $tableMap->getName(); // outmost query don't use alias
+        }
+
+        $columnMap = $tableMap->findColumnByName($columnName);
+        if ($columnMap) {
+            $columnName = $columnMap->getName();
+        }
+
+        return new ResolvedColumn("$tableAlias.$columnName", null, $tableAlias);
     }
 
     /**

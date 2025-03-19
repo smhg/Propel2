@@ -15,6 +15,8 @@ use Propel\Runtime\ActiveQuery\FilterExpression\AbstractFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\BinaryColumnFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
+use Propel\Runtime\ActiveQuery\FilterExpression\ColumnToQueryFilter;
+use Propel\Runtime\ActiveQuery\FilterExpression\ExistsColumnFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithColumns;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithPdoTypes;
 use Propel\Runtime\ActiveQuery\FilterExpression\InColumnFilter;
@@ -53,9 +55,11 @@ class CriterionFactory
         }
 
         if ($value instanceof Criteria) {
-            $columnName = $columnOrClause instanceof ResolvedColumn ? $columnOrClause->getLocalColumnName() : $columnOrClause; // TODO
+            if (is_string($columnOrClause)) {
+                throw new LogicException("Cannot use unresolved column name as input for subquery filter ($comparison)");
+            }
 
-            return static::buildCriterionWithCriteria($criteria, $columnName, $comparison, $value);
+            return static::buildSubqueryFilter($criteria, $columnOrClause, $comparison, $value);
         } elseif ($comparison === null) {
             $comparison = Criteria::EQUAL;
         }
@@ -103,6 +107,33 @@ class CriterionFactory
                 // simple comparison
                 // something like $c->add(BookTableMap::PRICE, 12, Criteria::GREATER_THAN);
                 return new ColumnFilter($query, $column, $comparison, $value);
+        }
+    }
+
+    /**
+     * @param \Propel\Runtime\ActiveQuery\Criteria $outerQuery
+     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|null $column
+     * @param string|null $comparison
+     * @param \Propel\Runtime\ActiveQuery\Criteria $innerQuery
+     *
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\AbstractFilter
+     */
+    protected static function buildSubqueryFilter(
+        Criteria $outerQuery,
+        $column,
+        ?string $comparison,
+        Criteria $innerQuery
+    ): AbstractFilter {
+        if ($comparison === null) {
+            $comparison = Criteria::IN;
+        }
+
+        switch ($comparison) {
+            case ExistsQueryCriterion::TYPE_EXISTS:
+            case ExistsQueryCriterion::TYPE_NOT_EXISTS:
+                return new ExistsColumnFilter($outerQuery, null, $comparison, $innerQuery);
+            default:
+                return new ColumnToQueryFilter($outerQuery, $column, $comparison, $innerQuery);
         }
     }
 

@@ -542,6 +542,23 @@ class ModelCriteriaTest extends BookstoreTestBase
         $this->assertCriteriaTranslation($c, $sql, $params, $description);
     }
 
+
+
+    /**
+     * @return void
+     */
+    public function testFilterByWithSubqueryReplacesNames()
+    {
+        $subquery = AuthorQuery::create('a')->where('b.AuthorId = a.FirstName');
+        $c = BookQuery::create('b')->add(null, $subquery, 'EXISTS');
+
+        $expectedQuery = "SELECT  FROM book WHERE EXISTS (SELECT 1 AS existsFlag FROM author WHERE book.author_id = author.first_name)";
+        $sql = $this->getSql($expectedQuery);
+
+        $params = [];
+        $this->assertCriteriaTranslation($c, $sql, $params, '');
+    }
+
     /**
      * @return void
      */

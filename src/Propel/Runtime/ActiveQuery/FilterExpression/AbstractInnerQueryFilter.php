@@ -9,6 +9,7 @@
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
 use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\ActiveQuery\Join;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\ActiveQuery\Util\ResolvedColumn;
@@ -16,7 +17,7 @@ use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Map\RelationMap;
 
 /**
- * Abstract filter for nested filter expression, that bind an inner query
+ * Abstract filter for nested filter expression that bind an inner query
  * with an operator like IN, EXISTS
  *
  * @phpstan-consistent-constructor
@@ -103,6 +104,34 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
         $this->queryColumn = $queryColumn;
         $this->sqlOperator = $this->resolveOperator($operator);
         $this->innerQuery = $innerQuery;
+
+        if ($this->innerQuery instanceof ModelCriteria && $outerQuery instanceof ModelCriteria) {
+            $this->innerQuery->setPrimaryCriteria($outerQuery, new Join()); // HACK - ColumnResolver uses primary criteria to remove aliases from topmost query
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getLocalColumnName(): string
+    {
+        return $this->queryColumn ? $this->queryColumn->getQueryColumnLiteral() : '';
+    }
+
+    /**
+     * @return string
+     */
+    public function getOperator(): string
+    {
+        return $this->sqlOperator;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTableAlias(): ?string
+    {
+        return $this->queryColumn ? $this->queryColumn->getTableAlias() : null;
     }
 
     /**
@@ -119,9 +148,9 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
             $leftHandOperator = $this->queryColumn->getQueryColumnLiteral() . ' ';
         }
         $innerQuery = $this->processInnerQuery()->createSelectSql($paramCollector);
-        $this->query->replaceNames($innerQuery); // fixup column names from outer query
+        //$this->query->replaceNames($innerQuery); // fixup column names from outer query
 
-        return "{$leftHandOperator}$this->sqlOperator ($innerQuery}";
+        return "{$leftHandOperator}$this->sqlOperator ($innerQuery)";
     }
 
     /**
