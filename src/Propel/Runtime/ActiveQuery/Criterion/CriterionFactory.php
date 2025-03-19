@@ -8,12 +8,15 @@
 
 namespace Propel\Runtime\ActiveQuery\Criterion;
 
+use LogicException;
 use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException;
 use Propel\Runtime\ActiveQuery\FilterExpression\AbstractFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\BinaryColumnFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
-use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteral;
+use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithColumns;
+use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithPdoTypes;
 use Propel\Runtime\ActiveQuery\FilterExpression\InColumnFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\LikeColumnFilter;
 use Propel\Runtime\ActiveQuery\Util\ResolvedColumn;
@@ -25,34 +28,42 @@ class CriterionFactory
 {
     /**
      * @param \Propel\Runtime\ActiveQuery\Criteria $criteria
-     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string|null $column
+     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string|null $columnOrClause
      * @param string|int|null $comparison
      * @param mixed $value
      *
+     * @throws \LogicException
+     * @throws \Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException
+     *
      * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface
      */
-    public static function build(Criteria $criteria, $column, $comparison = null, $value = null): ColumnFilterInterface
+    public static function build(Criteria $criteria, $columnOrClause, $comparison = null, $value = null): ColumnFilterInterface
     {
         if (is_int($comparison)) {
             // $comparison is a PDO::PARAM_* constant value
             // something like $c->add('foo like ?', '%bar%', PDO::PARAM_STR);
-            $columnName = $column instanceof ResolvedColumn ? $column->getLocalColumnName() : $column; // TODO
 
-            return new RawCriterion($criteria, $columnName, $value, $comparison);
+            if ($columnOrClause === null) {
+                throw new InvalidClauseException('Empty clause in column filter - Passing PDO type to Criteria::where()/Criteria::and() requires a non-empty clause.');
+            } elseif ($columnOrClause instanceof ResolvedColumn) {
+                throw new LogicException('Column of clause with PDO types was resolved, but should have remained a string. Resolved column: ' . print_r($columnOrClause, true));
+            }
+
+            return new FilterClauseLiteralWithPdoTypes($criteria, $columnOrClause, $value, $comparison);
         }
 
         if ($value instanceof Criteria) {
-            $columnName = $column instanceof ResolvedColumn ? $column->getLocalColumnName() : $column; // TODO
+            $columnName = $columnOrClause instanceof ResolvedColumn ? $columnOrClause->getLocalColumnName() : $columnOrClause; // TODO
 
             return static::buildCriterionWithCriteria($criteria, $columnName, $comparison, $value);
         } elseif ($comparison === null) {
             $comparison = Criteria::EQUAL;
         }
 
-        if (is_string($column)) {
-            return static::buildCriterion($criteria, $column, $comparison, $value);
+        if (is_string($columnOrClause)) {
+            return static::buildCriterion($criteria, $columnOrClause, $comparison, $value);
         } else {
-            return static::buildFilterCondition($criteria, $column, $comparison, $value);
+            return static::buildFilterCondition($criteria, $columnOrClause, $comparison, $value);
         }
     }
 
@@ -87,7 +98,7 @@ class CriterionFactory
             case Criteria::CUSTOM:
                 // custom expression with no parameter binding
                 // something like $c->add(BookTableMap::TITLE, "CONCAT(book.TITLE, 'bar') = 'foobar'", Criteria::CUSTOM);
-                return new FilterClauseLiteral($query, $value);
+                return new FilterClauseLiteralWithColumns($query, $value);
             default:
                 // simple comparison
                 // something like $c->add(BookTableMap::PRICE, 12, Criteria::GREATER_THAN);

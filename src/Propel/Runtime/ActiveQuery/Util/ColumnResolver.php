@@ -58,7 +58,7 @@ class ColumnResolver
      *
      * @return array<\Propel\Runtime\ActiveQuery\Util\ResolvedColumn>
      */
-    public function resolveColumns(string &$sql): array
+    public function resolveColumnsAndAdjustExpressions(string &$sql): array
     {
         $sql = $this->replaceColumnNames($sql);
 

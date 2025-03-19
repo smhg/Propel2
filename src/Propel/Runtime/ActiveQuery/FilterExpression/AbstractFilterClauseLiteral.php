@@ -10,12 +10,13 @@ namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException;
-use Propel\Runtime\ActiveQuery\ModelCriteria;
 
 /**
  * A full filter statement given as a string, i.e. `col = ?`, `col1 = col2`, `col IS NULL`, `1=1`
+ * 
+ * Child classes have to figure out how to get PDO types for columns.
  */
-class FilterClauseLiteral extends AbstractFilter
+abstract class AbstractFilterClauseLiteral extends AbstractFilter
 {
     /**
      * @var string
@@ -34,6 +35,16 @@ class FilterClauseLiteral extends AbstractFilter
     }
 
     /**
+     * Build parameter for Propel prepared statement.
+     * 
+     * @param int $position
+     * @param mixed $value
+     *
+     * @return array{table: null, column?: string|\Propel\Runtime\ActiveQuery\Util\ResolvedColumn, type?: int, value: mixed}
+     */
+    abstract protected function buildParameterByPosition(int $position, $value): array;
+
+    /**
      * @param array<array> $paramCollector A list to which Prepared Statement parameters will be appended
      *
      * @throws \Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException
@@ -42,24 +53,18 @@ class FilterClauseLiteral extends AbstractFilter
      */
     protected function buildFilterClause(array &$paramCollector): string
     {
-        $columns = $this->query instanceof ModelCriteria ? $this->query->getColumnResolver() : [];
-
-        $replacements = substr_count($this->clause, '?');
-        if (!$replacements) {
+        $numberOfPlaceholders = substr_count($this->clause, '?');
+        if ($numberOfPlaceholders === 0) {
             return $this->clause;
-        }
-
-        if (!$columns && $this->value) {
-            throw new InvalidClauseException($this->clause . ' - Cannot find column to determine value type');
         }
 
         // single value
 
         if (!is_array($this->value)) {
-            if ($replacements > 1) {
+            if ($numberOfPlaceholders > 1) {
                 throw new InvalidClauseException($this->clause . ' - Not enough values provided for clause');
             }
-            $parameter = $this->buildParameterByPosition($columns, 0, $this->value);
+            $parameter = $this->buildParameterByPosition(0, $this->value);
             $placeholder = $this->addParameter($paramCollector, $parameter);
 
             return str_replace('?', $placeholder, $this->clause);
@@ -67,48 +72,29 @@ class FilterClauseLiteral extends AbstractFilter
 
         // array of values
 
-        if ($replacements > 1 && $replacements !== count($this->value)) {
+        if ($numberOfPlaceholders > 1 && $numberOfPlaceholders !== count($this->value)) {
             throw new InvalidClauseException($this->clause . ' - Number of placeholders does not match number of values in clause.');
         }
 
-        $placeholderCollector = $replacements === 1 ? [] : null;
+        $buildPlaceholderList = ($numberOfPlaceholders === 1); // single placeholder means we need a list ("col IN ?" => "col in (:p1, :p2)")
+        $placeholderCollector = $buildPlaceholderList ? [] : null; 
         $clause = (string)$this->clause;
-        $columnsMatchValues = count($columns) === count($this->value);
-        foreach (array_values($this->value) as $index => $value) {
-            $columnIndex = $columnsMatchValues ? $index : 0;
-            $parameter = $this->buildParameterByPosition($columns, $columnIndex, $value);
+        foreach (array_values($this->value) as $columnIndex => $value) {
+            $parameter = $this->buildParameterByPosition($columnIndex, $value);
             $placeholder = $this->addParameter($paramCollector, $parameter);
-            if ($placeholderCollector) {
+            if ($buildPlaceholderList) {
                 $placeholderCollector[] = $placeholder;
             } else {
                 $clause = str_replace('?', $placeholder, $clause);
             }
         }
 
-        if ($placeholderCollector) {
+        if ($buildPlaceholderList) {
             $placeholderList = '(' . implode(',', $placeholderCollector) . ')';
             $clause = str_replace('?', $placeholderList, $clause);
         }
 
         return $clause;
-    }
-
-    /**
-     * @param array<\Propel\Runtime\ActiveQuery\Util\ResolvedColumn> $parsedColumns
-     * @param int $position
-     * @param mixed $value
-     *
-     * @return array
-     */
-    protected function buildParameterByPosition(array $parsedColumns, int $position, $value): array
-    {
-        $ix = count($parsedColumns) > 1 ? $position : 0;
-
-        return [
-            'table' => null,
-            'column' => $parsedColumns[$ix],
-            'value' => $value,
-        ];
     }
 
     /**

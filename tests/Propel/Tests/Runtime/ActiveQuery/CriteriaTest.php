@@ -10,7 +10,6 @@ namespace Propel\Tests\Runtime\ActiveQuery;
 
 use PDO;
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\ActiveQuery\Join;
 use Propel\Runtime\ActiveQuery\Lock;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\Adapter\Pdo\MysqlAdapter;
