@@ -22,7 +22,7 @@ class LikeColumnFilter extends ColumnFilter
   */
     protected function buildFilterClause(array &$paramCollector): string
     {
-        $field = $this->getColumnLiteral();
+        $field = $this->getLocalColumnName();
         $bindParam = $this->addParameter($paramCollector);
 
         if ($this->isIgnoreCase()) {

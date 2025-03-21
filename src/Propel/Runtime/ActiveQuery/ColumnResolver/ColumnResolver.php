@@ -6,9 +6,16 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Runtime\ActiveQuery\Util;
+ namespace Propel\Runtime\ActiveQuery\ColumnResolver;
 
+use LogicException;
 use Propel\Runtime\ActiveQuery\BaseModelCriteria;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\LocalColumnExpression;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\RemoteColumnExpression;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\RemoteTypedColumnExpression;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UnresolvedColumnExpression;
+use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
 use Propel\Runtime\ActiveQuery\Exception\UnknownModelException;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -25,7 +32,7 @@ class ColumnResolver
     /**
      * ColumnMap for columns found in statement
      *
-     * @var array<\Propel\Runtime\ActiveQuery\Util\ResolvedColumn>
+     * @var array<\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression>
      */
     private $replacedColumns = [];
 
@@ -44,9 +51,9 @@ class ColumnResolver
      *
      * @param string $clause
      *
-     * @return \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|null
+     * @return \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|null
      */
-    public function resolveFirstColumn(string $clause): ?ResolvedColumn
+    public function resolveFirstColumn(string $clause): ?AbstractColumnExpression
     {
         $this->replaceColumnNames($clause);
 
@@ -56,7 +63,7 @@ class ColumnResolver
     /**
      * @param string $sql SQL clause to inspect (modified by the method)
      *
-     * @return array<\Propel\Runtime\ActiveQuery\Util\ResolvedColumn>
+     * @return array<AbstractColumnExpression>
      */
     public function resolveColumnsAndAdjustExpressions(string &$sql): array
     {
@@ -91,10 +98,11 @@ class ColumnResolver
      * </code>
      *
      * @param string $sql SQL clause to inspect
+     * @param bool $preferAsColumns Set to true if the SQL clause has access to AS clauses (i.e. HAVING, subquery)
      *
      * @return string modified statement
      */
-    public function replaceColumnNames(string $sql): string
+    public function replaceColumnNames(string $sql, bool $preferAsColumns = false): string
     {
         $this->replacedColumns = [];
 
@@ -147,61 +155,59 @@ class ColumnResolver
     {
         $key = $matches[0];
         $resolvedColumn = $this->resolveColumn($key);
-
+/*
         if (!$resolvedColumn->isFromLocalTable()) {
+            $this->replacedColumns[] = $resolvedColumn;
             return $this->query->quoteColumnIdentifier($resolvedColumn->getLocalColumnName() ?? $key);
         }
-
-        $this->replacedColumns[] = $resolvedColumn;
-
-        return $this->query->quoteColumnIdentifier($resolvedColumn->getLocalColumnName(), $resolvedColumn->getTableMap());
+*/
+        if (!$resolvedColumn instanceof UnresolvedColumnExpression) {
+            $this->replacedColumns[] = $resolvedColumn;
+        }
+        
+        return $resolvedColumn->getColumnExpressionInQuery(true);
     }
 
     /**
-     * Finds a column and a SQL translation for a pseudo SQL column name.
      *
-     * Examples:
-     * <code>
-     * $c->resolveColumn('Book.Title');
-     *   => new ResolvedColumn('book.title', $bookTitleColumnMap)
-     *
-     * $c->join('Book.Author a')->resolveColumn('a.FirstName');
-     *   => new ResolvedColumn('a.first_name', $authorFirstNameColumnMap)
-     * </code>
-     *
-     * @param string $columnName String representing the column name in a pseudo SQL clause, e.g. 'Book.Title'
+     * @param string $columnIdentifier String representing the column name in a pseudo SQL clause, e.g. 'Book.Title'
      * @param bool $failSilently
+     * @param bool $hasAccessToOutputColumns Set true if column is accessed from output of the query, i.e. in HAVING or when query is a subquery.  
      *
      * @throws \Propel\Runtime\ActiveQuery\Exception\UnknownColumnException
      * @throws \Propel\Runtime\ActiveQuery\Exception\UnknownModelException
      *
-     * @return \Propel\Runtime\ActiveQuery\Util\ResolvedColumn
+     * @return AbstractColumnExpression
      */
-    public function resolveColumn(string $columnName, bool $failSilently = true): ResolvedColumn
+    public function resolveColumn(string $columnIdentifier, bool $failSilently = true, bool $hasAccessToOutputColumns = false): AbstractColumnExpression
     {
-        $query = $this->query;
+        $sourceQuery = $this->query;
 
-        if (strpos($columnName, '.') === false) {
-            $prefix = (string)$query->getModelAliasOrName();
-        } else {
-            // $prefix could be either class name or table name
-            [$prefix, $columnName] = explode('.', $columnName);
+        if ($hasAccessToOutputColumns && $sourceQuery->getColumnForAs($columnIdentifier)) {
+            return new RemoteColumnExpression($sourceQuery, null, $columnIdentifier);
         }
 
-        [$tableAlias, $tableMap] = $this->findTableForColumnIdentifierInQuery($prefix, $query);
+        if (strpos($columnIdentifier, '.') === false) {
+            $prefix = (string)$sourceQuery->getModelAliasOrName();
+        } else {
+            // $prefix could be either class name or table name
+            [$prefix, $columnIdentifier] = explode('.', $columnIdentifier);
+        }
+
+        [$tableAlias, $tableMap] = $this->resolveTableIdentifierInQuery($prefix, $sourceQuery);
         $isColumnFound = (bool)$tableAlias;
 
         if ($tableAlias && !$tableMap) {
             // local column (join without model)
-            return new ResolvedColumn("$tableAlias.$columnName", null, $tableAlias);
+            return new RemoteColumnExpression($sourceQuery, $tableAlias, $columnIdentifier);
         }
 
-        if (!$isColumnFound && $query->hasSelectQuery($prefix)) {
-            return $this->getColumnFromSubQuery($prefix, $columnName, $failSilently);
+        if (!$isColumnFound && $sourceQuery->hasSelectQuery($prefix)) {
+            return $this->getColumnFromSubQuery($sourceQuery, $sourceQuery->getSelectQuery($prefix), $prefix, $columnIdentifier, $failSilently);
         }
 
-        if (!$isColumnFound && $query instanceof ModelCriteria && $query->getPrimaryCriteria()) {
-            $resolvedColumn = $this->getQueryFromOuterQuery($query, $prefix, $columnName);
+        if (!$isColumnFound && $sourceQuery instanceof ModelCriteria && $sourceQuery->getPrimaryCriteria()) {
+            $resolvedColumn = $this->getQueryFromOuterQuery($sourceQuery, $prefix, $columnIdentifier);
             if ($resolvedColumn) {
                 return $resolvedColumn;
             }
@@ -209,89 +215,93 @@ class ColumnResolver
 
         if (!$tableMap) {
             if ($failSilently) {
-                return ResolvedColumn::getEmptyResolvedColumn();
+                return new UnresolvedColumnExpression($sourceQuery, $tableAlias ?? $prefix, $columnIdentifier);
             }
 
             throw new UnknownModelException(sprintf('Unknown model, alias or table "%s"', $prefix));
         }
 
-        $column = $tableMap->findColumnByName($columnName);
+        $columnMap = $tableMap->findColumnByName($columnIdentifier);
 
-        if ($column !== null) {
-            $columnName = $column->getName();
+        if ($columnMap !== null) {
+            $columnIdentifier = $columnMap->getName();
 
-            return new ResolvedColumn("$tableAlias.$columnName", $column, $tableAlias);
-        } elseif ($query->getColumnForAs($columnName)) {
+            return new LocalColumnExpression($sourceQuery, $tableAlias, $columnMap);
+        } elseif ($sourceQuery->getColumnForAs($columnIdentifier)) {
             // local column
-            return new ResolvedColumn($columnName);
-        } elseif ($failSilently) {
-            return ResolvedColumn::getEmptyResolvedColumn();
-        } else {
-            throw new UnknownColumnException(sprintf('Unknown column "%s" on model, alias or table "%s"', $columnName, $prefix));
+            throw new LogicException('AS columns should not be resolved like this...');
         }
+        
+        if (!$failSilently) {
+            throw new UnknownColumnException(sprintf('Unknown column "%s" on model, alias or table "%s"', $columnIdentifier, $prefix));
+        }
+
+        return new UnresolvedColumnExpression($sourceQuery, $tableAlias ?? $prefix, $columnIdentifier);
     }
 
     /**
-     * @param \Propel\Runtime\ActiveQuery\ModelCriteria $query
+     * @param \Propel\Runtime\ActiveQuery\ModelCriteria $sourceQuery
      * @param string $prefix
-     * @param string $columnName
+     * @param string $columnIdentifier
      *
-     * @return \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|null
+     * @return AbstractColumnExpression|null
      */
-    protected function getQueryFromOuterQuery(ModelCriteria $query, string $prefix, string $columnName): ?ResolvedColumn
+    protected function getQueryFromOuterQuery(ModelCriteria $sourceQuery, string $prefix, string $columnIdentifier): ?AbstractColumnExpression
     {
         // HACK - Propel does not use alias on topmost query, so $prefix might be an unused alias - FIXME: use alias if specified
 
-        if (!$query->getPrimaryCriteria()) {
+        if (!$sourceQuery->getPrimaryCriteria()) {
             return null;
         }
 
         $tableAlias = null;
         $tableMap = null;
-        $parentQuery = $query;
+        $parentQuery = $sourceQuery;
         while (!$tableAlias && $parentQuery->getPrimaryCriteria()) {
             $parentQuery = $parentQuery->getPrimaryCriteria();
-            [$tableAlias, $tableMap] = $this->findTableForColumnIdentifierInQuery($prefix, $parentQuery);
+            [$tableAlias, $tableMap] = $this->resolveTableIdentifierInQuery($prefix, $parentQuery);
         }
 
         if (!$tableAlias) {
             return null;
         }
 
+        if (!$tableMap) {
+            return new RemoteColumnExpression($sourceQuery, $tableAlias, $columnIdentifier);
+        }
+
         if (!$parentQuery->getPrimaryCriteria() && $prefix === $parentQuery->getModelAlias() && $tableMap) {
-            $tableAlias = $tableMap->getName(); // outmost query don't use alias
+            //$tableAlias = $tableMap->getName(); // outmost query don't use alias
         }
 
-        $columnMap = $tableMap->findColumnByName($columnName);
+        $columnMap = $tableMap->findColumnByName($columnIdentifier);
         if ($columnMap) {
-            $columnName = $columnMap->getName();
+            $columnIdentifier = $columnMap->getName();
         }
 
-        return new ResolvedColumn("$tableAlias.$columnName", null, $tableAlias);
+        return new LocalColumnExpression($sourceQuery, $tableAlias, $columnMap);
     }
 
     /**
-     * @param string $columnIdentifier
+     * @param string $tableIdentifier
      * @param \Propel\Runtime\ActiveQuery\BaseModelCriteria $query
      *
      * @return array{0: ?string, 1: \Propel\Runtime\Map\TableMap|null}
      */
-    protected function findTableForColumnIdentifierInQuery(string $columnIdentifier, BaseModelCriteria $query): array
+    protected function resolveTableIdentifierInQuery(string $tableIdentifier, BaseModelCriteria $query): array
     {
         if (
-            $columnIdentifier === $query->getModelAliasOrName()
-            || $columnIdentifier === $query->getModelShortName()
-            || ($query->getTableMap() && $columnIdentifier === $query->getTableMap()->getName())
+            $tableIdentifier === $query->getModelAliasOrName()
+            || $tableIdentifier === $query->getModelShortName()
+            || ($query->getTableMap() && $tableIdentifier === $query->getTableMap()->getName())
         ) {
-            // column name from Criteria's table
             $tableMap = $query->getTableMap();
             $tableAlias = $query->getTableNameInQuery();
 
             return [$tableAlias, $tableMap];
         }
-        $join = $query->getJoinByIdentifier($columnIdentifier);
+        $join = $query->getJoinByIdentifier($tableIdentifier);
         if ($join) {
-            // column of a relations's model
             $tableAlias = $join->getRightTableAliasOrName();
             $tableMap = ($join instanceof ModelJoin) ? $join->getTableMap() : null;
 
@@ -304,32 +314,33 @@ class ColumnResolver
     /**
      * Special case for subquery columns
      *
+     * @param Criteria $sourceQuery
+     * @param Criteria $subquery
      * @param string $tableAlias
      * @param string $columnPhpName
      * @param bool $failSilently
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return \Propel\Runtime\ActiveQuery\Util\ResolvedColumn
+     * @return AbstractColumnExpression
      */
-    protected function getColumnFromSubQuery(string $tableAlias, string $columnPhpName, bool $failSilently = true): ResolvedColumn
+    protected function getColumnFromSubQuery(Criteria $sourceQuery, Criteria $subQuery, string $tableAlias, string $columnPhpName, bool $failSilently = true): AbstractColumnExpression
     {
-        $subQueryCriteria = $this->query->getSelectQuery($tableAlias);
-        $tableMap = $subQueryCriteria instanceof ModelCriteria ? $subQueryCriteria->getTableMap() : null;
+        if ($subQuery->getColumnForAs($columnPhpName) !== null) {
+            return new RemoteColumnExpression($sourceQuery, $tableAlias, $columnPhpName);
+        }
+
+        $tableMap = $subQuery instanceof ModelCriteria ? $subQuery->getTableMap() : null;
         if ($tableMap && $tableMap->hasColumnByPhpName($columnPhpName)) {
-            $column = $tableMap->getColumnByPhpName($columnPhpName);
-            $localColumnName = $tableAlias . '.' . $column->getName();
+            $columnMap = $tableMap->getColumnByPhpName($columnPhpName);
 
-            return new ResolvedColumn($localColumnName, null, $tableAlias);
-        }
-        if ($subQueryCriteria->getColumnForAs($columnPhpName) !== null) {
-            // aliased column
-            return new ResolvedColumn("$tableAlias.$columnPhpName");
-        }
-        if ($failSilently) {
-            return ResolvedColumn::getEmptyResolvedColumn();
+            return new RemoteTypedColumnExpression($sourceQuery, $tableAlias, $columnMap->getName(), $columnMap->getPdoType(), $columnMap);
         }
 
-        throw new PropelException(sprintf('Unknown column "%s" in the subQuery with alias "%s".', $columnPhpName, $tableAlias));
+        if (!$failSilently) {
+            throw new PropelException(sprintf('Unknown column "%s" in the subQuery with alias "%s".', $columnPhpName, $tableAlias));
+        }
+
+        return new UnresolvedColumnExpression($sourceQuery, $tableAlias, $columnPhpName);
     }
 }

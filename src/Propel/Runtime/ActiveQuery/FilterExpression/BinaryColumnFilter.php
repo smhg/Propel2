@@ -32,7 +32,7 @@ class BinaryColumnFilter extends AbstractColumnFilter
         $isBinary = ($this->operator === Criteria::BINARY_ALL);
         $compareTo = $isBinary ? $this->addParameter($paramCollector) : '0';
 
-        $field = $this->getColumnliteral();
+        $field = $this->getLocalColumnName();
 
         return "$field & $bindParam = $compareTo";
     }

@@ -10,8 +10,8 @@ namespace Propel\Runtime\ActiveQuery;
 
 use ArrayIterator;
 use IteratorAggregate;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnResolver;
 use Propel\Runtime\ActiveQuery\Exception\UnknownModelException;
-use Propel\Runtime\ActiveQuery\Util\ColumnResolver;
 use Propel\Runtime\Exception\InvalidArgumentException;
 use Propel\Runtime\Exception\LogicException;
 use Propel\Runtime\Formatter\AbstractFormatter;
@@ -68,7 +68,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
     protected $defaultFormatterClass = ModelCriteria::FORMAT_OBJECT;
 
     /**
-     * @var \Propel\Runtime\ActiveQuery\Util\ColumnResolver
+     * @var \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnResolver
      */
     protected $columnResolver;
 
@@ -415,7 +415,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
     }
 
     /**
-     * @return \Propel\Runtime\ActiveQuery\Util\ColumnResolver
+     * @return \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnResolver
      */
     public function getColumnResolver(): ColumnResolver
     {

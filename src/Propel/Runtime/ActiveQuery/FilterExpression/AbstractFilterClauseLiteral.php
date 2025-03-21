@@ -10,14 +10,26 @@ namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException;
+use Propel\Runtime\ActiveQuery\ModelCriteria;
 
 /**
  * A full filter statement given as a string, i.e. `col = ?`, `col1 = col2`, `col IS NULL`, `1=1`
- * 
+ *
  * Child classes have to figure out how to get PDO types for columns.
  */
 abstract class AbstractFilterClauseLiteral extends AbstractFilter
 {
+    /**
+     * All clauses need resolved columns, otherwise they cannot be added
+     * correctly to the query. Otherwise this should be moved to FilterClauseLiteralWithColumns
+     *
+     * @see \Propel\Runtime\ActiveQuery\Criteria::add()
+     * @see self::getLocalColumnName()
+     *
+     * @var array<\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression>
+     */
+    protected $resolvedColumns;
+
     /**
      * @var string
      */
@@ -31,16 +43,37 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
     public function __construct(Criteria $query, string $clause, $value = null)
     {
         parent::__construct($query, $value);
-        $this->clause = $clause;
+        $this->clause = trim($clause);
+        $this->resolveColumnsAndAdjustExpressions();
+    }
+
+    /**
+     * @return void
+     */
+    protected function resolveColumnsAndAdjustExpressions(): void
+    {
+        if ($this->resolvedColumns === null) {
+            $this->resolvedColumns = $this->query instanceof ModelCriteria
+                ? $this->query->getColumnResolver()->resolveColumnsAndAdjustExpressions($this->clause)
+                : [];
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getLocalColumnName(): string
+    {
+        return $this->resolvedColumns ? $this->resolvedColumns[0]->getColumnExpressionInQuery() : '';
     }
 
     /**
      * Build parameter for Propel prepared statement.
-     * 
+     *
      * @param int $position
      * @param mixed $value
      *
-     * @return array{table: null, column?: string|\Propel\Runtime\ActiveQuery\Util\ResolvedColumn, type?: int, value: mixed}
+     * @return array{table: null, column?: string|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression, type?: int, value: mixed}
      */
     abstract protected function buildParameterByPosition(int $position, $value): array;
 
@@ -77,7 +110,7 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
         }
 
         $buildPlaceholderList = ($numberOfPlaceholders === 1); // single placeholder means we need a list ("col IN ?" => "col in (:p1, :p2)")
-        $placeholderCollector = $buildPlaceholderList ? [] : null; 
+        $placeholderCollector = $buildPlaceholderList ? [] : null;
         $clause = (string)$this->clause;
         foreach (array_values($this->value) as $columnIndex => $value) {
             $parameter = $this->buildParameterByPosition($columnIndex, $value);
@@ -95,14 +128,6 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
         }
 
         return $clause;
-    }
-
-    /**
-     * @return string
-     */
-    public function getLocalColumnName(): string
-    {
-        return '';
     }
 
     /**

@@ -445,7 +445,7 @@ class ColumnMap
             return null;
         }
 
-        foreach ($this->getTable()->getRelations() as $relation) {
+        foreach ($this->getTableMap()->getRelations() as $relation) {
             if ($relation->getType() === RelationMap::MANY_TO_ONE) {
                 if (
                     $relation->getForeignTable()->getName() === $this->getRelatedTableName()

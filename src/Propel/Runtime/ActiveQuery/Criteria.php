@@ -716,7 +716,7 @@ class Criteria
      * to this Criteria. This can be used to chain the
      * Criterions to form a more complex where clause.
      *
-     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string|null $column Full name of column (for example TABLE.COLUMN).
+     * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string|null $column Full name of column (for example TABLE.COLUMN).
      * @param mixed|null $value
      * @param string|int|null $comparison Criteria comparison constant or PDO binding type
      *
@@ -949,7 +949,7 @@ class Criteria
      * The name of the table must be used implicitly in the column name,
      * so the Column name must be something like 'TABLE.id'.
      *
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string|null $p1 The column to run the comparison on, or a Criterion object.
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string|null $p1 The column to run the comparison on, or a Criterion object.
      * @param mixed $value
      * @param string|int|null $comparison A String.
      *
@@ -991,7 +991,7 @@ class Criteria
      * so the Column name must be something like 'TABLE.id'.
      *
      * @param string $name name to combine the criterion later
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string $p1 The column to run the comparison on, or AbstractCriterion object.
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1 The column to run the comparison on, or AbstractCriterion object.
      * @param mixed|null $value
      * @param string|null $comparison A String.
      *
@@ -1239,7 +1239,7 @@ class Criteria
      *
      * @return $this this modified Criteria object (Fluid API)
      */
-    public function addSelectQuery(self $subQueryCriteria, ?string $alias = null)
+    public function addSubquery(self $subQueryCriteria, ?string $alias = null)
     {
         if ($alias === null) {
             $alias = 'alias_' . ($subQueryCriteria->forgeSelectQueryAlias() + count($this->selectQueries));
@@ -1247,6 +1247,23 @@ class Criteria
         $this->selectQueries[$alias] = $subQueryCriteria;
 
         return $this;
+    }
+
+    /**
+     * @deprecated use aptly named Criteria::addSubquery().
+     *
+     * @param \Propel\Runtime\ActiveQuery\Criteria $subQueryCriteria Criteria to build the subquery from
+     * @param string|null $alias alias for the subQuery
+     *
+     * @return $this The current object, for fluid interface
+     */
+    public function addSelectQuery(Criteria $subQueryCriteria, ?string $alias = null, bool $addAliasAndSelectColumns = true)
+    {
+        if ($this instanceof ModelCriteria) {
+            return $this->addSubquery($subQueryCriteria, $alias, $addAliasAndSelectColumns);
+        }
+
+        return $this->addSubquery($subQueryCriteria, $alias);
     }
 
     /**
@@ -1939,7 +1956,7 @@ class Criteria
             $this->_or();
         }
         $isFirstCondition = true;
-        foreach ($criteria->getMap() as $key => $criterion) {
+        foreach ($criteria->getColumnFilter() as $key => $criterion) {
             if ($isFirstCondition && $this->defaultCombineOperator === self::LOGICAL_OR) {
                 $this->addOr($criterion, null, null, false);
                 $this->defaultCombineOperator = self::LOGICAL_AND;
@@ -1986,9 +2003,9 @@ class Criteria
      * $crit->addHaving($c);
      * </code>
      *
-     * @param mixed $p1 A Criterion, or a SQL clause with a question mark placeholder, or a column name
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1 A filter or a SQL clause with a question mark placeholder, or a column name
      * @param mixed $value The value to bind in the condition
-     * @param mixed $comparison A PDO::PARAM_ class constant
+     * @param string|int|null $comparison A PDO::PARAM_ class constant
      *
      * @return $this A modified Criteria object.
      */
@@ -2014,7 +2031,7 @@ class Criteria
      *  - Otherwise, create a classic Criterion based on a column name and a comparison.
      *    <code>$c->getCriterionForCondition(BookTableMap::TITLE, 'War%', Criteria::LIKE);</code>
      *
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string|null $p1 A Criterion, or a SQL clause with a question mark placeholder, or a column name
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string|null $p1 A Criterion, or a SQL clause with a question mark placeholder, or a column name
      * @param mixed|null $value The value to bind in the condition
      * @param string|int|null $comparison A Criteria class constant, or a PDO::PARAM_ class constant
      *
@@ -2044,7 +2061,7 @@ class Criteria
      *  - addAnd(column, value)
      *  - addAnd(Criterion)
      *
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string $p1 The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1 The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
      * @param mixed|null $value
      * @param mixed|null $condition
      * @param bool $preferColumnCondition
@@ -2067,7 +2084,7 @@ class Criteria
      *  - addOr(column, value)
      *  - addOr(Criterion)
      *
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string $p1 The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1 The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
      * @param mixed $value
      * @param mixed $condition
      * @param bool $preferColumnCondition
@@ -2081,7 +2098,7 @@ class Criteria
 
     /**
      * @param string $andOr
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string $p1
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1
      * @param mixed $value
      * @param string|int|null $condition
      * @param bool $preferColumnCondition
@@ -2112,7 +2129,7 @@ class Criteria
      *
      * @see Criteria::add()
      *
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string $p1 The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1 The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
      * @param mixed $value
      * @param string|null $operator A String, like Criteria::EQUAL.
      * @param bool $preferColumnCondition If true, the condition is combined with an existing condition on the same column

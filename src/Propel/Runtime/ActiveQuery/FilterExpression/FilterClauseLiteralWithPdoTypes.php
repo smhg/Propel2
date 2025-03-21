@@ -40,18 +40,6 @@ class FilterClauseLiteralWithPdoTypes extends AbstractFilterClauseLiteral
     }
 
     /**
-     * @param array<array> $paramCollector A list to which Prepared Statement parameters will be appended
-     *
-     * @return string
-     */
-    protected function buildFilterClause(array &$paramCollector): string
-    {
-        $this->clause = $this->query->replaceColumnNames($this->clause);
-
-        return parent::buildFilterClause($paramCollector);
-    }
-
-    /**
      * @see FilterClauseLiteral::buildParameterByPosition()
      *
      * @param int $position
@@ -63,6 +51,10 @@ class FilterClauseLiteralWithPdoTypes extends AbstractFilterClauseLiteral
     {
         $typeIndex = count($this->pdoTypes) === 1 ? 0 : $position;
 
-        return ['table' => null, 'type' => $this->pdoTypes[$typeIndex], 'value' => $value];
+        return [
+            'table' => null,
+            'type' => $this->pdoTypes[$typeIndex],
+            'value' => $value,
+        ];
     }
 }

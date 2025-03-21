@@ -8,8 +8,8 @@
 
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\ActiveQuery\Util\ResolvedColumn;
 use Propel\Runtime\Map\ColumnMap;
 
 /**
@@ -18,7 +18,7 @@ use Propel\Runtime\Map\ColumnMap;
 abstract class AbstractColumnFilter extends AbstractFilter
 {
     /**
-     * @var \Propel\Runtime\ActiveQuery\Util\ResolvedColumn
+     * @var \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression
      */
     protected $queryColumn;
 
@@ -33,11 +33,11 @@ abstract class AbstractColumnFilter extends AbstractFilter
      * Create a new instance.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria $query
-     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn $columnIdentifier
+     * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression $columnIdentifier
      * @param string $operator
      * @param mixed $value
      */
-    public function __construct(Criteria $query, ResolvedColumn $columnIdentifier, string $operator, $value)
+    public function __construct(Criteria $query, AbstractColumnExpression $columnIdentifier, string $operator, $value)
     {
         parent::__construct($query, $value);
         $this->queryColumn = $columnIdentifier;
@@ -49,21 +49,13 @@ abstract class AbstractColumnFilter extends AbstractFilter
      */
     public function getLocalColumnName(): string
     {
-        return $this->getColumnLiteral();
+        return $this->queryColumn->getColumnExpressionInQuery(true);
     }
 
     /**
-     * @return string
+     * @return \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression
      */
-    public function getQuotedColumnLiteral(): string
-    {
-        return $this->query->quoteColumnIdentifier($this->getColumnLiteral(), $this->queryColumn->getTableMap());
-    }
-
-    /**
-     * @return \Propel\Runtime\ActiveQuery\Util\ResolvedColumn
-     */
-    public function getQueryColumn(): ResolvedColumn
+    public function getQueryColumn(): AbstractColumnExpression
     {
         return $this->queryColumn;
     }
@@ -77,19 +69,13 @@ abstract class AbstractColumnFilter extends AbstractFilter
     }
 
     /**
-     * @return string
-     */
-    public function getColumnLiteral(): string
-    {
-        return $this->queryColumn->getQueryColumnLiteral();
-    }
-
-    /**
      * @return \Propel\Runtime\Map\ColumnMap|null
      */
     public function getColumnMap(): ?ColumnMap
     {
-        return $this->queryColumn->getColumnMap();
+        return $this->queryColumn->hasColumnMap()
+            ? $this->queryColumn->getColumnMap()
+            : null;
     }
 
     /**
@@ -109,15 +95,27 @@ abstract class AbstractColumnFilter extends AbstractFilter
     }
 
     /**
+     * @see \Propel\Runtime\Adapter\Pdo\PdoAdapter::bindValues()
+     *
      * @param mixed $value
      *
      * @return array{table: ?string, column: string, value: mixed}
      */
     protected function buildParameterWithValue($value): array
     {
+        if (!$this->queryColumn->hasColumnMap()) {
+            return [
+                'table' => null,
+                'column' => $this->queryColumn->getColumnIdentifier(), // won't be used when table is null, just for reference
+                'value' => $value,
+            ];
+        }
+
+        $columnMap = $this->queryColumn->getColumnMap();
+
         return [
-            'table' => $this->queryColumn->getLocalTableName(),
-            'column' => $this->queryColumn->getColumnMap()->getName(),
+            'table' => $columnMap->getTableName(), //$this->queryColumn->getTableAlias(),
+            'column' => $columnMap->getName(),
             'value' => $value,
         ];
     }

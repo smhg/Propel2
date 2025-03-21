@@ -9,18 +9,16 @@
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
 use LogicException;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Criterion\CriterionFactory;
 use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException;
-use Propel\Runtime\ActiveQuery\Util\ResolvedColumn;
 
-/**
- */
 class FilterFactory
 {
     /**
-     * @param \Propel\Runtime\ActiveQuery\Criteria $criteria
-     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|string|null $columnOrClause
+     * @param \Propel\Runtime\ActiveQuery\Criteria $query
+     * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string|null $columnOrClause
      * @param string|int|null $comparison
      * @param mixed $value
      *
@@ -29,7 +27,7 @@ class FilterFactory
      *
      * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface
      */
-    public static function build(Criteria $criteria, $columnOrClause, $comparison = null, $value = null): ColumnFilterInterface
+    public static function build(Criteria $query, $columnOrClause, $comparison = null, $value = null): ColumnFilterInterface
     {
         if (is_int($comparison)) {
             // $comparison is a PDO::PARAM_* constant value
@@ -37,11 +35,11 @@ class FilterFactory
 
             if ($columnOrClause === null) {
                 throw new InvalidClauseException('Empty clause in column filter - Passing PDO type to Criteria::where()/Criteria::and() requires a non-empty clause.');
-            } elseif ($columnOrClause instanceof ResolvedColumn) {
+            } elseif ($columnOrClause instanceof AbstractColumnExpression) {
                 throw new LogicException('Column of clause with PDO types was resolved, but should have remained a string. Resolved column: ' . print_r($columnOrClause, true));
             }
 
-            return new FilterClauseLiteralWithPdoTypes($criteria, $columnOrClause, $value, $comparison);
+            return new FilterClauseLiteralWithPdoTypes($query, $columnOrClause, $value, $comparison);
         }
 
         if ($value instanceof Criteria) {
@@ -49,7 +47,7 @@ class FilterFactory
                 throw new LogicException("Cannot use unresolved column name as input for subquery filter ($comparison)");
             }
 
-            return static::buildSubqueryFilter($criteria, $columnOrClause, $comparison, $value);
+            return static::buildSubqueryFilter($query, $columnOrClause, $comparison, $value);
         }
 
         if ($comparison === null) {
@@ -57,22 +55,24 @@ class FilterFactory
         }
 
         if (is_string($columnOrClause)) {
+            return new FilterClauseLiteralWithColumns($query, $columnOrClause);
+
             // TODO still needed for having, group by, join
-            return CriterionFactory::build($criteria, $columnOrClause, $comparison, $value);
+            return CriterionFactory::build($query, $columnOrClause, $comparison, $value);
         } else {
-            return static::buildFilterCondition($criteria, $columnOrClause, $comparison, $value);
+            return static::buildFilterCondition($query, $columnOrClause, $comparison, $value);
         }
     }
 
     /**
      * @param \Propel\Runtime\ActiveQuery\Criteria $query
-     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|null $column
+     * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|null $column
      * @param string|null $comparison
      * @param mixed $value
      *
      * @return \Propel\Runtime\ActiveQuery\FilterExpression\AbstractFilter
      */
-    protected static function buildFilterCondition(Criteria $query, ?ResolvedColumn $column, $comparison = null, $value = null): AbstractFilter
+    protected static function buildFilterCondition(Criteria $query, ?AbstractColumnExpression $column, $comparison = null, $value = null): AbstractFilter
     {
         switch ($comparison) {
             case Criteria::IN:
@@ -105,7 +105,7 @@ class FilterFactory
 
     /**
      * @param \Propel\Runtime\ActiveQuery\Criteria $outerQuery
-     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|null $column
+     * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|null $column
      * @param string|null $comparison
      * @param \Propel\Runtime\ActiveQuery\Criteria $innerQuery
      *

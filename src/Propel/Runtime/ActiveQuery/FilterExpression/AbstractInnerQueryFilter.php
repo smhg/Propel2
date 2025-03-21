@@ -8,11 +8,11 @@
 
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Join;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveQuery\ModelJoin;
-use Propel\Runtime\ActiveQuery\Util\ResolvedColumn;
 use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Map\RelationMap;
 
@@ -25,7 +25,7 @@ use Propel\Runtime\Map\RelationMap;
 abstract class AbstractInnerQueryFilter extends AbstractFilter
 {
     /**
-     * @var \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|null Left side of the operator, can be empty.
+     * @var \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|null Left side of the operator, can be empty.
      */
     protected $queryColumn;
 
@@ -85,13 +85,13 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
 
     /**
      * @param \Propel\Runtime\ActiveQuery\Criteria $outerQuery
-     * @param \Propel\Runtime\ActiveQuery\Util\ResolvedColumn|null $queryColumn Left side of the operator, usually a column name or empty.
+     * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|null $queryColumn Left side of the operator, usually a column name or empty.
      * @param string|null $operator The operator, like IN, NOT IN, EXISTS, NOT EXISTS
      * @param \Propel\Runtime\ActiveQuery\Criteria $innerQuery
      */
     final public function __construct(
         $outerQuery,
-        ?ResolvedColumn $queryColumn,
+        ?AbstractColumnExpression $queryColumn,
         ?string $operator,
         Criteria $innerQuery
     ) {
@@ -115,7 +115,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
      */
     public function getLocalColumnName(): string
     {
-        return $this->queryColumn ? $this->queryColumn->getQueryColumnLiteral() : '';
+        return $this->queryColumn ? $this->queryColumn->getColumnExpressionInQuery(true) : '';
     }
 
     /**
@@ -145,7 +145,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
     {
         $leftHandOperator = '';
         if ($this->queryColumn) {
-            $leftHandOperator = $this->queryColumn->getQueryColumnLiteral() . ' ';
+            $leftHandOperator = $this->queryColumn->getColumnExpressionInQuery(true) . ' ';
         }
         $innerQuery = $this->processInnerQuery()->createSelectSql($paramCollector);
         //$this->query->replaceNames($innerQuery); // fixup column names from outer query

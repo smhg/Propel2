@@ -63,7 +63,7 @@ class ColumnFilter extends AbstractColumnFilter
      */
     protected function buildFilterClause(array &$paramCollector): string
     {
-        $field = $this->getQuotedColumnLiteral();
+        $field = $this->queryColumn->getColumnExpressionInQuery(true);
 
         // NULL VALUES need special treatment because the SQL syntax is different
         // i.e. table.column IS NULL rather than table.column = null
