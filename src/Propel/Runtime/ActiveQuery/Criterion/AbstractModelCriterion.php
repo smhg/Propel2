@@ -62,6 +62,7 @@ abstract class AbstractModelCriterion extends AbstractCriterion
     public function equals(?object $filter): bool
     {
         return parent::equals($filter)
+            && $filter instanceof static
             && $this->comparison === $filter->comparison
             && $this->clause === $filter->clause;
     }

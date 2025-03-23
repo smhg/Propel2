@@ -9,6 +9,7 @@
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UnresolvedColumnExpression;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Map\ColumnMap;
 
@@ -45,11 +46,25 @@ abstract class AbstractColumnFilter extends AbstractFilter
     }
 
     /**
+     * @param bool $useQuoteIfEnable = true
+     *
      * @return string
      */
-    public function getLocalColumnName(): string
+    public function getLocalColumnName(bool $useQuoteIfEnable = true): string
     {
-        return $this->queryColumn->getColumnExpressionInQuery(true);
+        return $this->queryColumn->getColumnExpressionInQuery($useQuoteIfEnable);
+    }
+
+    /**
+     * Column name without table prefix.
+     *
+     * Will be DB column name if column could be resolved.
+     *
+     * @return string
+     */
+    public function getColumnName(): string
+    {
+        return $this->queryColumn->getColumnName();
     }
 
     /**
@@ -87,7 +102,7 @@ abstract class AbstractColumnFilter extends AbstractFilter
     }
 
     /**
-     * @return array{column: string, table: ?string, value: mixed}
+     * @return array{table?: ?string, column?: string, value: mixed, type?: int}
      */
     protected function buildParameter(): array
     {
@@ -95,29 +110,27 @@ abstract class AbstractColumnFilter extends AbstractFilter
     }
 
     /**
+     * @see AbstractFilter::buildStatement()
+     *
+     * @return void
+     */
+    protected function resolveUnresolved(): void
+    {
+        if ($this->queryColumn instanceof UnresolvedColumnExpression) {
+            $this->queryColumn = $this->query->resolveColumn($this->queryColumn->getColumnExpressionInQuery());
+        }
+    }
+
+    /**
      * @see \Propel\Runtime\Adapter\Pdo\PdoAdapter::bindValues()
      *
      * @param mixed $value
      *
-     * @return array{table: ?string, column: string, value: mixed}
+     * @return array{table?: ?string, column?: string, value: mixed, type?: int}
      */
     protected function buildParameterWithValue($value): array
     {
-        if (!$this->queryColumn->hasColumnMap()) {
-            return [
-                'table' => null,
-                'column' => $this->queryColumn->getColumnIdentifier(), // won't be used when table is null, just for reference
-                'value' => $value,
-            ];
-        }
-
-        $columnMap = $this->queryColumn->getColumnMap();
-
-        return [
-            'table' => $columnMap->getTableName(), //$this->queryColumn->getTableAlias(),
-            'column' => $columnMap->getName(),
-            'value' => $value,
-        ];
+        return $this->queryColumn->buildPdoParam($value);
     }
 
     /**

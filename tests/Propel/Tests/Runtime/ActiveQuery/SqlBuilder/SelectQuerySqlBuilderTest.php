@@ -44,9 +44,10 @@ class SelectQuerySqlBuilderTest extends TestCaseFixtures
             [BookQuery::create(), null, [], 'Empty HAVING clause should build to null'],
             [
                 BookQuery::create()->addHaving('Price', 42, Criteria::GREATER_THAN),
-                'HAVING Price>:p1',
-                [['table' => null, 'column' => 'Price', 'value' => 42]],
-               'HAVING clause should build to statement'],
+                'HAVING book.price>:p1',
+                [['table' => 'book', 'column' => 'price', 'value' => 42]],
+               'HAVING clause should build to statement'
+            ],
         ];
     }
 
@@ -62,14 +63,8 @@ class SelectQuerySqlBuilderTest extends TestCaseFixtures
      */
     public function testBuildHavingClause(Criteria $query, ?string $expectedClause, array $expectedParams, string $message): void
     {
-        $builder = new class ($query) extends SelectQuerySqlBuilder{
-            public function doBuildHavingClause(array &$params): ?string
-            {
-                return $this->buildHavingClause($params);
-            }
-        };
         $params = [];
-        $clause = $builder->doBuildHavingClause($params);
+        $clause = $this->callMethod(new SelectQuerySqlBuilder($query), 'buildHavingClause', [&$params]);
 
         $this->assertSame($expectedClause, $clause, $message);
         $this->assertSame($expectedParams, $params, 'Generated query parameter array does not match');

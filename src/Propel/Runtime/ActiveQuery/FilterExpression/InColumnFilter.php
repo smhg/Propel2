@@ -13,13 +13,11 @@ use Traversable;
 
 class InColumnFilter extends AbstractColumnFilter
 {
- /**
-  * Collects a Prepared Statement representation of the Criterion onto the buffer
-  *
-  * @param array<array> $paramCollector A list to which Prepared Statement parameters will be appended
-  *
-  * @return string
-  */
+    /**
+     * @param array<array> $paramCollector A list to which Prepared Statement parameters will be appended
+     *
+     * @return string
+     */
     protected function buildFilterClause(array &$paramCollector): string
     {
         $values = ($this->value instanceof Traversable) ? iterator_to_array($this->value) : (array)$this->value;

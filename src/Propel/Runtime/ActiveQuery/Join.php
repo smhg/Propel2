@@ -877,4 +877,14 @@ class Join
     {
         $this->identifierQuoting = $identifierQuoting;
     }
+
+    /**
+     * @param string $identifier
+     *
+     * @return bool
+     */
+    public function isIdentifiedBy(string $identifier): bool
+    {
+        return $this->rightTableAlias === $identifier || $this->rightTableName === $identifier;
+    }
 }

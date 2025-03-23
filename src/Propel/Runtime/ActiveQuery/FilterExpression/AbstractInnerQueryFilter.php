@@ -9,6 +9,7 @@
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UnresolvedColumnExpression;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Join;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -66,6 +67,52 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
     abstract protected function initForRelation(ModelCriteria $outerQuery, RelationMap $relation): void;
 
     /**
+     * @param bool $useQuoteIfEnable
+     *
+     * @return string
+     */
+    public function getLocalColumnName(bool $useQuoteIfEnable = true): string
+    {
+        return $this->queryColumn ? $this->queryColumn->getColumnExpressionInQuery($useQuoteIfEnable) : '';
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getColumnName(): ?string
+    {
+        return $this->queryColumn ? $this->queryColumn->getColumnName() : null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOperator(): string
+    {
+        return $this->sqlOperator;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTableAlias(): ?string
+    {
+        return $this->queryColumn ? $this->queryColumn->getTableAlias() : null;
+    }
+
+    /**
+     * @see AbstractFilter::buildStatement()
+     *
+     * @return void
+     */
+    protected function resolveUnresolved(): void
+    {
+        if ($this->queryColumn instanceof UnresolvedColumnExpression) {
+            $this->queryColumn = $this->query->resolveColumn($this->queryColumn->getColumnExpressionInQuery());
+        }
+    }
+
+    /**
      * Allows to edit or replace the inner query before it is turned to SQL.
      *
      * @param mixed $outerQuery
@@ -108,30 +155,6 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
         if ($this->innerQuery instanceof ModelCriteria && $outerQuery instanceof ModelCriteria) {
             $this->innerQuery->setPrimaryCriteria($outerQuery, new Join()); // HACK - ColumnResolver uses primary criteria to remove aliases from topmost query
         }
-    }
-
-    /**
-     * @return string
-     */
-    public function getLocalColumnName(): string
-    {
-        return $this->queryColumn ? $this->queryColumn->getColumnExpressionInQuery(true) : '';
-    }
-
-    /**
-     * @return string
-     */
-    public function getOperator(): string
-    {
-        return $this->sqlOperator;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getTableAlias(): ?string
-    {
-        return $this->queryColumn ? $this->queryColumn->getTableAlias() : null;
     }
 
     /**

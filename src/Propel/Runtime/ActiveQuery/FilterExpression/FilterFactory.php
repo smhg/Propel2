@@ -11,7 +11,6 @@ namespace Propel\Runtime\ActiveQuery\FilterExpression;
 use LogicException;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\ActiveQuery\Criterion\CriterionFactory;
 use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException;
 
 class FilterFactory
@@ -43,6 +42,8 @@ class FilterFactory
         }
 
         if ($value instanceof Criteria) {
+            // $value is a subquery
+            // something like $c->add(null, BookClause::create()->filterByAuthorId(42), Criteria::EXISTS);
             if (is_string($columnOrClause)) {
                 throw new LogicException("Cannot use unresolved column name as input for subquery filter ($comparison)");
             }
@@ -50,18 +51,21 @@ class FilterFactory
             return static::buildSubqueryFilter($query, $columnOrClause, $comparison, $value);
         }
 
-        if ($comparison === null) {
-            $comparison = Criteria::EQUAL;
+        if ($comparison === Criteria::CUSTOM) {
+            // custom expression with no parameter binding
+            // something like $c->add(BookTableMap::TITLE, "CONCAT(book.TITLE, 'bar') = 'foobar'", Criteria::CUSTOM);
+            return new FilterClauseLiteralWithColumns($query, $value);
         }
 
         if (is_string($columnOrClause)) {
             return new FilterClauseLiteralWithColumns($query, $columnOrClause);
-
-            // TODO still needed for having, group by, join
-            return CriterionFactory::build($query, $columnOrClause, $comparison, $value);
-        } else {
-            return static::buildFilterCondition($query, $columnOrClause, $comparison, $value);
         }
+
+        if ($comparison === null) {
+            $comparison = Criteria::EQUAL;
+        }
+
+        return static::buildFilterCondition($query, $columnOrClause, $comparison, $value);
     }
 
     /**
@@ -92,10 +96,6 @@ class FilterFactory
                 // table.column & ? = 0 (Similar to  "NOT IN")
                 // something like $c->add(BookTableMap::SOME_ARRAY_VAR, 26, Criteria::BINARY_NONE);
                 return new BinaryColumnFilter($query, $column, $comparison, $value);
-            case Criteria::CUSTOM:
-                // custom expression with no parameter binding
-                // something like $c->add(BookTableMap::TITLE, "CONCAT(book.TITLE, 'bar') = 'foobar'", Criteria::CUSTOM);
-                return new FilterClauseLiteralWithColumns($query, $value);
             default:
                 // simple comparison
                 // something like $c->add(BookTableMap::PRICE, 12, Criteria::GREATER_THAN);

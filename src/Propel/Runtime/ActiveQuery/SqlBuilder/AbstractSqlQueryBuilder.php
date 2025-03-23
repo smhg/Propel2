@@ -8,9 +8,7 @@
 
 namespace Propel\Runtime\ActiveQuery\SqlBuilder;
 
-use LogicException;
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\Propel;
 
@@ -101,8 +99,6 @@ abstract class AbstractSqlQueryBuilder
      * @param array<string> $columnNames
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $values
      *
-     * @throws \LogicException
-     *
      * @return array
      */
     public function buildParams(array $columnNames, ?Criteria $values = null): array
@@ -117,15 +113,11 @@ abstract class AbstractSqlQueryBuilder
                 continue;
             }
             $crit = $values->getCriterion($key);
-            if ($crit instanceof AbstractCriterion) {
-                $params[] = [
-                    'column' => $crit->getColumn(),
-                    'table' => $crit->getTableAlias(),
-                    'value' => $crit->getValue(),
-                ];
-            } else {
-                throw new LogicException('Insert/Update params should only be built by Criterions');
-            }
+            $params[] = [
+                'column' => $crit->getColumnName(),
+                'table' => $crit->getTableAlias(),
+                'value' => $crit->getValue(),
+            ];
         }
 
         return $params;

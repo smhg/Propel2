@@ -260,7 +260,7 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
             return;
         }
 
-        $column = $criterion->getColumn();
+        $column = $criterion->getColumnName();
         $isTextColumn = $this->dbMap->getTable($realTableName)->getColumn($column)->isText();
         if (!$isTextColumn) {
             return;

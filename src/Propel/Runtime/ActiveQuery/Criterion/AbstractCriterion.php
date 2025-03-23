@@ -121,7 +121,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
     {
         if ($column instanceof ColumnMap) {
             $this->column = $column->getName();
-            $this->table = $column->getTable()->getName();
+            $this->table = $column->getTableMap()->getName();
         } else {
             $dotPos = strrpos($column, '.');
             if ($dotPos === false) {
@@ -136,21 +136,36 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
     }
 
     /**
+     * @deprecated use aptly named AbstractCriterion::getColumnName()
      * Get the column name.
      *
      * @return string|null A String with the column name.
      */
     public function getColumn(): ?string
     {
+        return $this->getColumnName();
+    }
+
+    /**
+     * Get the column name.
+     *
+     * @return string|null A String with the column name.
+     */
+    public function getColumnName(): ?string
+    {
         return $this->column;
     }
 
     /**
+     * @param bool $useQuoteIfEnable
+     *
      * @return string
      */
-    public function getLocalColumnName(): string
+    public function getLocalColumnName(bool $useQuoteIfEnable = false): string
     {
-        return $this->table . '.' . $this->column;
+        $localColumnName = $this->table . '.' . $this->column;
+
+        return $useQuoteIfEnable ? $this->query->quoteColumnIdentifier($localColumnName) : $localColumnName;
     }
 
     /**
@@ -353,13 +368,13 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
             return true;
         }
 
-        if (!$filter instanceof AbstractCriterion) {
+        if (!$filter instanceof static) {
             return false;
         }
 
         if (
-            $this->table !== $filter->getTable()
-            && $this->column !== $filter->getColumn()
+            $this->table !== $filter->getTableAlias()
+            && $this->column !== $filter->getColumnName()
             && $this->comparison !== $filter->getComparison()
         ) {
             return false;

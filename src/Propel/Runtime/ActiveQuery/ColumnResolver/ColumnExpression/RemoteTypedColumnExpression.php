@@ -22,9 +22,9 @@ class RemoteTypedColumnExpression extends RemoteColumnExpression
      * @var int
      */
     protected int $pdoType;
-    
+
     /**
-     * @var ColumnMap|null
+     * @var \Propel\Runtime\Map\ColumnMap|null
      */
     protected ?ColumnMap $columnMap;
 
@@ -32,18 +32,21 @@ class RemoteTypedColumnExpression extends RemoteColumnExpression
      * A column that comes from a subquery or parent query with PDO type information available.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria $sourceQuery
-     * @param mixed $tableAlias
-     * @param string $columnIdentifier
+     * @param string|null $tableAlias
+     * @param string $columnName
      * @param int $pdoType
-     * @param ColumnMap|null $columnMap
+     * @param \Propel\Runtime\Map\ColumnMap|null $columnMap
      */
-    public function __construct(Criteria $sourceQuery, ?string $tableAlias, string $columnIdentifier, int $pdoType, ?ColumnMap $columnMap = null)
+    public function __construct(Criteria $sourceQuery, ?string $tableAlias, string $columnName, int $pdoType, ?ColumnMap $columnMap = null)
     {
-        parent::__construct($sourceQuery, $tableAlias, $columnIdentifier);
+        parent::__construct($sourceQuery, $tableAlias, $columnName);
         $this->pdoType = $pdoType;
         $this->columnMap = $columnMap;
     }
 
+    /**
+     * @return \Propel\Runtime\Map\ColumnMap|null
+     */
     public function getColumnMap(): ?ColumnMap
     {
         return $this->columnMap;
@@ -51,6 +54,7 @@ class RemoteTypedColumnExpression extends RemoteColumnExpression
 
     /**
      * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression $otherColumn
+     *
      * @return bool
      */
     public function equals(AbstractColumnExpression $otherColumn): bool
@@ -58,8 +62,7 @@ class RemoteTypedColumnExpression extends RemoteColumnExpression
         return $otherColumn instanceof static
             && parent::equals($otherColumn)
             && $this->pdoType === $otherColumn->pdoType
-            && $this->columnMap === $otherColumn->columnMap
-            ;
+            && $this->columnMap === $otherColumn->columnMap;
     }
 
     /**
@@ -68,5 +71,20 @@ class RemoteTypedColumnExpression extends RemoteColumnExpression
     public function hasColumnMap(): bool
     {
         return (bool)$this->columnMap;
+    }
+
+    /**
+     * @see \Propel\Runtime\Adapter\Pdo\PdoAdapter::bindValues()
+     *
+     * @param mixed $value
+     *
+     * @return array{type: int, value: mixed}
+     */
+    public function buildPdoParam($value): array
+    {
+        return [
+            'type' => $this->pdoType,
+            'value' => $value,
+        ];
     }
 }

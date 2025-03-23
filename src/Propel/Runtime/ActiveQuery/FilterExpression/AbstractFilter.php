@@ -104,12 +104,18 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
     }
 
     /**
+     * @return void
+     */
+    abstract protected function resolveUnresolved(): void;
+
+    /**
      * @param array $paramCollector
      *
      * @return string
      */
     public function buildStatement(array &$paramCollector): string
     {
+        $this->resolveUnresolved();
         if (!$this->clauses) {
             return $this->buildFilterClause($paramCollector);
         }
@@ -123,6 +129,19 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
         }
 
         return $statement;
+    }
+
+    /**
+     * @deprecated for BC, use AbstractFilter::buildStatement().
+     *
+     * @param string $sb $paramCollector
+     * @param array<array{table?: ?string, column?: string, value: mixed, type?: int}> $paramCollector
+     *
+     * @return void
+     */
+    public function appendPsTo(string &$sb, array &$paramCollector): void
+    {
+        $sb .= $this->buildStatement($paramCollector);
     }
 
     /**
@@ -194,8 +213,18 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
     public function getAttachedFilter(): array
     {
         $criterions = parent::getAttachedFilter();
-        $criterions[] = $this;
+        array_unshift($criterions, $this);
 
         return $criterions;
+    }
+
+    /**
+     * @deprecated for BC, use getAttachedFilter()
+     *
+     * @return array<\Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion|\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
+     */
+    public function getAttachedCriterion(): array
+    {
+        return $this->getAttachedFilter();
     }
 }

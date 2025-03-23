@@ -25,7 +25,7 @@ abstract class AbstractColumnExpression
     /**
      * The query object where the expression is used.
      *
-     * @var Criteria
+     * @var \Propel\Runtime\ActiveQuery\Criteria
      */
     protected Criteria $sourceQuery;
 
@@ -35,63 +35,69 @@ abstract class AbstractColumnExpression
     protected $tableAlias;
 
     /**
+     * Name of column without table alias in format used in query,
+     * i.e. 'id' or 'Id'
+     *
      * @var string
      */
-    protected $columnIdentifier;
+    protected $columnName;
 
     /**
      * @param \Propel\Runtime\ActiveQuery\Criteria $sourceQuery
-     * @param mixed $tableAlias
-     * @param string $columnIdentifier
+     * @param string|null $tableAlias
+     * @param string $columnName The column name without table alias.
      */
-    public function __construct(Criteria $sourceQuery, ?string $tableAlias, string $columnIdentifier)
+    public function __construct(Criteria $sourceQuery, ?string $tableAlias, string $columnName)
     {
         $this->sourceQuery = $sourceQuery;
-        $this->columnIdentifier = $columnIdentifier;
         $this->tableAlias = $tableAlias;
+        $this->columnName = $columnName;
     }
 
     /**
      * @param bool $useQuotesIfEnabled
+     *
      * @return string
      */
     public function getColumnExpressionInQuery(bool $useQuotesIfEnabled = false): string
     {
-        $columnLiteral = $this->tableAlias ? "{$this->tableAlias}.{$this->columnIdentifier}" : $this->columnIdentifier;
+        $columnLiteral = $this->tableAlias ? "{$this->tableAlias}.{$this->columnName}" : $this->columnName;
         if (!$useQuotesIfEnabled) {
             return $columnLiteral;
         }
         $tableMap = $this->hasColumnMap() ? $this->getColumnMap()->getTableMap() : null;
- 
+
         return $this->sourceQuery->quoteColumnIdentifier($columnLiteral, $tableMap);
     }
 
     /**
-     * The raw column name, i.e. 'author_id' for 'Book.AuthorId'
-     * @return string
-     */
-    public function getColumnIdentifier(): string
-    {
-        return $this->columnIdentifier;
-    }
-
-    /**
      * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression $otherColumn
+     *
      * @return bool
      */
     public function equals(AbstractColumnExpression $otherColumn): bool
     {
         return $otherColumn instanceof static
-            && $this->columnIdentifier === $otherColumn->columnIdentifier
+            && $this->columnName === $otherColumn->columnName
             && $this->tableAlias === $otherColumn->tableAlias;
     }
 
     /**
-     * @return Criteria
+     * @return \Propel\Runtime\ActiveQuery\Criteria|null
      */
     public function getSourceQuery(): ?Criteria
     {
         return $this->sourceQuery;
+    }
+
+    /**
+     * The raw column name, i.e. 'author_id' for 'Book.AuthorId'
+     *
+     * @return string
+     */
+    public function getColumnName(): string
+    {
+        return $this->hasColumnMap() ? $this->getColumnMap()->getName() : $this->columnName;
     }
 
     /**
@@ -103,7 +109,7 @@ abstract class AbstractColumnExpression
     }
 
     /**
-     * @return string|null
+     * @return bool
      */
     public function hasColumnMap(): bool
     {
@@ -111,10 +117,44 @@ abstract class AbstractColumnExpression
     }
 
     /**
-     * @return ColumnMap|null
+     * @throws \LogicException
+     *
+     * @return \Propel\Runtime\Map\ColumnMap|null
      */
     public function getColumnMap(): ?ColumnMap
     {
         throw new LogicException('should never be called, guard by checking AbstractColumnExpression::hasColumnMap() first.');
+    }
+
+    /**
+     * @param array<\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression>|null $columnExpressions
+     *
+     * @return \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|null
+     */
+    public static function findFirstColumnExpressionWithColumnMap(?array $columnExpressions): ?AbstractColumnExpression
+    {
+        foreach ($columnExpressions ?? [] as $col) {
+            if ($col->hasColumnMap()) {
+                return $col;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @see \Propel\Runtime\Adapter\Pdo\PdoAdapter::bindValues()
+     *
+     * @param mixed $value
+     *
+     * @return array{table?: ?string, column?: string, value: mixed, type?: int}
+     */
+    public function buildPdoParam($value): array
+    {
+        return [
+            'table' => $this->getTableAlias(),
+            'column' => $this->getColumnName(),
+            'value' => $value,
+        ];
     }
 }

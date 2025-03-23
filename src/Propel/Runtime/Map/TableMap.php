@@ -990,4 +990,18 @@ class TableMap
 
         return $pk;
     }
+
+    /**
+     * Check if an identifier matches any of the names of this TableMap
+     *
+     * @param string $identifier
+     *
+     * @return bool
+     */
+    public function isIdentifiedBy(string $identifier): bool
+    {
+        return $this->tableName === $identifier
+            || $this->phpName === $identifier
+            || $this->classname === ($identifier[0] === '\\' ? $identifier : '\\' . $identifier);
+    }
 }

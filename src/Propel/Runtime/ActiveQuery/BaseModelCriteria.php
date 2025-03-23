@@ -343,6 +343,18 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
     }
 
     /**
+     * @param string $identifier
+     *
+     * @return bool
+     */
+    public function isIdentifiedBy(string $identifier): bool
+    {
+        return $identifier === $this->getModelAliasOrName()
+            || $identifier === $this->getModelShortName()
+            || ($this->getTableMap() && $identifier === $this->getTableMap()->getName());
+    }
+
+    /**
      * Execute the query with a find(), and return a Traversable object.
      *
      * The return value depends on the query formatter. By default, this returns an ArrayIterator
@@ -378,35 +390,6 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
     {
         foreach ($this->joins as $join) {
             if ($join instanceof ModelJoin && $join->getTableMapOrFail()->getName() == $tableName) {
-                return $join;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @param string $identifier Propel uses (possibly qualified) PascalCase for logical table name, snake_case for DB table name, or alias
-     *
-     * @return \Propel\Runtime\ActiveQuery\Join|null
-     */
-    public function getJoinByIdentifier(string $identifier): ?Join
-    {
-        if ($this->hasJoin($identifier)) {
-            return $this->getJoin($identifier);
-        }
-
-        $className = $identifier[0] === '\\' ? $identifier : '\\' . $identifier;
-        foreach ($this->joins as $join) {
-            if (!($join instanceof ModelJoin)) {
-                continue;
-            }
-            $tableMap = $join->getTableMapOrFail();
-            if (
-                $tableMap->getName() === $identifier
-                || $tableMap->getPhpName() === $identifier
-                || $tableMap->getClassName() === $className
-            ) {
                 return $join;
             }
         }

@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression;
 
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnResolver;
 use Propel\Runtime\ActiveQuery\Criteria;
 
 /**
@@ -17,16 +18,41 @@ use Propel\Runtime\ActiveQuery\Criteria;
  */
 class UnresolvedColumnExpression extends AbstractColumnExpression
 {
+ /**
+  * A column that could not (yet) be found in query.
+  *
+  * @param \Propel\Runtime\ActiveQuery\Criteria $sourceQuery
+  * @param string|null $tableAlias
+  * @param string $columnName
+  */
+    public function __construct(Criteria $sourceQuery, ?string $tableAlias, string $columnName)
+    {
+        parent::__construct($sourceQuery, $tableAlias, $columnName);
+    }
 
     /**
-     * A column that could not (yet) be found in query.
-     *
      * @param \Propel\Runtime\ActiveQuery\Criteria $sourceQuery
-     * @param mixed $tableAlias
-     * @param string $columnIdentifier
+     * @param string $columnLiteral
+     *
+     * @return self
      */
-    public function __construct(Criteria $sourceQuery, ?string $tableAlias, string $columnIdentifier)
+    public static function fromString(Criteria $sourceQuery, string $columnLiteral)
     {
-        parent::__construct($sourceQuery, $tableAlias, $columnIdentifier);
+        [$tableAlias, $columnName] = ColumnResolver::splitColumnLiteralParts($columnLiteral);
+
+        return new self($sourceQuery, $tableAlias, $columnName);
+    }
+
+    /**
+     * @param bool $hasAccessToOutputColumns
+     *
+     * @return \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|null
+     */
+    public function resolveAgain(bool $hasAccessToOutputColumns = false): ?AbstractColumnExpression
+    {
+        $columnIdentifier = $this->getColumnExpressionInQuery();
+        $resolvedAgain = $this->sourceQuery->resolveColumn($columnIdentifier, $hasAccessToOutputColumns);
+
+        return $resolvedAgain instanceof static ? null : $resolvedAgain;
     }
 }

@@ -13,13 +13,11 @@ use Propel\Runtime\Adapter\Pdo\PgsqlAdapter;
 
 class LikeColumnFilter extends ColumnFilter
 {
- /**
-  * Collects a Prepared Statement representation of the Criterion onto the buffer
-  *
-  * @param array $paramCollector A list to which Prepared Statement parameters will be appended
-  *
-  * @return string
-  */
+    /**
+     * @param array $paramCollector A list to which Prepared Statement parameters will be appended
+     *
+     * @return string
+     */
     protected function buildFilterClause(array &$paramCollector): string
     {
         $field = $this->getLocalColumnName();

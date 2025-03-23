@@ -10,6 +10,7 @@ namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidValueException;
+use Propel\Runtime\Adapter\SqlAdapterInterface;
 
 /**
  * Filter expressions like "<column> <op> <value>".
@@ -86,7 +87,7 @@ class ColumnFilter extends AbstractColumnFilter
         // will be replaced w/ '?' and will be inserted later using PDO bindValue()
 
         $paramVariable = $this->addParameter($paramCollector);
-        if ($this->isIgnoreCase()) {
+        if ($this->isIgnoreCase() && $this->adapter instanceof SqlAdapterInterface) {
             $paramVariable = $this->adapter->ignoreCase($paramVariable);
             $field = $this->adapter->ignoreCase($field);
         }

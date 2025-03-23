@@ -18,7 +18,7 @@ class ClauseList
     /**
      * @var string
      */
-    protected const AND_OPERATOR_LITERAL = 'AND';
+    public const AND_OPERATOR_LITERAL = 'AND';
 
     /**
      * @var string
@@ -61,7 +61,7 @@ class ClauseList
     }
 
     /**
-     * Append an OR Filter onto this Filter's list.
+     * Append filter with operator.
      *
      * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface $filter
      * @param string $conjunction
@@ -77,7 +77,7 @@ class ClauseList
     }
 
     /**
-     * Append an AND Filter onto this Filter's list.
+     * Append an AND filter onto this Filter's list.
      *
      * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface $filter
      *
@@ -91,7 +91,7 @@ class ClauseList
     }
 
     /**
-     * Append an OR Filter onto this Filter's list.
+     * Append an OR filter onto this Filter's list.
      *
      * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface $filter
      *

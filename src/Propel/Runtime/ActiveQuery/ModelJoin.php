@@ -253,4 +253,15 @@ class ModelJoin extends Join
             . ' previousJoin: ' . ($this->previousJoin ? '(' . $this->previousJoin . ')' : 'null')
             . ' relationAlias: ' . $this->rightTableAlias;
     }
+
+    /**
+     * @param string $identifier
+     *
+     * @return bool
+     */
+    public function isIdentifiedBy(string $identifier): bool
+    {
+        return parent::isIdentifiedBy($identifier)
+            || $this->getTableMapOrFail()->isIdentifiedBy($identifier);
+    }
 }

@@ -36,35 +36,15 @@ class FilterClauseLiteralWithColumns extends AbstractFilterClauseLiteral
     public function __construct(Criteria $query, string $clause, $value = null)
     {
         parent::__construct($query, $clause, $value);
-        if (!$this->resolvedColumns && $this->value) {
+
+        if ($this->value && !$this->hasResolvedColumns()) {
             throw new InvalidClauseException("{$this->clause} - Cannot find column to determine value type");
         }
-        $this->init();
-    }
 
-    /**
-     * @return void
-     */
-    protected function init(): void
-    {
-        $referenceColumn = $this->findFirstColumnExpressionWithColumnMap();
+        $referenceColumn = AbstractColumnExpression::findFirstColumnExpressionWithColumnMap($this->resolvedColumns);
         if ($referenceColumn) {
             $this->applyOperatorBehavior($referenceColumn);
         }
-    }
-
-    /**
-     * @return \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|null
-     */
-    protected function findFirstColumnExpressionWithColumnMap(): ?AbstractColumnExpression
-    {
-        foreach ($this->resolvedColumns ?? [] as $col) {
-            if ($col->hasColumnMap()) {
-                return $col;
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -103,7 +83,7 @@ class FilterClauseLiteralWithColumns extends AbstractFilterClauseLiteral
      */
     protected function isInOperator(): bool
     {
-        return substr($this->clause, -4) === 'IN ?';
+        return strtoupper(substr($this->clause, -5)) === ' IN ?';
     }
 
     /**
@@ -111,7 +91,7 @@ class FilterClauseLiteralWithColumns extends AbstractFilterClauseLiteral
      */
     protected function isNotInOperator(): bool
     {
-        return substr($this->clause, -8) === 'NOT IN ?';
+        return strtoupper(substr($this->clause, -9)) === ' NOT IN ?';
     }
 
     /**
@@ -128,26 +108,13 @@ class FilterClauseLiteralWithColumns extends AbstractFilterClauseLiteral
      * @param int $position
      * @param mixed $value
      *
-     * @return array{table: null, column: \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression, value: mixed}
+     * @return array
      */
     protected function buildParameterByPosition(int $position, $value): array
     {
-        if ($this->resolvedColumns === null) {
-            $this->resolveColumnsAndAdjustExpressions();
-        }
         $columnIndex = count($this->resolvedColumns) === 1 ? 0 : $position;
-        $columnExpression = $this->resolvedColumns[$columnIndex];
-        $tableName = null;
-        if ($columnExpression->hasColumnMap()) {
-            $columnMap = $columnExpression->getColumnMap();
-            $tableName = $columnMap->getTableMap()->getName();
-        }
 
-        return [
-            'table' => $tableName,
-            'column' => $columnExpression->getColumnIdentifier(),
-            'value' => $value,
-        ];
+        return $this->resolvedColumns[$columnIndex]->buildPdoParam($value);
     }
 
     /**

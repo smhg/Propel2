@@ -8,9 +8,9 @@
 
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UnresolvedColumnExpression;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException;
-use Propel\Runtime\ActiveQuery\ModelCriteria;
 
 /**
  * A full filter statement given as a string, i.e. `col = ?`, `col1 = col2`, `col IS NULL`, `1=1`
@@ -21,7 +21,7 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
 {
     /**
      * All clauses need resolved columns, otherwise they cannot be added
-     * correctly to the query. Otherwise this should be moved to FilterClauseLiteralWithColumns
+     * correctly to the query.
      *
      * @see \Propel\Runtime\ActiveQuery\Criteria::add()
      * @see self::getLocalColumnName()
@@ -29,6 +29,11 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
      * @var array<\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression>
      */
     protected $resolvedColumns;
+
+    /**
+     * @var string
+     */
+    protected $inputClause;
 
     /**
      * @var string
@@ -43,28 +48,40 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
     public function __construct(Criteria $query, string $clause, $value = null)
     {
         parent::__construct($query, $value);
-        $this->clause = trim($clause);
-        $this->resolveColumnsAndAdjustExpressions();
+        $this->inputClause = $clause;
+        $this->setNormalizedClause();
     }
 
     /**
      * @return void
      */
-    protected function resolveColumnsAndAdjustExpressions(): void
+    protected function setNormalizedClause(): void
     {
-        if ($this->resolvedColumns === null) {
-            $this->resolvedColumns = $this->query instanceof ModelCriteria
-                ? $this->query->getColumnResolver()->resolveColumnsAndAdjustExpressions($this->clause)
-                : [];
-        }
+        $normalizedExpression = $this->query->normalizeFilterExpression($this->inputClause);
+        $this->clause = $normalizedExpression->getNormalizedFilterExpression();
+        $this->resolvedColumns = $normalizedExpression->getReplacedColumns();
     }
 
     /**
+     * @param bool $useQuoteIfEnable
+     *
      * @return string
      */
-    public function getLocalColumnName(): string
+    public function getLocalColumnName(bool $useQuoteIfEnable = false): string
     {
-        return $this->resolvedColumns ? $this->resolvedColumns[0]->getColumnExpressionInQuery() : '';
+        return $this->resolvedColumns ? $this->resolvedColumns[0]->getColumnExpressionInQuery($useQuoteIfEnable) : '';
+    }
+
+    /**
+     * Column name without table prefix.
+     *
+     * Will be DB column name if column could be resolved.
+     *
+     * @return string|null
+     */
+    public function getColumnName(): ?string
+    {
+        return $this->resolvedColumns ? $this->resolvedColumns[0]->getColumnName() : null;
     }
 
     /**
@@ -76,6 +93,18 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
      * @return array{table: null, column?: string|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression, type?: int, value: mixed}
      */
     abstract protected function buildParameterByPosition(int $position, $value): array;
+
+    /**
+     * @see AbstractFilter::buildStatement()
+     *
+     * @return void
+     */
+    protected function resolveUnresolved(): void
+    {
+        if ($this->hasUnresolvedColumns()) {
+            $this->setNormalizedClause();
+        }
+    }
 
     /**
      * @param array<array> $paramCollector A list to which Prepared Statement parameters will be appended
@@ -110,21 +139,21 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
         }
 
         $buildPlaceholderList = ($numberOfPlaceholders === 1); // single placeholder means we need a list ("col IN ?" => "col in (:p1, :p2)")
-        $placeholderCollector = $buildPlaceholderList ? [] : null;
+        $placeholderCollector = [];
         $clause = (string)$this->clause;
         foreach (array_values($this->value) as $columnIndex => $value) {
             $parameter = $this->buildParameterByPosition($columnIndex, $value);
-            $placeholder = $this->addParameter($paramCollector, $parameter);
-            if ($buildPlaceholderList) {
-                $placeholderCollector[] = $placeholder;
-            } else {
-                $clause = str_replace('?', $placeholder, $clause);
-            }
+            $placeholderCollector[] = $this->addParameter($paramCollector, $parameter);
         }
 
         if ($buildPlaceholderList) {
             $placeholderList = '(' . implode(',', $placeholderCollector) . ')';
             $clause = str_replace('?', $placeholderList, $clause);
+        } else {
+            $zipper = fn ($clause, $placeholder) => "$clause$placeholder";
+            $clauseParts = explode('?', $clause);
+            $zippedParts = array_map($zipper, $clauseParts, $placeholderCollector);
+            $clause = implode('', $zippedParts);
         }
 
         return $clause;
@@ -144,5 +173,37 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
     public function getTableAlias(): ?string
     {
         return null;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function hasUnresolvedColumns(): bool
+    {
+        return $this->doHasUnresolvedColumns();
+    }
+
+    /**
+     * @return bool
+     */
+    protected function hasResolvedColumns(): bool
+    {
+        return $this->doHasUnresolvedColumns(true);
+    }
+
+    /**
+     * @param bool $hasResolved
+     *
+     * @return bool
+     */
+    private function doHasUnresolvedColumns(bool $hasResolved = false): bool
+    {
+        foreach ((array)$this->resolvedColumns as $resolvedColumn) {
+            if ($resolvedColumn instanceof UnresolvedColumnExpression ^ $hasResolved) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

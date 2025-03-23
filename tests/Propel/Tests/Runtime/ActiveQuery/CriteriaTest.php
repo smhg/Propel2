@@ -37,13 +37,6 @@ class CriteriaTest extends BookstoreTestBase
      */
     private $c;
 
-//    /**
-//     * DB adapter saved for later.
-//     *
-//     * @var AbstractAdapter
-//     */
-//    private $savedAdapter;
-
     /**
      * @return void
      */
@@ -100,18 +93,15 @@ class CriteriaTest extends BookstoreTestBase
      */
     public function testAddAndSameColumns()
     {
-        $table1 = 'myTable1';
-        $column1 = 'myColumn1';
+        $table = 'myTable1';
+        $column = 'myColumn1';
         $value1 = 'myValue1';
-        $key1 = "$table1.$column1";
+        $key = "$table.$column";
 
-        $table2 = 'myTable1';
-        $column2 = 'myColumn1';
         $value2 = 'myValue2';
-        $key2 = "$table2.$column2";
 
-        $this->c->add($key1, $value1, Criteria::EQUAL);
-        $this->c->addAnd($key2, $value2, Criteria::EQUAL);
+        $this->c->add($key, $value1, Criteria::EQUAL);
+        $this->c->addAnd($key, $value2, Criteria::EQUAL);
 
         $expect = $this->getSql('SELECT  FROM myTable1 WHERE (myTable1.myColumn1=:p1 AND myTable1.myColumn1=:p2)');
 
@@ -330,18 +320,16 @@ class CriteriaTest extends BookstoreTestBase
                 'FoObAr',
                 Criteria::LIKE
             );
-            $sb = '';
             $params = [];
-            $myCriterion->appendPsTo($sb, $params);
+            $sb = $myCriterion->buildStatement($params);
             $expected = 'TABLE.COLUMN LIKE :p1';
 
             $this->assertEquals($expected, $sb);
 
             $ignoreCriterion = $myCriterion->setIgnoreCase(true);
 
-            $sb = '';
             $params = [];
-            $ignoreCriterion->appendPsTo($sb, $params);
+            $sb = $ignoreCriterion->buildStatement($params);
             // $expected = "UPPER(TABLE.COLUMN) LIKE UPPER(?)";
             $this->assertEquals($expectedIgnore[$i], $sb);
             $i++;
@@ -966,8 +954,8 @@ class CriteriaTest extends BookstoreTestBase
         $c = new Criteria();
         $c->addAsColumn('column_alias', 'tbl.COL1');
         $crit = $c->getNewCriterion('column_alias', 'FOO');
-        $this->assertNull($crit->getTable());
-        $this->assertEquals('column_alias', $crit->getColumn());
+        $this->assertNull($crit->getTableAlias());
+        $this->assertEquals('column_alias', $crit->getLocalColumnName());
     }
 
     /**
@@ -1029,6 +1017,43 @@ class CriteriaTest extends BookstoreTestBase
         $this->assertEquals($expected, $result);
         $c->doSelect($this->con);
         $expected = $this->getSql('SELECT book.title, book.isbn AS isb_n FROM book HAVING isb_n = \'1234567890123\'');
+        $this->assertEquals($expected, $this->con->getLastExecutedQuery());
+    }
+
+    /**
+     * @group mysql
+     *
+     * @return void
+     */
+    public function testHavingOnOverridingAsColumn()
+    {
+        $c = (new BookQuery())
+            ->select(['title'])
+            ->addAsColumn('price', 'id')
+            ->addHaving('price >= 12');
+        $expected = $this->getSql('SELECT id AS price, book.title AS "title" FROM book HAVING price >= 12');
+        $params = [];
+        $result = $c->createSelectSql($params);
+        $this->assertEquals($expected, $result);
+        $c->doSelect($this->con);
+        $this->assertEquals($expected, $this->con->getLastExecutedQuery());
+    }
+
+    /**
+     * @group mysql
+     *
+     * @return void
+     */
+    public function testHavingLocalColumn()
+    {
+        $c = (new BookQuery())
+            ->addHaving('price', 12, Criteria::GREATER_EQUAL);
+        $expected = $this->getSql('SELECT  FROM book HAVING book.price>=:p1');
+        $params = [];
+        $result = $c->createSelectSql($params);
+        $this->assertEquals($expected, $result);
+        $c->doSelect($this->con);
+        $expected = $this->getSql('SELECT book.id, book.title, book.isbn, book.price, book.publisher_id, book.author_id FROM book HAVING book.price>=12');
         $this->assertEquals($expected, $this->con->getLastExecutedQuery());
     }
 

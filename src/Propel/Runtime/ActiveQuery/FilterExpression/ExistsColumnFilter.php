@@ -12,8 +12,6 @@ use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\Map\RelationMap;
 
-/**
- */
 class ExistsColumnFilter extends AbstractInnerQueryFilter
 {
     /**

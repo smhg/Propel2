@@ -8,6 +8,7 @@
 
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
+use Propel\Runtime\ActiveQuery\Criterion\ClauseList;
 use Propel\Runtime\Adapter\AdapterInterface;
 
 interface ColumnFilterInterface
@@ -35,9 +36,22 @@ interface ColumnFilterInterface
     public function collectParameters(array &$paramCollector): void;
 
     /**
+     * The full column identifier as used in query (with quotes if configured in ServiceContainer or table)
+     *
+     * @param bool $useQuoteIfEnable
+     *
      * @return string
      */
-    public function getLocalColumnName(): string;
+    public function getLocalColumnName(bool $useQuoteIfEnable = true): string;
+
+    /**
+     * Column name without table prefix.
+     *
+     * Will be DB column name if column could be resolved.
+     *
+     * @return string|null
+     */
+    public function getColumnName(): ?string;
 
     /**
      * @return string|null
@@ -70,6 +84,16 @@ interface ColumnFilterInterface
      * @return bool
      */
     public function equals(ColumnFilterInterface $filter): bool;
+
+    /**
+     * Append filter with operator.
+     *
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface $filter
+     * @param string $conjunction
+     *
+     * @return static
+     */
+    public function addFilter(ColumnFilterInterface $filter, string $conjunction = ClauseList::AND_OPERATOR_LITERAL);
 
     /**
      * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface $filter

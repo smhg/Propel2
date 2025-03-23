@@ -18,12 +18,14 @@ use Propel\Runtime\ActiveQuery\Criteria;
 class RemoteColumnExpression extends AbstractColumnExpression
 {
     /**
- * A column that comes from a subquery or parent query and has no type information.
+     * A column that comes from a subquery or parent query and has no type information.
+     *
+     * @param \Propel\Runtime\ActiveQuery\Criteria $sourceQuery
      * @param string|null $tableAlias
-     * @param \Propel\Runtime\Map\ColumnMap $columnMap
+     * @param string $columnName
      */
-    public function __construct(Criteria $sourceQuery, ?string $tableAlias, string $columnIdentifier)
+    public function __construct(Criteria $sourceQuery, ?string $tableAlias, string $columnName)
     {
-        parent::__construct($sourceQuery, $tableAlias, $columnIdentifier);
+        parent::__construct($sourceQuery, $tableAlias, $columnName);
     }
 }

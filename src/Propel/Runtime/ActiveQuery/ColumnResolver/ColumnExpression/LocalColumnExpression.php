@@ -24,7 +24,8 @@ class LocalColumnExpression extends AbstractColumnExpression
     protected $columnMap;
 
     /**
-    * A local column is used in context where the DB column is available
+     * A local column is used in context where the DB column is available
+     *
      * @param \Propel\Runtime\ActiveQuery\Criteria $sourceQuery
      * @param string $tableAlias
      * @param \Propel\Runtime\Map\ColumnMap $columnMap
@@ -45,16 +46,15 @@ class LocalColumnExpression extends AbstractColumnExpression
 
     /**
      * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression $otherColumn
+     *
      * @return bool
      */
     public function equals(AbstractColumnExpression $otherColumn): bool
     {
         return $otherColumn instanceof static
             && $this->columnMap === $otherColumn->columnMap
-            && parent::equals($otherColumn)
-            ;
+            && parent::equals($otherColumn);
     }
-
 
     /**
      * @return bool
@@ -62,5 +62,21 @@ class LocalColumnExpression extends AbstractColumnExpression
     public function hasColumnMap(): bool
     {
         return true;
+    }
+
+    /**
+     * @see \Propel\Runtime\Adapter\Pdo\PdoAdapter::bindValues()
+     *
+     * @param mixed $value
+     *
+     * @return array{table: ?string, column: string, value: mixed}
+     */
+    public function buildPdoParam($value): array
+    {
+        return [
+            'table' => $this->columnMap->getTableName(),
+            'column' => $this->columnMap->getName(),
+            'value' => $value,
+        ];
     }
 }

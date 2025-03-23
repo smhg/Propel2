@@ -8,6 +8,7 @@
 
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\LocalColumnExpression;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\Map\RelationMap;
@@ -28,7 +29,9 @@ class ColumnToQueryFilter extends AbstractInnerQueryFilter
     protected function initForRelation(ModelCriteria $outerQuery, RelationMap $relation): void
     {
         $outerColumns = $relation->getLeftColumns();
-        $this->leftOperand = ($outerColumns) ? reset($outerColumns)->getFullyQualifiedName() : null;
+        if ($outerColumns) {
+            $this->queryColumn = new LocalColumnExpression($this->query, $this->query->getTableNameInQuery(), reset($outerColumns));
+        }
 
         $innerColumns = $relation->getRightColumns();
         if ($innerColumns && $this->innerQuery instanceof ModelCriteria) {
