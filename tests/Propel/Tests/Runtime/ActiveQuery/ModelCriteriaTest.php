@@ -350,7 +350,7 @@ class ModelCriteriaTest extends BookstoreTestBase
         try {
             $c->where('b.Title = ?', 'foo');
             $this->fail('where() throws an exception when it finds a ? but cannot determine a column');
-        } catch (InvalidClauseException $e) {
+        } catch (PropelException $e) {
             $this->assertTrue(true, 'where() throws an exception when it finds a ? but cannot determine a column');
         }
     }

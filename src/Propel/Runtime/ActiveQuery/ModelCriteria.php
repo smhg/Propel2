@@ -13,6 +13,7 @@ use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExp
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\LocalColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UnresolvedColumnExpression;
 use Propel\Runtime\ActiveQuery\Criterion\ClauseList;
+use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException;
 use Propel\Runtime\ActiveQuery\Criterion\ExistsQueryCriterion;
 use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
 use Propel\Runtime\ActiveQuery\Exception\UnknownRelationException;
@@ -2127,6 +2128,8 @@ class ModelCriteria extends BaseModelCriteria
      * @param mixed $value A value for the condition
      * @param int|null $bindingType
      *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
      * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface a Criterion object
      */
     protected function getCriterionForClause(string $clause, $value, ?int $bindingType = null): ColumnFilterInterface
@@ -2135,7 +2138,11 @@ class ModelCriteria extends BaseModelCriteria
             return new FilterClauseLiteralWithPdoTypes($this, $clause, $value, $bindingType);
         }
 
-        return new FilterClauseLiteralWithColumns($this, $clause, $value);
+        try {
+            return new FilterClauseLiteralWithColumns($this, $clause, $value);
+        } catch (InvalidClauseException $e) {
+            throw new PropelException($e->getMessage(), $e->getCode(), $e); // for BC
+        }
     }
 
     /**
