@@ -37,11 +37,11 @@ class ModelJoin extends Join
     /**
      * @param \Propel\Runtime\Map\RelationMap $relationMap
      * @param string|null $leftTableAlias
-     * @param string|null $relationAlias
+     * @param string|null $rightTableAlias
      *
      * @return $this
      */
-    public function setRelationMap(RelationMap $relationMap, ?string $leftTableAlias = null, ?string $relationAlias = null)
+    public function setRelationMap(RelationMap $relationMap, ?string $leftTableAlias = null, ?string $rightTableAlias = null)
     {
         $leftCols = $relationMap->getLeftColumns();
         $rightCols = $relationMap->getRightColumns();
@@ -55,7 +55,7 @@ class ModelJoin extends Join
                     $this->addForeignValueCondition(
                         $rightCols[$i]->getTableName(),
                         $rightCols[$i]->getName(),
-                        $relationAlias,
+                        $rightTableAlias,
                         $leftValues[$i],
                         Criteria::EQUAL,
                     );
@@ -76,7 +76,7 @@ class ModelJoin extends Join
                     $leftTableAlias,
                     $rightCols[$i]->getTableName(),
                     $rightCols[$i]->getName(),
-                    $relationAlias,
+                    $rightTableAlias,
                     Criteria::EQUAL,
                 );
             }

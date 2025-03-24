@@ -11,7 +11,6 @@ namespace Propel\Runtime\ActiveQuery\FilterExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UnresolvedColumnExpression;
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\ActiveQuery\Join;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Exception\PropelException;
@@ -153,7 +152,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
         $this->innerQuery = $innerQuery;
 
         if ($this->innerQuery instanceof ModelCriteria && $outerQuery instanceof ModelCriteria) {
-            $this->innerQuery->setPrimaryCriteria($outerQuery, new Join()); // HACK - ColumnResolver uses primary criteria to remove aliases from topmost query
+            $this->innerQuery->setPrimaryCriteria($outerQuery, null); // HACK - ColumnResolver uses primary criteria to remove aliases from topmost query
         }
     }
 
@@ -179,24 +178,36 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
     /**
      * @param \Propel\Runtime\ActiveQuery\ModelCriteria $outerQuery
      * @param \Propel\Runtime\Map\RelationMap $relationMap where outer query is on the left side
+     * @param bool $forInnerQuery
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
      * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface
      */
-    protected function buildJoinCondition($outerQuery, RelationMap $relationMap): ColumnFilterInterface
+    protected function buildJoinCondition($outerQuery, RelationMap $relationMap, bool $forInnerQuery = false): ColumnFilterInterface
     {
-        if (!$this->innerQuery instanceof ModelCriteria) {
+        if (!$forInnerQuery) {
+            $leftQuery = $outerQuery;
+            $rightQuery = $this->innerQuery;
+        } else {
+            $leftQuery = $this->innerQuery;
+            $rightQuery = $outerQuery;
+            $symmetricRelation = $relationMap->getSymmetricalRelation();
+            if (!$symmetricRelation) {
+                throw new PropelException("Cannot find symmetrical relation for relation '{$relationMap->getName()}' on {$outerQuery->getModelAliasOrName()}");
+            }
+            $relationMap = $symmetricRelation;
+        }
+        if (!$rightQuery instanceof ModelCriteria || !$leftQuery instanceof ModelCriteria) {
             throw new PropelException('Cannot build join on regular condition');
         }
         $join = new ModelJoin();
-        $outerAlias = $outerQuery->getModelAlias();
-        $innerAlias = $this->innerQuery->getModelAlias();
-        $join->setRelationMap($relationMap, $outerAlias, $innerAlias);
-        $join->buildJoinCondition($outerQuery);
+        $leftAlias = $leftQuery->getModelAlias();
+        $rightAlias = $rightQuery->getModelAlias();
+        $join->setRelationMap($relationMap, $leftAlias, $rightAlias);
+        $join->buildJoinCondition($leftQuery);
 
         $joinCondition = $join->getJoinCondition();
-//        $joinCondition->setTable($this->innerQuery->getTableNameInQuery());
 
         return $joinCondition;
     }

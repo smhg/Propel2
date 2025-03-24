@@ -122,9 +122,9 @@ class FilterFactory
         }
 
         switch ($comparison) {
-            case ExistsColumnFilter::TYPE_EXISTS:
-            case ExistsColumnFilter::TYPE_NOT_EXISTS:
-                return new ExistsColumnFilter($outerQuery, null, $comparison, $innerQuery);
+            case ExistsFilter::TYPE_EXISTS:
+            case ExistsFilter::TYPE_NOT_EXISTS:
+                return new ExistsFilter($outerQuery, null, $comparison, $innerQuery);
             default:
                 return new ColumnToQueryFilter($outerQuery, $column, $comparison, $innerQuery);
         }

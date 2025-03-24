@@ -13,11 +13,12 @@ use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExp
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\LocalColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UnresolvedColumnExpression;
 use Propel\Runtime\ActiveQuery\Criterion\ClauseList;
-use Propel\Runtime\ActiveQuery\Criterion\ColumnToQueryOperatorCriterion;
 use Propel\Runtime\ActiveQuery\Criterion\ExistsQueryCriterion;
 use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
 use Propel\Runtime\ActiveQuery\Exception\UnknownRelationException;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
+use Propel\Runtime\ActiveQuery\FilterExpression\ColumnToQueryFilter;
+use Propel\Runtime\ActiveQuery\FilterExpression\ExistsFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithColumns;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithPdoTypes;
 use Propel\Runtime\ActiveQuery\ModelCriteria as ActiveQueryModelCriteria;
@@ -927,7 +928,7 @@ class ModelCriteria extends BaseModelCriteria
     /**
      * Adds and returns an internal query to be used in an EXISTS-clause.
      *
-     * @param class-string<\Propel\Runtime\ActiveQuery\Criterion\AbstractInnerQueryCriterion> $abstractInnerQueryCriterionClass
+     * @param class-string<\Propel\Runtime\ActiveQuery\FilterExpression\AbstractInnerQueryFilter> $abstractInnerQueryCriterionClass
      * @param string $relationName name of the relation
      * @param string|null $modelAlias sets an alias for the nested query
      * @param class-string<\Propel\Runtime\ActiveQuery\ModelCriteria>|null $queryClass allows to use a custom query class for the exists query, like ExtendedBookQuery::class
@@ -975,9 +976,9 @@ class ModelCriteria extends BaseModelCriteria
         string $relationName,
         ?string $modelAlias = null,
         ?string $queryClass = null,
-        string $type = ExistsQueryCriterion::TYPE_EXISTS
+        string $type = ExistsFilter::TYPE_EXISTS
     ) {
-        return $this->useAbstractInnerQueryCriterion(ExistsQueryCriterion::class, $relationName, $modelAlias, $queryClass, $type);
+        return $this->useAbstractInnerQueryCriterion(ExistsFilter::class, $relationName, $modelAlias, $queryClass, $type);
     }
 
     /**
@@ -1014,7 +1015,7 @@ class ModelCriteria extends BaseModelCriteria
         ?string $queryClass = null,
         string $type = Criteria::IN
     ) {
-        return $this->useAbstractInnerQueryCriterion(ColumnToQueryOperatorCriterion::class, $relationName, $modelAlias, $queryClass, $type);
+        return $this->useAbstractInnerQueryCriterion(ColumnToQueryFilter::class, $relationName, $modelAlias, $queryClass, $type);
     }
 
     /**
@@ -1092,14 +1093,16 @@ class ModelCriteria extends BaseModelCriteria
      * Sets the primary Criteria for this secondary Criteria
      *
      * @param \Propel\Runtime\ActiveQuery\ModelCriteria $criteria The primary criteria
-     * @param \Propel\Runtime\ActiveQuery\Join $previousJoin The previousJoin for this ModelCriteria
+     * @param \Propel\Runtime\ActiveQuery\Join|null $previousJoin The previousJoin for this ModelCriteria
      *
      * @return $this
      */
-    public function setPrimaryCriteria(ModelCriteria $criteria, Join $previousJoin)
+    public function setPrimaryCriteria(ModelCriteria $criteria, ?Join $previousJoin)
     {
         $this->primaryCriteria = $criteria;
-        $this->setPreviousJoin($previousJoin);
+        if ($previousJoin) {
+            $this->setPreviousJoin($previousJoin);
+        }
 
         return $this;
     }

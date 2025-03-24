@@ -128,6 +128,10 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
 
         if (!$sourceTableNames && $this->criteria->getPrimaryTableName()) {
             $primaryTable = $this->criteria->getPrimaryTableName();
+            $possibleAlias = $this->criteria->getTableNameInQuery();
+            if ($primaryTable !== $possibleAlias) {
+                $primaryTable = "$primaryTable $possibleAlias";
+            }
             $sourceTableNames[] = $this->quoteIdentifierTable($primaryTable);
         }
 

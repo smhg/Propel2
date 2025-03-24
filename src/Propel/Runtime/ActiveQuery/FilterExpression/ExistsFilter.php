@@ -12,7 +12,7 @@ use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\Map\RelationMap;
 
-class ExistsColumnFilter extends AbstractInnerQueryFilter
+class ExistsFilter extends AbstractInnerQueryFilter
 {
     /**
      * @var string
@@ -25,7 +25,7 @@ class ExistsColumnFilter extends AbstractInnerQueryFilter
     public const TYPE_NOT_EXISTS = 'NOT EXISTS';
 
     /**
-     * @see AbstractInnerQueryCriterion::initRelation()
+     * Special filter for EXISTS with proper adjustments to inner query.
      *
      * @param \Propel\Runtime\ActiveQuery\ModelCriteria $outerQuery
      * @param \Propel\Runtime\Map\RelationMap $relation
@@ -34,7 +34,7 @@ class ExistsColumnFilter extends AbstractInnerQueryFilter
      */
     protected function initForRelation(ModelCriteria $outerQuery, RelationMap $relation): void
     {
-        $joinCondition = $this->buildJoinCondition($outerQuery, $relation);
+        $joinCondition = $this->buildJoinCondition($outerQuery, $relation, true);
         $this->innerQuery->addAnd($joinCondition);
     }
 

@@ -113,7 +113,7 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
      *
      * @return string
      */
-    public function buildStatement(array &$paramCollector): string
+    final public function buildStatement(array &$paramCollector): string
     {
         $this->resolveUnresolved();
         if (!$this->clauses) {

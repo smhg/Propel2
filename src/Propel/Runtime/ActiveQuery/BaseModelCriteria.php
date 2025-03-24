@@ -338,8 +338,11 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
         if ($this->useAliasInSQL && $this->modelAlias) {
             return $this->modelAlias;
         }
+        if ($this->getTableMap()) {
+            return $this->getTableMap()->getName();
+        }
 
-        return $this->getTableMap()->getName();
+        return parent::getTableNameInQuery();
     }
 
     /**
