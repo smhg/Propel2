@@ -11,6 +11,7 @@ namespace Propel\Runtime\ActiveQuery;
 use Exception;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\RemoteColumnExpression;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\RemoteTypedColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\NormalizedFilterExpression;
 use Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion;
 use Propel\Runtime\ActiveQuery\FilterExpression\AbstractColumnFilter;
@@ -27,6 +28,7 @@ use Propel\Runtime\Adapter\AdapterInterface;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\DataFetcher\DataFetcherInterface;
 use Propel\Runtime\Exception\LogicException;
+use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Map\ColumnMap;
 use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Propel;
@@ -2055,22 +2057,31 @@ class Criteria
      * You can get a new, empty Criterion object with the
      * getNewCriterion() method.
      *
-     * <p>
-     * <code>
-     * $crit = new Criteria();
-     * $c = $crit->getNewCriterion(BaseTableMap::ID, 5, Criteria::LESS_THAN);
-     * $crit->addHaving($c);
-     * </code>
+     * Can be called
+     * - addHaving('fooCol', 42)
+     * - addHaving('fooCol', 42, Criteria::GREATER_THAN)
+     * - addHaving('fooCol > 42')
+     * - addHaving('fooCol > ?', 42, \PDO::PARAM_INT)
+     * - addHaving('fooCol', 42, Criteria::GREATER_THAN, \PDO::PARAM_INT) // for AS columns
      *
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1 A filter or a SQL clause with a question mark placeholder, or a column name
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $columnOrClause A filter or a SQL clause with a question mark placeholder, or a column name
      * @param mixed $value The value to bind in the condition
-     * @param string|int|null $comparison A PDO::PARAM_ class constant
+     * @param string|int|null $comparison A PDO::PARAM_ class constant or an operator
+     * @param int|null $pdoType A PDO::PARAM_ class constant
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
      *
      * @return $this A modified Criteria object.
      */
-    public function addHaving($p1, $value = null, $comparison = null)
+    public function addHaving($columnOrClause, $value = null, $comparison = null, ?int $pdoType = null)
     {
-        $this->having = $this->getCriterionForCondition($p1, $value, $comparison, true);
+        if ($pdoType !== null && is_string($columnOrClause)) {
+            if (!NormalizedFilterExpression::isColumnLiteral($columnOrClause)) {
+                throw new PropelException("Expected column name, but found '$columnOrClause'");
+            }
+            $columnOrClause = new RemoteTypedColumnExpression($this, null, $columnOrClause, $pdoType);
+        }
+        $this->having = $this->getCriterionForCondition($columnOrClause, $value, $comparison, true);
 
         return $this;
     }
