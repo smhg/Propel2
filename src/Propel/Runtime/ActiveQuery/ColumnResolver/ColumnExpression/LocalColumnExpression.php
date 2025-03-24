@@ -24,7 +24,7 @@ class LocalColumnExpression extends AbstractColumnExpression
     protected $columnMap;
 
     /**
-     * A local column is used in context where the DB column is available
+     * A local column is used in context where the DB column is available.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria $sourceQuery
      * @param string $tableAlias

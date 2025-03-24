@@ -10,6 +10,7 @@ namespace Propel\Tests\Runtime\ActiveQuery;
 
 use PDO;
 use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException;
 use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
 use Propel\Runtime\ActiveQuery\Exception\UnknownRelationException;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -349,7 +350,7 @@ class ModelCriteriaTest extends BookstoreTestBase
         try {
             $c->where('b.Title = ?', 'foo');
             $this->fail('where() throws an exception when it finds a ? but cannot determine a column');
-        } catch (PropelException $e) {
+        } catch (InvalidClauseException $e) {
             $this->assertTrue(true, 'where() throws an exception when it finds a ? but cannot determine a column');
         }
     }
@@ -805,7 +806,7 @@ class ModelCriteriaTest extends BookstoreTestBase
         $c->setModelAlias('b', true);
         $c->groupByClass('b');
 
-        $sql = 'SELECT  FROM book GROUP BY b.id,b.title,b.isbn,b.price,b.publisher_id,b.author_id';
+        $sql = 'SELECT  FROM book b GROUP BY b.id,b.title,b.isbn,b.price,b.publisher_id,b.author_id';
         $params = [];
         $this->assertCriteriaTranslation($c, $sql, $params, 'groupByClass() accepts a true class alias and adds a GROUP BY clause for all columns of the class');
     }

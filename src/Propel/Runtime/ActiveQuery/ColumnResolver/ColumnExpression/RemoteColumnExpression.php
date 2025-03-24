@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression;
 
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnResolver;
 use Propel\Runtime\ActiveQuery\Criteria;
 
 /**
@@ -27,5 +28,18 @@ class RemoteColumnExpression extends AbstractColumnExpression
     public function __construct(Criteria $sourceQuery, ?string $tableAlias, string $columnName)
     {
         parent::__construct($sourceQuery, $tableAlias, $columnName);
+    }
+
+    /**
+     * @param \Propel\Runtime\ActiveQuery\Criteria $sourceQuery
+     * @param string $columnLiteral
+     *
+     * @return self
+     */
+    public static function fromString(Criteria $sourceQuery, string $columnLiteral)
+    {
+        [$tableAlias, $columnName] = ColumnResolver::splitColumnLiteralParts($columnLiteral);
+
+        return new self($sourceQuery, $tableAlias, $columnName);
     }
 }

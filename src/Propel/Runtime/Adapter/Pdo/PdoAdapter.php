@@ -573,7 +573,7 @@ abstract class PdoAdapter
 
                 continue;
             }
-            if (empty($param['table']) || empty($param['column'])) {
+            if (empty($param['table']) || empty($param['column']) || !$dbMap->hasTable($param['table'])) {
                 $type = $param['type'] ?? PDO::PARAM_STR;
                 $stmt->bindValue($parameter, $value, $type);
 

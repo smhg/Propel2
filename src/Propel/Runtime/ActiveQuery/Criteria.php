@@ -10,7 +10,7 @@ namespace Propel\Runtime\ActiveQuery;
 
 use Exception;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
-use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UnresolvedColumnExpression;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\RemoteColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\NormalizedFilterExpression;
 use Propel\Runtime\ActiveQuery\Criterion\AbstractCriterion;
 use Propel\Runtime\ActiveQuery\FilterExpression\AbstractColumnFilter;
@@ -2313,7 +2313,8 @@ class Criteria
      */
     public function resolveColumn(string $columnIdentifier, bool $hasAccessToOutputColumns = false, bool $failSilently = true): AbstractColumnExpression
     {
-        return UnresolvedColumnExpression::fromString($this, $columnIdentifier);
+        // Regular Criteria has no TableMap, all columns can be considered remote.
+        return RemoteColumnExpression::fromString($this, $columnIdentifier);
     }
 
     /**
