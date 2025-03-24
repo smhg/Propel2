@@ -1019,15 +1019,15 @@ class Criteria
      * so the Column name must be something like 'TABLE.id'.
      *
      * @param string $name name to combine the criterion later
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1 The column to run the comparison on, or AbstractCriterion object.
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $columnOrClause The column to run the comparison on, or AbstractCriterion object.
      * @param mixed|null $value
      * @param string|null $comparison A String.
      *
      * @return $this A modified Criteria object.
      */
-    public function addCond(string $name, $p1, $value = null, ?string $comparison = null)
+    public function addCond(string $name, $columnOrClause, $value = null, ?string $comparison = null)
     {
-        $this->namedCriterions[$name] = $this->getCriterionForCondition($p1, $value, $comparison);
+        $this->namedCriterions[$name] = $this->getCriterionForCondition($columnOrClause, $value, $comparison);
 
         return $this;
     }
@@ -2140,16 +2140,16 @@ class Criteria
      *  - addAnd(column, value)
      *  - addAnd(Criterion)
      *
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1 The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $columnOrClause The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
      * @param mixed|null $value
      * @param mixed|null $condition
      * @param bool $preferColumnCondition
      *
      * @return static A modified Criteria object.
      */
-    public function addAnd($p1, $value = null, $condition = null, bool $preferColumnCondition = true)
+    public function addAnd($columnOrClause, $value = null, $condition = null, bool $preferColumnCondition = true)
     {
-        return $this->addFilter(self::LOGICAL_AND, $p1, $value, $condition, $preferColumnCondition);
+        return $this->addFilter(self::LOGICAL_AND, $columnOrClause, $value, $condition, $preferColumnCondition);
     }
 
     /**
@@ -2163,30 +2163,30 @@ class Criteria
      *  - addOr(column, value)
      *  - addOr(Criterion)
      *
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1 The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $columnOrClause The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
      * @param mixed $value
      * @param mixed $condition
      * @param bool $preferColumnCondition
      *
      * @return static A modified Criteria object.
      */
-    public function addOr($p1, $value = null, $condition = null, bool $preferColumnCondition = true)
+    public function addOr($columnOrClause, $value = null, $condition = null, bool $preferColumnCondition = true)
     {
-        return $this->addFilter(self::LOGICAL_OR, $p1, $value, $condition, $preferColumnCondition);
+        return $this->addFilter(self::LOGICAL_OR, $columnOrClause, $value, $condition, $preferColumnCondition);
     }
 
     /**
      * @param string $andOr
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $columnOrClause
      * @param mixed $value
      * @param string|int|null $condition
      * @param bool $preferColumnCondition
      *
      * @return static
      */
-    protected function addFilter(string $andOr, $p1, $value = null, $condition = null, bool $preferColumnCondition = true)
+    protected function addFilter(string $andOr, $columnOrClause, $value = null, $condition = null, bool $preferColumnCondition = true)
     {
-        $filter = $this->getCriterionForCondition($p1, $value, $condition);
+        $filter = $this->getCriterionForCondition($columnOrClause, $value, $condition);
 
         if ($andOr === self::LOGICAL_OR) {
             $parentFilter = $this->getLastCriterion();
@@ -2208,7 +2208,7 @@ class Criteria
      *
      * @see Criteria::add()
      *
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1 The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $columnOrClause The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
      * @param mixed $value
      * @param string|null $operator A String, like Criteria::EQUAL.
      * @param bool $preferColumnCondition If true, the condition is combined with an existing condition on the same column
@@ -2217,15 +2217,15 @@ class Criteria
      *
      * @return static A modified Criteria object.
      */
-    public function addUsingOperator($p1, $value = null, ?string $operator = null, bool $preferColumnCondition = true)
+    public function addUsingOperator($columnOrClause, $value = null, ?string $operator = null, bool $preferColumnCondition = true)
     {
         if ($this->defaultCombineOperator === self::LOGICAL_OR) {
             $this->defaultCombineOperator = self::LOGICAL_AND;
 
-            return $this->addOr($p1, $value, $operator, $preferColumnCondition);
+            return $this->addOr($columnOrClause, $value, $operator, $preferColumnCondition);
         }
 
-        return $this->addAnd($p1, $value, $operator, $preferColumnCondition);
+        return $this->addAnd($columnOrClause, $value, $operator, $preferColumnCondition);
     }
 
     /**

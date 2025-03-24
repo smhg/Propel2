@@ -2338,21 +2338,21 @@ class ModelCriteria extends BaseModelCriteria
 
     /**
      * @param string $andOr
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $p1
+     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $columnOrClause
      * @param mixed $value
      * @param string|int|null $condition
      * @param bool $preferColumnCondition
      *
      * @return static
      */
-    protected function addFilter(string $andOr, $p1, $value = null, $condition = null, bool $preferColumnCondition = true)
+    protected function addFilter(string $andOr, $columnOrClause, $value = null, $condition = null, bool $preferColumnCondition = true)
     {
-        if (is_string($p1)) {
-            $resolvedColumn = $this->resolveColumn($p1);
-            $p1 = $resolvedColumn;
+        if (is_string($columnOrClause)) {
+            $resolvedColumn = $this->resolveColumn($columnOrClause);
+            $columnOrClause = $resolvedColumn;
         }
 
-        return parent::addFilter($andOr, $p1, $value, $condition, $preferColumnCondition);
+        return parent::addFilter($andOr, $columnOrClause, $value, $condition, $preferColumnCondition);
     }
 
     /**
