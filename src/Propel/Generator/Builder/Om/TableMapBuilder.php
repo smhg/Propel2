@@ -120,6 +120,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
         $table = $this->getTable();
 
         $this->declareClasses(
+            '\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\LocalColumnExpression',
             '\Propel\Runtime\ActiveQuery\InstancePoolTrait',
             '\Propel\Runtime\Map\TableMap',
             '\Propel\Runtime\Map\TableMapTrait',
@@ -1286,23 +1287,16 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      */
     public static function addSelectColumns(Criteria \$criteria, ?string \$alias = null): void
     {
-        if (null === \$alias) {";
+        \$tableMap = static::getTableMap();
+        \$tableAlias = \$alias ?: '{$this->getTable()->getName()}';";
         foreach ($this->getTable()->getColumns() as $col) {
-            if (!$col->isLazyLoad()) {
-                $script .= "
-            \$criteria->addSelectColumn({$col->getFQConstantName()});";
-            } // if !col->isLazyLoad
+            if ($col->isLazyLoad()) {
+                continue;
+            }
+            $normalizedColumnName = strtoupper($col->getName());
+            $script .= "
+        \$criteria->addSelectColumn(new LocalColumnExpression(\$criteria, \$tableAlias, \$tableMap->columns['$normalizedColumnName']));";
         }
-        $script .= "
-        } else {";
-        foreach ($this->getTable()->getColumns() as $col) {
-            if (!$col->isLazyLoad()) {
-                $script .= "
-            \$criteria->addSelectColumn(\$alias . '." . $col->getName() . "');";
-            } // if !col->isLazyLoad
-        }
-        $script .= "
-        }";
         $script .= "
     }
 ";

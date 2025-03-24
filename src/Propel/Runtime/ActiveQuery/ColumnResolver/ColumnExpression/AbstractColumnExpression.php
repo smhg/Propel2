@@ -61,13 +61,12 @@ abstract class AbstractColumnExpression
      */
     public function getColumnExpressionInQuery(bool $useQuotesIfEnabled = false): string
     {
-        $columnLiteral = $this->tableAlias ? "{$this->tableAlias}.{$this->columnName}" : $this->columnName;
         if (!$useQuotesIfEnabled) {
-            return $columnLiteral;
+            return $this->tableAlias ? "{$this->tableAlias}.{$this->columnName}" : $this->columnName;
         }
         $tableMap = $this->hasColumnMap() ? $this->getColumnMap()->getTableMap() : null;
 
-        return $this->sourceQuery->quoteColumnIdentifier($columnLiteral, $tableMap);
+        return $this->sourceQuery->quoteColumnIdentifier($this->tableAlias, $this->columnName, $tableMap);
     }
 
     /**

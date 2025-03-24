@@ -106,9 +106,12 @@ class ModelCriteria extends BaseModelCriteria
      */
     protected $isKeepQuery = true;
 
-    // this is for the select method
     /**
-     * @var array|string|null
+     * User-selected columns.
+     *
+     * Set in {@see static::select()}. Will be added as AS columns in {@see static::configureSelectColumns()}
+     *
+     * @var array<string>|null
      */
     protected $select;
 
@@ -538,7 +541,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @see select()
      *
-     * @return array<string>|string|null A list of column names (e.g. array('Title', 'Category.Name', 'c.Content')) or a single column name (e.g. 'Name')
+     * @return array<string>|null A list of column names (e.g. array('Title', 'Category.Name', 'c.Content')) or a single column name (e.g. 'Name')
      */
     public function getSelect()
     {
@@ -2195,7 +2198,6 @@ class ModelCriteria extends BaseModelCriteria
     public function doSelect(?ConnectionInterface $con = null): DataFetcherInterface
     {
         $this->configureSelectColumns();
-
         $this->addSelfSelectColumns();
 
         return parent::doSelect($con);
@@ -2232,10 +2234,6 @@ class ModelCriteria extends BaseModelCriteria
             $this->setFormatter(SimpleArrayFormatter::class);
         }
         $this->selectColumns = [];
-
-        if (!is_array($this->select)) {
-            return;
-        }
 
         foreach ($this->select as $columnName) {
             if (array_key_exists($columnName, $this->asColumns)) {
@@ -2516,11 +2514,11 @@ class ModelCriteria extends BaseModelCriteria
     /**
      * Override method to prevent an addition of self columns.
      *
-     * @param string $name
+     * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $name
      *
      * @return $this
      */
-    public function addSelectColumn(string $name)
+    public function addSelectColumn($name)
     {
         $this->isSelfSelected = true;
 

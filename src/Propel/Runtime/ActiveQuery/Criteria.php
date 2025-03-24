@@ -249,9 +249,9 @@ class Criteria
     protected $singleRecord = false;
 
     /**
-     * Storage of select data. Collection of column names.
+     * Columns used in SELECT
      *
-     * @var array<string>
+     * @var array<string|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression>
      */
     protected $selectColumns = [];
 
@@ -1629,11 +1629,11 @@ class Criteria
     /**
      * Add select column.
      *
-     * @param string $name Name of the select column.
+     * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $name Name of the select column.
      *
      * @return $this Modified Criteria object (for fluent API)
      */
-    public function addSelectColumn(string $name)
+    public function addSelectColumn($name)
     {
         $this->selectColumns[] = $name;
 
@@ -1649,8 +1649,11 @@ class Criteria
      */
     public function removeSelectColumn(string $name)
     {
-        while (($key = array_search($name, $this->selectColumns, true)) !== false) {
-            unset($this->selectColumns[$key]);
+        foreach ($this->selectColumns as $index => $column) {
+            $columnName = $column instanceof AbstractColumnExpression ? $column->getColumnExpressionInQuery() : $column;
+            if ($columnName === $name) {
+                unset($this->selectColumns[$index]);
+            }
         }
 
         return $this;
@@ -1698,9 +1701,24 @@ class Criteria
     /**
      * Get select columns.
      *
+     * For BC, this returns a string array, resolved columns will be turned to string.
+     * Use {@see static::getSelectColumnsRaw()} to get actual array.
+     *
      * @return array<string> An array with the name of the select columns.
      */
     public function getSelectColumns(): array
+    {
+        return array_map(fn ($col) => $col instanceof AbstractColumnExpression ? $col->getColumnExpressionInQuery() : $col, $this->selectColumns);
+    }
+
+    /**
+     * Get select columns.
+     *
+     * Use {@see static::getSelectColumns()} if you need stringified versions of the columns.
+     *
+     * @return array<string|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression> An array with the name of the select columns.
+     */
+    public function getSelectColumnsRaw(): array
     {
         return $this->selectColumns;
     }
@@ -1908,7 +1926,7 @@ class Criteria
                 && $this->singleRecord === $criteria->isSingleRecord()
                 && $this->dbName === $criteria->getDbName()
                 && $this->selectModifiers === $criteria->getSelectModifiers()
-                && $this->selectColumns === $criteria->getSelectColumns()
+                && $this->getSelectColumns() === $criteria->getSelectColumns()
                 && $this->asColumns === $criteria->getAsColumns()
                 && $this->orderByColumns === $criteria->getOrderByColumns()
                 && $this->groupByColumns === $criteria->getGroupByColumns()
@@ -1995,7 +2013,7 @@ class Criteria
         }
 
         // merge select columns
-        $this->selectColumns = array_merge($this->getSelectColumns(), $criteria->getSelectColumns());
+        $this->selectColumns = array_merge($this->getSelectColumnsRaw(), $criteria->getSelectColumnsRaw());
 
         // merge as columns
         $commonAsColumns = array_intersect_key($this->getAsColumns(), $criteria->getAsColumns());
@@ -2288,18 +2306,19 @@ class Criteria
     /**
      * Quotes identifier based on $this->isIdentifierQuotingEnabled() and $tableMap->isIdentifierQuotingEnabled.
      *
-     * @param string $string
+     * @param string|null $tableAlias
+     * @param string $columnAlias
      * @param \Propel\Runtime\Map\TableMap|null $tableMap
      *
      * @return string
      */
-    public function quoteColumnIdentifier(string $string, ?TableMap $tableMap = null): string
+    public function quoteColumnIdentifier(?string $tableAlias, string $columnAlias, ?TableMap $tableMap = null): string
     {
         if (!$this->isIdentifierQuotingEnabled() && !($tableMap && $tableMap->isIdentifierQuotingEnabled())) {
-            return $string;
+            return $tableAlias ? "$tableAlias.$columnAlias" : $columnAlias;
         }
 
-        return $this->getAdapter()->quote($string);
+        return $this->getAdapter()->quoteColumnIdentifier($tableAlias, $columnAlias);
     }
 
     /**
@@ -2455,16 +2474,24 @@ class Criteria
     public function needsSelectAliases(): bool
     {
         $columnNames = [];
-        foreach ($this->getSelectColumns() as $fullyQualifiedColumnName) {
-            $pos = strrpos($fullyQualifiedColumnName, '.');
-            if ($pos) {
-                $columnName = substr($fullyQualifiedColumnName, $pos);
-                if (isset($columnNames[$columnName])) {
-                    // more than one column with the same name, so aliasing is required
-                    return true;
+        foreach ($this->getSelectColumnsRaw() as $fullyQualifiedColumnName) {
+            if ($fullyQualifiedColumnName instanceof AbstractColumnExpression) {
+                if (!$fullyQualifiedColumnName->getTableAlias()) {
+                    continue;
                 }
-                $columnNames[$columnName] = true;
+                $columnName = $fullyQualifiedColumnName->getColumnName();
+            } else {
+                $pos = strrpos($fullyQualifiedColumnName, '.');
+                if ($pos === false) {
+                    continue;
+                }
+                $columnName = substr($fullyQualifiedColumnName, $pos);
             }
+            if (isset($columnNames[$columnName])) {
+                // more than one column with the same name, so aliasing is required
+                return true;
+            }
+            $columnNames[$columnName] = true;
         }
 
         return false;

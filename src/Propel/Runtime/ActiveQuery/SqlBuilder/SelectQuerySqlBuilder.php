@@ -97,9 +97,7 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
      */
     protected function buildSelectClause(array &$sourceTableNamesCollector): string
     {
-        $selectSql = $this->adapter->createSelectSqlPart($this->criteria, $sourceTableNamesCollector);
-
-        return $this->criteria->replaceColumnNames($selectSql);
+        return $this->adapter->createSelectSqlPart($this->criteria, $sourceTableNamesCollector);
     }
 
     /**

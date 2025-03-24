@@ -163,9 +163,9 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      */
     public function getLocalColumnName(bool $useQuoteIfEnable = false): string
     {
-        $localColumnName = $this->table . '.' . $this->column;
-
-        return $useQuoteIfEnable ? $this->query->quoteColumnIdentifier($localColumnName) : $localColumnName;
+        return $useQuoteIfEnable
+            ? $this->query->quoteColumnIdentifier($this->table, $this->column)
+            : $this->table . '.' . $this->column;
     }
 
     /**
