@@ -393,7 +393,7 @@ class ModelCriteria extends BaseModelCriteria
         }
 
         foreach ((array)$columnNames as $columnName) {
-            $localColumnName = $this->columnResolver->resolveColumn($columnName, true, false)->getColumnExpressionInQuery(true);
+            $localColumnName = $this->columnResolver->resolveColumn($columnName, true, false)->getColumnExpressionInQuery();
             $this->addGroupByColumn($localColumnName);
         }
 
