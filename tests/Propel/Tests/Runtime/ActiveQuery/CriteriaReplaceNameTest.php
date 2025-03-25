@@ -11,7 +11,6 @@ namespace Propel\Tests\Runtime\ActiveQuery;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\LocalColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\RemoteTypedColumnExpression;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
-use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnResolver;
 use Propel\Tests\Bookstore\AuthorQuery;
 use Propel\Tests\Bookstore\BookQuery;
 use Propel\Tests\TestCase;
@@ -136,6 +135,9 @@ class CriteriaReplaceNameTest extends TestCase
         $replacedColumns = $this->replaceColumns($c, $origClause);
 
         if ($columnPhpName) {
+            if (count($replacedColumns) > 1){
+                echo 'ere';
+            }
             $this->assertCount(1, $replacedColumns);
             $columnMap = $c->getTableMap()->getColumnByPhpName($columnPhpName);
             $this->assertEquals($columnMap, $replacedColumns[0]->getColumnMap());
@@ -215,9 +217,10 @@ class CriteriaReplaceNameTest extends TestCase
      */
     protected function replaceColumns(ModelCriteria $c, &$sql): array
     {
-        $replacer = new ColumnResolver($c);
-        $sql = $replacer->replaceColumnNames($sql);
-        
-        return $this->getProperty(ColumnResolver::class, 'replacedColumns')->getValue($replacer);
+
+        $expr = $c->normalizeFilterExpression($sql);
+        $sql = $expr->getNormalizedFilterExpression();
+
+        return $replacedColumns = $expr->getReplacedColumns();
     }
 }

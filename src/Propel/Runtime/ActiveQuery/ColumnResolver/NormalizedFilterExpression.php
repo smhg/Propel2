@@ -15,7 +15,7 @@ class NormalizedFilterExpression
     /**
      * @var string
      */
-    public const COLUMN_LITERAL_PATTERN = '/[\w\\\]+\.\w+/';
+    public const COLUMN_LITERAL_PATTERN = '/[\w\\\]+\.\w*[A-Za-z]\w*/';
 
     /**
      * @var string
