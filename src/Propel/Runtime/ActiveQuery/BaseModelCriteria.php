@@ -285,6 +285,22 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
     }
 
     /**
+     * Returns the table name associated with an alias.
+     *
+     * @param string $alias
+     *
+     * @return string|null
+     */
+    public function getTableForAlias(string $alias): ?string
+    {
+        if ($this->modelAlias === $alias) {
+            return $this->tableMap->getName();
+        }
+
+        return parent::getTableForAlias($alias);
+    }
+
+    /**
      * Return the short ClassName for class with namespace
      *
      * @param string $fullyQualifiedClassName The fully qualified class name

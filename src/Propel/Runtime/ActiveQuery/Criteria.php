@@ -1294,17 +1294,17 @@ class Criteria
     /**
      * Adds a Criteria as subQuery in the From Clause.
      *
-     * @param self $subQueryCriteria Criteria to build the subquery from
+     * @param self $subQuery Criteria to build the subquery from
      * @param string|null $alias alias for the subQuery
      *
      * @return $this this modified Criteria object (Fluid API)
      */
-    public function addSubquery(self $subQueryCriteria, ?string $alias = null)
+    public function addSubquery(self $subQuery, ?string $alias = null)
     {
         if ($alias === null) {
-            $alias = 'alias_' . ($subQueryCriteria->forgeSelectQueryAlias() + count($this->selectQueries));
+            $alias = 'alias_' . ($subQuery->forgeSelectQueryAlias() + count($this->selectQueries));
         }
-        $this->selectQueries[$alias] = $subQueryCriteria;
+        $this->selectQueries[$alias] = $subQuery;
 
         return $this;
     }
@@ -1696,6 +1696,19 @@ class Criteria
     public function hasSelectClause(): bool
     {
         return (bool)$this->selectColumns || (bool)$this->asColumns;
+    }
+
+    /**
+     * Check if columns are selected.
+     *
+     * Used to check if table columns should be added. Does not include AS columns,
+     * as those should not influence regular columns in output.
+     *
+     * @return bool
+     */
+    protected function hasSelectColumns(): bool
+    {
+        return (bool)$this->selectColumns;
     }
 
     /**

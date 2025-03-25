@@ -549,6 +549,34 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
+     * Whether this Criteria has any select columns.
+     *
+     * This will include columns added with addAsColumn() method.
+     *
+     * @see addAsColumn()
+     * @see addSelectColumn()
+     *
+     * @return bool
+     */
+    public function hasSelectClause(): bool
+    {
+        return (bool)$this->select || parent::hasSelectClause();
+    }
+
+    /**
+     * Check if columns are selected.
+     *
+     * Used to check if table columns should be added. Does not include AS columns,
+     * as those should not influence regular columns in output.
+     *
+     * @return bool
+     */
+    protected function hasSelectColumns(): bool
+    {
+        return (bool)$this->select || parent::hasSelectColumns();
+    }
+
+    /**
      * This method returns the previousJoin for this ModelCriteria,
      * by default this is null, but after useQuery this is set the to the join of that use
      *
@@ -813,7 +841,7 @@ class ModelCriteria extends BaseModelCriteria
         }
 
         // check that the columns of the main class are already added (but only if this isn't a useQuery)
-        if (!$this->hasSelectClause() && !$this->getPrimaryCriteria()) {
+        if (!$this->hasSelectColumns() && !$this->getPrimaryCriteria()) {
             $this->addSelfSelectColumns();
         }
         // add the columns of the related class
@@ -853,7 +881,7 @@ class ModelCriteria extends BaseModelCriteria
 
         $clause = $this->normalizeFilterExpression($clause)->getNormalizedFilterExpression();
         // check that the columns of the main class are already added (if this is the primary ModelCriteria)
-        if (!$this->hasSelectClause() && !$this->getPrimaryCriteria()) {
+        if (!$this->hasSelectColumns() && !$this->getPrimaryCriteria()) {
             $this->addSelfSelectColumns();
         }
         $this->addAsColumn($name, $clause);
@@ -1126,21 +1154,24 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @see Criteria::addSubquery()
      *
-     * @param \Propel\Runtime\ActiveQuery\Criteria $subQueryCriteria Criteria to build the subquery from
+     * @param \Propel\Runtime\ActiveQuery\Criteria $subQuery Criteria to build the subquery from
      * @param string|null $alias alias for the subQuery
      * @param bool $addAliasAndSelectColumns Set to false if you want to manually add the aliased select columns
      *
      * @return $this The current object, for fluid interface
      */
-    public function addSubquery(Criteria $subQueryCriteria, ?string $alias = null, bool $addAliasAndSelectColumns = true)
+    public function addSubquery(Criteria $subQuery, ?string $alias = null, bool $addAliasAndSelectColumns = true)
     {
-        if (!$subQueryCriteria->hasSelectClause()) {
-            $subQueryCriteria->addSelfSelectColumns();
+        if (!$subQuery->hasSelectColumns()) {
+            $subQuery->addSelfSelectColumns();
         }
 
-        parent::addSubquery($subQueryCriteria, $alias);
+        parent::addSubquery($subQuery, $alias);
+        if ($subQuery instanceof BaseModelCriteria && $subQuery->modelAlias) {
+            $subQuery->useAliasInSQL = true;
+        }
 
-        if (!$addAliasAndSelectColumns) {
+        if (!$addAliasAndSelectColumns || !$subQuery instanceof BaseModelCriteria) {
             return $this;
         }
 
@@ -1150,15 +1181,12 @@ class ModelCriteria extends BaseModelCriteria
             $alias = (string)key($this->selectQueries);
         }
 
-        if ($subQueryCriteria instanceof BaseModelCriteria) {
-            if ($subQueryCriteria->modelTableMapName === $this->modelTableMapName) {
-                // this is necessary for backwards compatibility. It allows referencing columns from the subquery by the outer table alias (which is just weird behavior, who does that?)
-                $this->setModelAlias($alias, true);
-                $this->addSelfSelectColumns(true);
-            } else {
-                $tableMapClassName = (string)$subQueryCriteria->modelTableMapName;
-                $this->addSelfSelectColumnsFromTableMapClass($tableMapClassName, $alias);
-            }
+        if ($subQuery->modelTableMapName === $this->modelTableMapName) {
+            $this->setModelAlias($alias, true);
+            $this->addSelfSelectColumns(true);
+        } else {
+            $tableMapClassName = (string)$subQuery->modelTableMapName;
+            $this->addSelfSelectColumnsFromTableMapClass($tableMapClassName, $alias);
         }
 
         return $this;
@@ -1787,7 +1815,7 @@ class ModelCriteria extends BaseModelCriteria
         $this->configureSelectColumns();
 
         // check that the columns of the main class are already added (if this is the primary ModelCriteria)
-        if (!$this->hasSelectClause() && !$this->getPrimaryCriteria()) {
+        if (!$this->hasSelectColumns() && !$this->getPrimaryCriteria()) {
             $this->addSelfSelectColumns();
         }
 
@@ -2162,7 +2190,7 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
-     * @deprecated Use ModelCriteria::resolveColumn()
+     * @deprecated Use {@see ModelCriteria::resolveColumn()}
      *
      * @param string $columnName String representing the column name in a pseudo SQL clause, e.g. 'Book.Title'
      * @param bool $failSilently

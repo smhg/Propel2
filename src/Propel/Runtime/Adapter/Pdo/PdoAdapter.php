@@ -434,6 +434,7 @@ abstract class PdoAdapter
     public function createSelectSqlPart(Criteria $criteria, array &$fromClause, bool $aliasAll = false): string
     {
         $selectClause = [];
+        $localFromClause = [];
 
         if ($aliasAll) {
             $this->turnSelectColumnsToAliases($criteria);
@@ -456,19 +457,29 @@ abstract class PdoAdapter
 
                 // resolve table alias
                 $sourceTableName = $criteria->getTableForAlias($tableName);
-                $fromClause[] = $sourceTableName ? $sourceTableName . ' ' . $tableName : $tableName;
+                $localFromClause[$sourceTableName ? $sourceTableName . ' ' . $tableName : $tableName] = 1;
             }
         }
 
         // set the aliases
         foreach ($criteria->getAsColumns() as $alias => $col) {
-            $selectClause[] = $col . ' AS ' . $alias;
+            $expression = $criteria->normalizeFilterExpression($col);
+            $selectClause[] = $expression->getNormalizedFilterExpression() . ' AS ' . $alias;
+            foreach ($expression->getReplacedColumns() as $column) {
+                $tableName = $column->getTableAlias();
+                if (!$tableName) {
+                    continue;
+                }
+                $sourceTableName = $criteria->getTableForAlias($tableName);
+                $localFromClause[$sourceTableName ? $sourceTableName . ' ' . $tableName : $tableName] = 1;
+            }
         }
 
         $selectModifiers = $criteria->getSelectModifiers();
         $queryComment = $criteria->getComment();
 
-        // Build the SQL from the arrays we compiled
+        array_push($fromClause, ...array_keys($localFromClause));
+
         return 'SELECT '
             . ($queryComment ? '/* ' . $queryComment . ' */ ' : '')
             . ($selectModifiers ? (implode(' ', $selectModifiers) . ' ') : '')

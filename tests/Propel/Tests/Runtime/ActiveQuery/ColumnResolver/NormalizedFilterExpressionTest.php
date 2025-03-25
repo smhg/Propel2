@@ -9,11 +9,11 @@
 namespace Propel\Tests\Runtime\ActiveQuery\ColumnResolver;
 
 use Propel\Runtime\ActiveQuery\ColumnResolver\NormalizedFilterExpression;
-use Propel\Tests\Helpers\Bookstore\BookstoreTestBase;
+use Propel\Tests\TestCase;
 
 /**
  */
-class NormalizedFilterExpressionTest extends BookstoreTestBase
+class NormalizedFilterExpressionTest extends TestCase
 {
     public function ColumnLiteralDataProvider(): array
     {

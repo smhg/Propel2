@@ -48,7 +48,7 @@ class NormalizedFilterExpression
     }
 
     /**
-     * @return array
+     * @return array<\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression>
      */
     public function getReplacedColumns(): array
     {

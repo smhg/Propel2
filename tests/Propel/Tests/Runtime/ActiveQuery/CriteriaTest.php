@@ -512,7 +512,7 @@ class CriteriaTest extends BookstoreTestBase
 
         $params = [];
         $result = $c->createSelectSql($params);
-        $expected = $this->getSql('SELECT A.COL, B.COL AS foo FROM A WHERE foo = :p1');
+        $expected = $this->getSql('SELECT A.COL, B.COL AS foo FROM A, B WHERE foo = :p1');
         $this->assertEquals($expected, $result);
         $expected = [
             ['table' => null, 'type' => PDO::PARAM_STR, 'value' => 123],
