@@ -723,7 +723,7 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
-     * Add a join object to the Criteria
+     * Register a join object in the Criteria
      *
      * @see Criteria::addJoinObject()
      *

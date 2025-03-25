@@ -1520,7 +1520,8 @@ class QueryBuilder extends AbstractOMBuilder
         // create a ModelJoin object for this join
         \$join = new ModelJoin();
         \$join->setJoinType(\$joinType);
-        \$join->setRelationMap(\$relationMap, \$this->useAliasInSQL ? \$this->getModelAlias() : null, \$relationAlias);
+        \$leftAlias = \$this->useAliasInSQL ? \$this->getModelAlias() : null;
+        \$join->setupJoinCondition(\$this, \$relationMap, \$leftAlias, \$relationAlias);
         if (\$previousJoin = \$this->getPreviousJoin()) {
             \$join->setPreviousJoin(\$previousJoin);
         }

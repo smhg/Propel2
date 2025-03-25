@@ -406,4 +406,14 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
 
         return $criterions;
     }
+
+    /**
+     * Check if this or any of the attached filters is a Criterion
+     *
+     * @return bool
+     */
+    public function containsCriterion(): bool
+    {
+        return true;
+    }
 }

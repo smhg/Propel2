@@ -166,4 +166,35 @@ class ClauseList
             $this->clauses[$key] = clone $filter;
         }
     }
+
+    /**
+     * Check if this or any of the attached filters is a Criterion
+     *
+     * @return bool
+     */
+    public function containsCriterion(): bool
+    {
+        foreach ($this->clauses as $clause) {
+            if ($clause->containsCriterion()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the number of clauses in the list
+     *
+     * @return int
+     */
+    public function count(): int
+    {
+        $counted = 1;
+        foreach ($this->clauses as $clause) {
+            $counted += $clause->count();
+        }
+
+        return $counted;
+    }
 }

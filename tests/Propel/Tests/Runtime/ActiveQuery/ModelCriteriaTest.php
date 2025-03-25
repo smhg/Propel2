@@ -1265,7 +1265,7 @@ class ModelCriteriaTest extends BookstoreTestBase
         $criterion = $c->getNewCriterion(BookTableMap::COL_TITLE, BookTableMap::COL_TITLE . ' = ' . AuthorTableMap::COL_FIRST_NAME, Criteria::CUSTOM);
         $c->setJoinCondition('Author', $criterion);
         $books = BookQuery::create(null, $c)->find($con);
-        $expectedSQL = $this->getSql('SELECT book.id, book.title, book.isbn, book.price, book.publisher_id, book.author_id FROM book INNER JOIN author ON book.title = author.first_name');
+        $expectedSQL = $this->getSql('SELECT book.id, book.title, book.isbn, book.price, book.publisher_id, book.author_id FROM book INNER JOIN author ON (book.title = author.first_name)');
         $this->assertEquals($expectedSQL, $con->getLastExecutedQuery(), 'setJoinCondition() can override a previous join condition with a Criterion');
     }
 
@@ -1280,7 +1280,7 @@ class ModelCriteriaTest extends BookstoreTestBase
         $c->condition('cond1', 'Propel\Tests\Bookstore\Book.Title = Author.FirstName');
         $c->setJoinCondition('Author', 'cond1');
         $books = BookQuery::create(null, $c)->find($con);
-        $expectedSQL = $this->getSql('SELECT book.id, book.title, book.isbn, book.price, book.publisher_id, book.author_id FROM book INNER JOIN author ON book.title = author.first_name');
+        $expectedSQL = $this->getSql('SELECT book.id, book.title, book.isbn, book.price, book.publisher_id, book.author_id FROM book INNER JOIN author ON (book.title = author.first_name)');
         $this->assertEquals($expectedSQL, $con->getLastExecutedQuery(), 'setJoinCondition() can override a previous join condition with a named condition');
     }
 

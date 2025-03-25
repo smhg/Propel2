@@ -202,10 +202,9 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
             throw new PropelException('Cannot build join on regular condition');
         }
         $join = new ModelJoin();
-        $leftAlias = $leftQuery->getModelAlias();
-        $rightAlias = $rightQuery->getModelAlias();
-        $join->setRelationMap($relationMap, $leftAlias, $rightAlias);
-        $join->buildJoinCondition($leftQuery);
+        $leftAlias = $leftQuery->getTableNameInQuery();
+        $rightAlias = $rightQuery->getTableNameInQuery();
+        $join->setupJoinCondition($leftQuery, $relationMap, $leftAlias, $rightAlias);
 
         $joinCondition = $join->getJoinCondition();
 

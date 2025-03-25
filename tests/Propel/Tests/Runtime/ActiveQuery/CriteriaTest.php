@@ -726,7 +726,7 @@ class CriteriaTest extends BookstoreTestBase
             addJoin(['TABLE_A.FOO_ID'], ['TABLE_B.id'], Criteria::LEFT_JOIN)->
             addSelectColumn('TABLE_A.id');
 
-        $expect = $this->getSql('SELECT TABLE_A.id FROM TABLE_A LEFT JOIN TABLE_B ON TABLE_A.FOO_ID=TABLE_B.id');
+        $expect = $this->getSql('SELECT TABLE_A.id FROM TABLE_A LEFT JOIN TABLE_B ON (TABLE_A.FOO_ID=TABLE_B.id)');
         $params = [];
         $result = $c->createSelectSql($params);
         $this->assertEquals($expect, $result);

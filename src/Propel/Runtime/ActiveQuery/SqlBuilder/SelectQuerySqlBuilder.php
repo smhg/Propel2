@@ -188,8 +188,9 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
                 $sourceTableNamesCollector[] = $join->getLeftTableWithAlias();
             }
             $join->setAdapter($this->adapter);
+            $isBuiltFromFilter = ($join->getJoinCondition() && !$join->getJoinCondition()->containsCriterion());
             $joinClauseString = $join->getClause($params);
-            $joinClause[] = $this->criteria->replaceColumnNames($joinClauseString);
+            $joinClause[] = $isBuiltFromFilter ? $joinClauseString : $this->criteria->replaceColumnNames($joinClauseString);
         }
 
         return $joinClause;

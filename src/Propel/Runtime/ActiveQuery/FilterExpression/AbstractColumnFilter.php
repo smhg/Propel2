@@ -14,7 +14,7 @@ use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Map\ColumnMap;
 
 /**
- * Filter statement on a query
+ * Filter statement with a column as left hand side (i.e. "table.col = 42")
  */
 abstract class AbstractColumnFilter extends AbstractFilter
 {
@@ -31,7 +31,7 @@ abstract class AbstractColumnFilter extends AbstractFilter
     protected $operator;
 
     /**
-     * Create a new instance.
+     * Filter statement with a column as left hand side (i.e. "table.col = 42").
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria $query
      * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression $columnIdentifier
@@ -116,8 +116,18 @@ abstract class AbstractColumnFilter extends AbstractFilter
      */
     protected function resolveUnresolved(): void
     {
-        if ($this->queryColumn instanceof UnresolvedColumnExpression) {
-            $this->queryColumn = $this->query->resolveColumn($this->queryColumn->getColumnExpressionInQuery());
+        $this->resolveColumn($this->queryColumn);
+    }
+
+    /**
+     * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression $column
+     *
+     * @return void
+     */
+    protected function resolveColumn(AbstractColumnExpression $column): void
+    {
+        if ($column instanceof UnresolvedColumnExpression) {
+            $column = $column->resolveAgain() ?: $column;
         }
     }
 

@@ -115,9 +115,23 @@ interface ColumnFilterInterface
     public function getAttachedFilter(): array;
 
     /**
+     * Get the number of clauses in the list
+     *
+     * @return int
+     */
+    public function count(): int;
+
+    /**
      * @param \Propel\Runtime\Adapter\AdapterInterface $adapter
      *
      * @return void
      */
     public function setAdapter(AdapterInterface $adapter): void;
+
+    /**
+     * Check if this or any of the attached filters is a Criterion
+     *
+     * @return bool
+     */
+    public function containsCriterion(): bool;
 }

@@ -808,7 +808,11 @@ class Join
             }
             $joinCondition = sprintf('(%s)', implode(' AND ', $conditions));
         } else {
-            $joinCondition = $this->getJoinCondition()->buildStatement($params);
+            $filter = $this->getJoinCondition();
+            $joinCondition = $filter->buildStatement($params);
+            if ($filter->count() === 1) { // for BC with tests
+                $joinCondition = "($joinCondition)";
+            }
         }
 
         $rightTableName = $this->getRightTableWithAlias();
