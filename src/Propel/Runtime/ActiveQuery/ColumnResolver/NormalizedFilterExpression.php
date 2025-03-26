@@ -15,7 +15,7 @@ class NormalizedFilterExpression
     /**
      * @var string
      */
-    public const COLUMN_LITERAL_PATTERN = '/[\w\\\]+\.\w*[A-Za-z]\w*/';
+    public const COLUMN_LITERAL_PATTERN = '/[\w§\\\]+\.\w*[A-Za-z]\w*/';
 
     /**
      * @var string
@@ -133,7 +133,22 @@ class NormalizedFilterExpression
      */
     public static function isColumnLiteral(string $columnOrClause): bool
     {
-        // maybe whitespace and quotes, maybe words each followed by backslash or word.word, word dot word, maybe quotes and whitespace
-        return (bool)preg_match('/^\s*[\'"]?(([\w\\\]+|\w+\.\w+)\.)?\w+[\'"]?\s*$/', $columnOrClause);
+        $pattern = <<<REGEX
+~
+^\s*            # any number of spaces after start
+[\'"]?          # optional quotes
+((              # optional schema and table before column name (has to end with '.')
+  [\w\\\]+      # opt1: PHP class name, word with slashes, i.e. \Bookstore\Book
+  |             # opt2:
+  (\w*§)?       # optional sqlite schema ends with '§' i.e. bookstore§ 
+  \w+(\.\w+)*   # words separated by dots
+ )\.)?          # opt1 and opt2 have to end with dot or not be there
+\w+             # word (the column name)
+[\'"]?          # optional quotes
+\s*$            # any number of spaces before end
+~ix
+REGEX;
+
+        return (bool)preg_match($pattern, $columnOrClause);
     }
 }

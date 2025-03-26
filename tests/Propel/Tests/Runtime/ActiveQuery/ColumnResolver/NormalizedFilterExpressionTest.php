@@ -17,7 +17,7 @@ class NormalizedFilterExpressionTest extends TestCase
 {
     public function ColumnLiteralDataProvider(): array
     {
-        $column = ['column', 'table.column', 'schema.table.column', 'class\path\table.column'];
+        $column = ['column', 'table.column', 'schema.table.column', 'class\path\table.column', 'sqliteschema§table.column'];
         $noColumn = ['table.column = ?', '"table.column" = ?', 'table.column table.column', '" table.column"'];
 
         return array_merge(
