@@ -1699,19 +1699,6 @@ class Criteria
     }
 
     /**
-     * Check if columns are selected.
-     *
-     * Used to check if table columns should be added. Does not include AS columns,
-     * as those should not influence regular columns in output.
-     *
-     * @return bool
-     */
-    protected function hasSelectColumns(): bool
-    {
-        return (bool)$this->selectColumns;
-    }
-
-    /**
      * Get select columns.
      *
      * For BC, this returns a string array, resolved columns will be turned to string.

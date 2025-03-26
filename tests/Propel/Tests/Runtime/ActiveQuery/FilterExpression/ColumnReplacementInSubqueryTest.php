@@ -65,7 +65,7 @@ class ColumnReplacementInSubqueryTest extends TestCaseFixtures
         $expectedSql =  'SELECT book.id AS "id" '.
                         'FROM book, ' .
                         '(' .
-                            'SELECT aut.id, aut.first_name, aut.last_name, aut.email, aut.age, aut.id AS MyAsColumn ' . 
+                            'SELECT aut.id AS MyAsColumn ' . 
                             'FROM author aut ' .
                             'LEFT JOIN essay ess ON (aut.id=ess.first_author_id)'.
                         ') AS saut '.

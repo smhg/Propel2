@@ -564,19 +564,6 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
-     * Check if columns are selected.
-     *
-     * Used to check if table columns should be added. Does not include AS columns,
-     * as those should not influence regular columns in output.
-     *
-     * @return bool
-     */
-    protected function hasSelectColumns(): bool
-    {
-        return (bool)$this->select || parent::hasSelectColumns();
-    }
-
-    /**
      * This method returns the previousJoin for this ModelCriteria,
      * by default this is null, but after useQuery this is set the to the join of that use
      *
@@ -841,7 +828,7 @@ class ModelCriteria extends BaseModelCriteria
         }
 
         // check that the columns of the main class are already added (but only if this isn't a useQuery)
-        if (!$this->hasSelectColumns() && !$this->getPrimaryCriteria()) {
+        if (!$this->hasSelectClause() && !$this->getPrimaryCriteria()) {
             $this->addSelfSelectColumns();
         }
         // add the columns of the related class
@@ -881,7 +868,7 @@ class ModelCriteria extends BaseModelCriteria
 
         $clause = $this->normalizeFilterExpression($clause)->getNormalizedFilterExpression();
         // check that the columns of the main class are already added (if this is the primary ModelCriteria)
-        if (!$this->hasSelectColumns() && !$this->getPrimaryCriteria()) {
+        if (!$this->hasSelectClause() && !$this->getPrimaryCriteria()) {
             $this->addSelfSelectColumns();
         }
         $this->addAsColumn($name, $clause);
@@ -1162,7 +1149,7 @@ class ModelCriteria extends BaseModelCriteria
      */
     public function addSubquery(Criteria $subQuery, ?string $alias = null, bool $addAliasAndSelectColumns = true)
     {
-        if (!$subQuery->hasSelectColumns()) {
+        if (!$subQuery->hasSelectClause()) {
             $subQuery->addSelfSelectColumns();
         }
 
@@ -1815,7 +1802,7 @@ class ModelCriteria extends BaseModelCriteria
         $this->configureSelectColumns();
 
         // check that the columns of the main class are already added (if this is the primary ModelCriteria)
-        if (!$this->hasSelectColumns() && !$this->getPrimaryCriteria()) {
+        if (!$this->hasSelectClause() && !$this->getPrimaryCriteria()) {
             $this->addSelfSelectColumns();
         }
 
