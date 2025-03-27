@@ -88,4 +88,33 @@ class BehaviorLocatorTest extends TestCase
 
         return new BehaviorLocator($config);
     }
+
+    public function testFindBehaviorInComposerData(): void
+    {
+        $locator = new BehaviorLocator(null);
+        $package = [
+            'name' => 'behavior-test',
+            'type' => "propel-behavior",
+            'extra' => [
+                'name' => 'b1',
+                'class' => 'c1',
+                'behaviors' => [
+                    [
+                        'name' => 'b2',
+                        'class' => 'c2',
+                    ], [
+                        'name' => 'b3',
+                        'class' => 'c3',
+                    ]
+                ]
+            ]
+        ];
+        $loadedBehaviors = $this->callMethod($locator, 'loadBehaviors', [$package]);
+        $expected = [
+            'b1' => ['class' => 'c1', 'name' => 'b1', 'package' => 'behavior-test'],
+            'b2' => ['class' => 'c2', 'name' => 'b2', 'package' => 'behavior-test'],
+            'b3' => ['class' => 'c3', 'name' => 'b3', 'package' => 'behavior-test'],
+        ];
+        $this->assertEqualsCanonicalizing($expected, $loadedBehaviors);
+    }
 }
