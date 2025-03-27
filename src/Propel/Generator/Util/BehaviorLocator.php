@@ -8,6 +8,7 @@
 
 namespace Propel\Generator\Util;
 
+use LogicException;
 use Propel\Generator\Config\GeneratorConfigInterface;
 use Propel\Generator\Exception\BehaviorNotFoundException;
 use Propel\Generator\Exception\BuildException;
@@ -133,14 +134,11 @@ class BehaviorLocator
             }
 
             // find behavior in composer.json (useful when developing a behavior)
-            $json = $this->findComposerJson();
+            $composerJson = $this->findComposerJson();
 
-            if ($json !== null) {
-                $behavior = $this->loadBehavior(json_decode($json->getContents(), true));
-
-                if ($behavior !== null) {
-                    $this->behaviors[$behavior['name']] = $behavior;
-                }
+            if ($composerJson !== null) {
+                $composerData = json_decode($composerJson->getContents(), true);
+                $this->behaviors = array_merge($this->behaviors, $this->loadBehaviors($composerData));
             }
         }
 
@@ -199,7 +197,7 @@ class BehaviorLocator
      *
      * @param \Symfony\Component\Finder\SplFileInfo $composerLock
      *
-     * @return array
+     * @return array<array{name: string, class: string, package:string}>
      */
     private function loadBehaviorsFromLockFile(SplFileInfo $composerLock): array
     {
@@ -212,11 +210,8 @@ class BehaviorLocator
                 continue;
             }
             foreach ($json[$packageSectionName] as $package) {
-                $behavior = $this->loadBehavior($package);
-
-                if ($behavior !== null) {
-                    $behaviors[$behavior['name']] = $behavior;
-                }
+                $loadedBehaviors = $this->loadBehaviors($package);
+                $behaviors = array_merge($behaviors, $loadedBehaviors);
             }
         }
 
@@ -230,27 +225,55 @@ class BehaviorLocator
      *
      * @throws \Propel\Generator\Exception\BuildException
      *
-     * @return array|null Behavior data
+     * @return array<string, array{name: string, class: string, package:string}> Behavior data
      */
-    private function loadBehavior(array $package): ?array
+    private function loadBehaviors(array $package): array
     {
-        if (isset($package['type']) && $package['type'] == self::BEHAVIOR_PACKAGE_TYPE) {
-            // find propel behavior information
-            if (isset($package['extra'])) {
-                $extra = $package['extra'];
+        if (!isset($package['type']) || $package['type'] !== self::BEHAVIOR_PACKAGE_TYPE) {
+            return [];
+        }
 
-                if (isset($extra['name']) && isset($extra['class'])) {
-                    return [
-                        'name' => $extra['name'],
-                        'class' => $extra['class'],
-                        'package' => $package['name'],
-                    ];
-                }
+        if (!isset($package['extra'])) {
+            throw new BuildException(sprintf('Section `extra` is missings in composer.json of behavior %s', $package['name']));
+        }
 
-                throw new BuildException(sprintf('Cannot read behavior name and class from package %s', $package['name']));
+        $extra = $package['extra'];
+        $behaviors = [];
+
+        if (isset($extra['name']) && isset($extra['class'])) {
+            $packageData = $this->buildBehaviorDataFromSection($package, $extra);
+            $behaviors[$packageData['name']] = $packageData;
+        }
+        if (isset($extra['behaviors'])) {
+            foreach ($extra['behaviors'] as $section) {
+                $packageData = $this->buildBehaviorDataFromSection($package, $section);
+                $behaviors[$packageData['name']] = $packageData;
             }
         }
 
-        return null;
+        return $behaviors;
+    }
+
+    /**
+     * @param array $package
+     * @param array $section
+     *
+     * @throws \LogicException
+     *
+     * @return array{name: string, class: string, package:string}
+     */
+    private function buildBehaviorDataFromSection(array $package, array $section): array
+    {
+        foreach (['name', 'class'] as $key) {
+            if (!isset($section[$key])) {
+                throw new LogicException("Behavior {$package['name']}: Missing property in composer.json section extra.behaviors[].`$key`");
+            }
+        }
+
+        return [
+            'name' => $section['name'],
+            'class' => $section['class'],
+            'package' => $package['name'],
+        ];
     }
 }
