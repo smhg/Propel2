@@ -58,6 +58,7 @@ class SubQueryTest extends BookstoreTestBase
         $subCriteria->orderByTitle(Criteria::ASC);
 
         $c = new BookQuery();
+        $c->setAutoAddTable(false);
         BookTableMap::addSelectColumns($c, 'subCriteriaAlias');
         $c->addSelectQuery($subCriteria, 'subCriteriaAlias', false);
         $c->groupBy('subCriteriaAlias.AuthorId');
@@ -283,6 +284,7 @@ class SubQueryTest extends BookstoreTestBase
         $c = new BookQuery();
         $c->addSelectQuery($subCriteria, 'alias1', false);
         $c->select(['alias1.Id']);
+        $c->setAutoAddTable(false);
         $c->configureSelectColumns();
 
         $sql = $this->getSql('SELECT alias1.id AS "alias1.Id" FROM (SELECT book.id, book.title, book.isbn, book.price, book.publisher_id, book.author_id FROM book) AS alias1');
@@ -308,5 +310,43 @@ class SubQueryTest extends BookstoreTestBase
         $sql = $this->getSql('SELECT COUNT(*) FROM (SELECT subCriteriaAlias.id, subCriteriaAlias.title, subCriteriaAlias.isbn, subCriteriaAlias.price, subCriteriaAlias.publisher_id, subCriteriaAlias.author_id FROM (SELECT book.id, book.title, book.isbn, book.price, book.publisher_id, book.author_id FROM book) AS subCriteriaAlias WHERE subCriteriaAlias.price<20) propelmatch4cnt');
 
         $this->assertEquals($sql, $query, 'addSelectQuery() doCount is defined as complexQuery');
+    }
+
+    /**
+     * @return void
+     */
+    public function testPropelDoesNotAddTableFromSubqueryInSelect()
+    {
+        $colDef = <<< EOF
+CASE WHEN EXISTS(
+    SElECT 1
+    FRoM author r
+    WHERE r.id = book.author_id
+)
+THEN 1 ELSE 0 END
+EOF;
+        $p = [];
+        $actual = BookQuery::create()->select('id')->addAsColumn('hasAuthor', $colDef)->createSelectSql($p);
+        $expected = "SELECT $colDef AS hasAuthor, book.id AS \"id\" FROM book";
+        $this->assertEquals($this->getSql($expected), $actual);
+    }
+
+    /**
+     * @return void
+     */
+    public function testPropelDoesNotAddTableFromSubqueryInWhere()
+    {
+        $where = <<< EOF
+EXISTS(
+    SElECT 1
+    FRoM author r
+    WHERE r.id = book.author_id
+)
+THEN 1 ELSE 0 END
+EOF;
+        $p = [];
+        $actual = BookQuery::create()->where($where)->createSelectSql($p);
+        $expected = "SELECT  FROM book WHERE $where";
+        $this->assertEquals($this->getSql($expected), $actual);
     }
 }

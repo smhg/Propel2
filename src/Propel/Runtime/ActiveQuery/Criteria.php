@@ -399,6 +399,14 @@ class Criteria
     protected $identifierQuoting = false;
 
     /**
+     * Set false if main table name should only be added if used in SELECT
+     * or WHERE (emulates older behavior for BC).
+     *
+     * @var bool
+     */
+    protected $autoAddTableName = true;
+
+    /**
      * Creates a new instance with the default capacity which corresponds to
      * the specified database.
      *
@@ -1688,8 +1696,8 @@ class Criteria
      *
      * This will include columns added with addAsColumn() method.
      *
-     * @see addAsColumn()
-     * @see addSelectColumn()
+     * @see static::addAsColumn()
+     * @see static::addSelectColumn()
      *
      * @return bool
      */
@@ -2677,5 +2685,37 @@ class Criteria
         $this->identifierQuoting = $identifierQuoting;
 
         return $this;
+    }
+
+    /**
+     * Set false if main table name should only be added if used in SELECT
+     * or WHERE (emulates older behavior for BC).
+     *
+     * Allows to use a model query as a proxy for a subquery:
+     * <code>
+     * $subquery = BookQuery::create()->select('author_id')->addAsColumn('nrBooks', 'COUNT(*)')->groupBy('author_id');
+     * BookQuery::create()->setAutoAddTable(false)->addSubquery($subquery)->joinWithAuthor();
+     * // SELECT ... FROM (SELECT author_id, COUNT(*) AS nrBooks FROM book GROUP BY author_id) JOIN author ON (...)
+     * </code>
+     *
+     * @param bool $doAutoAdd
+     *
+     * @return static
+     */
+    public function setAutoAddTable(bool $doAutoAdd)
+    {
+        $this->autoAddTableName = $doAutoAdd;
+
+        return $this;
+    }
+
+    /**
+     * Check if BC behavior is enabled.
+     *
+     * @return bool
+     */
+    public function getAutoAddTable(): bool
+    {
+        return $this->autoAddTableName;
     }
 }

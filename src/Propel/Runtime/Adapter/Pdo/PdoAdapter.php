@@ -464,15 +464,8 @@ abstract class PdoAdapter
         // set the aliases
         foreach ($criteria->getAsColumns() as $alias => $col) {
             $expression = $criteria->normalizeFilterExpression($col);
-            $selectClause[] = $expression->getNormalizedFilterExpression() . ' AS ' . $alias;
-            foreach ($expression->getReplacedColumns() as $column) {
-                $tableName = $column->getTableAlias();
-                if (!$tableName) {
-                    continue;
-                }
-                $sourceTableName = $criteria->getTableForAlias($tableName);
-                $localFromClause[$sourceTableName ? $sourceTableName . ' ' . $tableName : $tableName] = 1;
-            }
+            $clause = $expression->getNormalizedFilterExpression();
+            $selectClause[] = "$clause AS $alias";
         }
 
         $selectModifiers = $criteria->getSelectModifiers();

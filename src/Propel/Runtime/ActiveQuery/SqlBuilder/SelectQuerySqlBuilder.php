@@ -111,6 +111,18 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
     {
         $sourceTableNames = array_unique(array_filter($sourceTableNames));
 
+        if ($this->criteria->getPrimaryTableName()) {
+            /** @var string $primaryTable */
+            $primaryTable = $this->criteria->getPrimaryTableName();
+            $possibleAlias = $this->criteria->getTableNameInQuery();
+            if ($primaryTable !== $possibleAlias) {
+                $primaryTable = "$primaryTable $possibleAlias";
+            }
+            if (!in_array($primaryTable, $sourceTableNames) && $this->criteria->getAutoAddTable()) {
+                $sourceTableNames[] = $primaryTable;
+            }
+        }
+
         $joinTableNames = $this->getJoinTableNames();
         if ($joinTableNames) {
             $sourceTableNames = array_diff($sourceTableNames, $joinTableNames);
@@ -122,15 +134,6 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
 
         foreach ($this->criteria->getSelectQueries() as $subQueryAlias => $subQueryCriteria) {
             $sourceTableNames[] = '(' . $subQueryCriteria->createSelectSql($params) . ') AS ' . $subQueryAlias;
-        }
-
-        if (!$sourceTableNames && $this->criteria->getPrimaryTableName()) {
-            $primaryTable = $this->criteria->getPrimaryTableName();
-            $possibleAlias = $this->criteria->getTableNameInQuery();
-            if ($primaryTable !== $possibleAlias) {
-                $primaryTable = "$primaryTable $possibleAlias";
-            }
-            $sourceTableNames[] = $this->quoteIdentifierTable($primaryTable);
         }
 
         $glue = ($joinClause && count($sourceTableNames) > 1) ? ' CROSS JOIN ' : ', ';
