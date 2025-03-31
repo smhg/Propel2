@@ -849,6 +849,8 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
+     * @deprecated use addAsColumn() - same effect, no side-effects.
+     *
      * Adds a supplementary column to the select clause
      * These columns can later be retrieved from the hydrated objects using getVirtualColumn()
      *

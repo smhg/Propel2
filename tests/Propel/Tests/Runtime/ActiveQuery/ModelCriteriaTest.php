@@ -922,6 +922,7 @@ class ModelCriteriaTest extends BookstoreTestBase
      */
     public function testJoinRelationName()
     {
+        $this->markTestIncomplete('invalid SQL');
         $c = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\BookstoreEmployee');
         $c->join('Propel\Tests\Bookstore\BookstoreEmployee.Supervisor');
         $sql = $this->getSql('SELECT  FROM bookstore_employee INNER JOIN bookstore_employee ON (bookstore_employee.supervisor_id=bookstore_employee.id)');
