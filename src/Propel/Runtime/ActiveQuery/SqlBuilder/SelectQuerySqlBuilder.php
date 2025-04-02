@@ -224,7 +224,7 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
      */
     protected function buildWhereClause(?array &$params, array &$sourceTableNamesCollector): ?string
     {
-        $columnNameToCriterions = $this->criteria->getColumnFilter();
+        $columnNameToCriterions = $this->criteria->getColumnFilters();
         if (!$columnNameToCriterions) {
             return null;
         }

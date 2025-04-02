@@ -143,8 +143,6 @@ class ModelCriteria extends BaseModelCriteria
      * $c->condition('cond1', 'b.Title = ?', 'foo');
      * </code>
      *
-     * @see Criteria::add()
-     *
      * @param string $conditionName A name to store the condition for a later combination with combine()
      * @param string $clause The pseudo SQL clause, e.g. 'AuthorId = ?'
      * @param mixed $value A value for the condition
@@ -166,8 +164,6 @@ class ModelCriteria extends BaseModelCriteria
      * <code>
      * $c->filterBy('Title', 'foo');
      * </code>
-     *
-     * @see Criteria::add()
      *
      * @param string $columnPhpName A string representing thecolumn phpName, e.g. 'AuthorId'
      * @param mixed $value A value for the condition
@@ -226,8 +222,6 @@ class ModelCriteria extends BaseModelCriteria
      * @phpstan-param literal-string|array $clause
      *
      * @psalm-param literal-string|array $clause
-     *
-     * @see Criteria::add()
      *
      * @param array|string $clause A string representing the pseudo SQL clause, e.g. 'Book.AuthorId = ?'
      *   Or an array of condition names
@@ -1583,11 +1577,11 @@ class ModelCriteria extends BaseModelCriteria
             $class = $this->getModelName();
             /** @phpstan-var \Propel\Runtime\ActiveRecord\ActiveRecordInterface $obj */
             $obj = new $class();
-            foreach ($this->keys() as $key) {
-                if (!method_exists($obj, 'setByName')) {
-                    continue;
+            if (method_exists($obj, 'setByName')) {
+                foreach (array_keys($this->updateValues) as $columnIdentifier) {
+                    $value = $this->getUpdateValue($columnIdentifier);
+                    $obj->setByName($columnIdentifier, $value, TableMap::TYPE_COLNAME);
                 }
-                $obj->setByName($key, $this->getValue($key), TableMap::TYPE_COLNAME);
             }
             $ret = $this->getFormatter()->formatRecord($obj);
         }
@@ -1623,12 +1617,14 @@ class ModelCriteria extends BaseModelCriteria
         if (count($pkCols) === 1) {
             // simple primary key
             $pkCol = $pkCols[0];
-            $criteria->add($pkCol->getFullyQualifiedName(), $key);
+            $column = new LocalColumnExpression($this, $this->getTableNameInQuery(), $pkCol);
+            $criteria->addFilter($column, $key);
         } else {
             // composite primary key
             foreach ($pkCols as $pkCol) {
                 $keyPart = array_shift($key);
-                $criteria->add($pkCol->getFullyQualifiedName(), $keyPart);
+                $column = new LocalColumnExpression($this, $this->getTableNameInQuery(), $pkCol);
+                $criteria->addFilter($column, $keyPart);
             }
         }
         $dataFetcher = $criteria->doSelect($con);
@@ -1664,8 +1660,9 @@ class ModelCriteria extends BaseModelCriteria
         $pkCols = $this->getTableMapOrFail()->getPrimaryKeys();
         if (count($pkCols) === 1) {
             // simple primary key
-            $pkCol = array_shift($pkCols);
-            $criteria->add($pkCol->getFullyQualifiedName(), $keys, Criteria::IN);
+            $pkColumnMap = array_shift($pkCols);
+            $column = new LocalColumnExpression($this, $this->getTableNameInQuery(), $pkColumnMap);
+            $criteria->addFilter($column, $keys, Criteria::IN);
         } else {
             // composite primary key
             throw new PropelException('Multiple object retrieval is not implemented for composite primary keys');
@@ -1918,7 +1915,7 @@ class ModelCriteria extends BaseModelCriteria
      */
     public function delete(?ConnectionInterface $con = null): int
     {
-        if (count($this->getColumnFilter()) === 0) {
+        if (count($this->getColumnFilters()) === 0) {
             throw new PropelException(__METHOD__ . ' expects a Criteria with at least one condition. Use deleteAll() to delete all the rows of a table');
         }
 
@@ -2100,8 +2097,8 @@ class ModelCriteria extends BaseModelCriteria
             } else {
                 $set = new Criteria($this->getDbName());
                 foreach ($updateValues as $columnName => $value) {
-                    $realColumnName = $this->getTableMapOrFail()->getColumnByPhpName($columnName)->getFullyQualifiedName();
-                    $set->add($realColumnName, $value);
+                    $columnMap = $this->getTableMapOrFail()->getColumnByPhpName($columnName);
+                    $set->setUpdateValue($columnMap, $value);
                 }
             }
 
@@ -2360,22 +2357,20 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return static
      */
-    protected function addFilter(string $andOr, $columnOrClause, $value = null, $condition = null, bool $preferColumnCondition = true)
+    protected function addFilterWithConjunction(string $andOr, $columnOrClause, $value = null, $condition = null, bool $preferColumnCondition = true)
     {
         if (is_string($columnOrClause)) {
             $resolvedColumn = $this->resolveColumn($columnOrClause);
             $columnOrClause = $resolvedColumn;
         }
 
-        return parent::addFilter($andOr, $columnOrClause, $value, $condition, $preferColumnCondition);
+        return parent::addFilterWithConjunction($andOr, $columnOrClause, $value, $condition, $preferColumnCondition);
     }
 
     /**
      * @deprecated just use ModelCriteria::addUsingOperator(), local columns will be resolved anyway.
      *
      * Overrides Criteria::add() to force the use of a true table alias if it exists
-     *
-     * @see Criteria::add()
      *
      * @param string $qualifiedColumnName The colName of column to run the condition on (e.g. BookTableMap::ID)
      * @param mixed $value
@@ -2418,7 +2413,7 @@ class ModelCriteria extends BaseModelCriteria
         $params = [];
         $dbMap = Propel::getServiceContainer()->getDatabaseMap($this->getDbName());
 
-        foreach ($this->getColumnFilter() as $criterion) {
+        foreach ($this->getColumnFilters() as $criterion) {
             $criterion->collectParameters($params);
         }
 

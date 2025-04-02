@@ -1569,7 +1569,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
                 && !$table->isAllowPkInsert()
             ) {
                 $script .= "
-        if (\$criteria->containsKey(" . $this->getColumnConstant($col) . ') && $criteria->keyContainsValue(' . $this->getColumnConstant($col) . ") ) {
+        if (\$criteria->hasUpdateValueForColumn(" . $this->getColumnConstant($col) . ") ) {
             throw new PropelException('Cannot insert a value for auto-increment primary key ('." . $this->getColumnConstant($col) . ".')');
         }
 ";
@@ -1588,7 +1588,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
             ) {
                 $script .= "
         // remove pkey col if it is null since this table does not accept that
-        if (\$criteria->containsKey(" . $this->getColumnConstant($col) . ') && !$criteria->keyContainsValue(' . $this->getColumnConstant($col) . ") ) {
+        if (\$criteria->containsKey(" . $this->getColumnConstant($col) . ') && !$criteria->hasUpdateValueForColumn(' . $this->getColumnConstant($col) . ") ) {
             \$criteria->remove(" . $this->getColumnConstant($col) . ");
         }
 ";

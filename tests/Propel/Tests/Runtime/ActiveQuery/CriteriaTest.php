@@ -64,7 +64,7 @@ class CriteriaTest extends BookstoreTestBase
         $this->assertTrue($this->c->containsKey($table . '.' . $column));
 
         // Verify that what we get out is what we put in
-        $this->assertTrue($this->c->getValue($table . '.' . $column) === $value);
+        $this->assertTrue($this->c->getUpdateValue($table . '.' . $column) === $value);
     }
 
     /**
@@ -1167,14 +1167,12 @@ class CriteriaTest extends BookstoreTestBase
     public function testClone()
     {
         $c1 = new Criteria();
-        $c1->add('tbl.COL1', 'foo', Criteria::EQUAL);
+        $c1->addFilter('tbl.COL1', 'foo', Criteria::EQUAL);
         $c2 = clone $c1;
         $c2->addAnd('tbl.COL1', 'bar', Criteria::EQUAL);
         $nbCrit = 0;
-        foreach ($c1->keys() as $key) {
-            foreach ($c1->getCriterion($key)->getAttachedCriterion() as $criterion) {
-                $nbCrit++;
-            }
+        foreach ($c1->getColumnFilters() as $filter) {
+            $nbCrit += $filter->count();
         }
         $this->assertEquals(1, $nbCrit, 'cloning a Criteria clones its Criterions');
     }

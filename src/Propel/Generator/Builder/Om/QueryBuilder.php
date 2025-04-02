@@ -1130,7 +1130,7 @@ class QueryBuilder extends AbstractOMBuilder
             \$andOr = (\$comparison === Criteria::CONTAINS_SOME) ? Criteria::LOGICAL_OR : Criteria::LOGICAL_AND;
             \$operator = (\$comparison === Criteria::CONTAINS_NONE) ? Criteria::NOT_LIKE : Criteria::LIKE;
             foreach (\$$variableName as \$value) {
-                \$this->addFilter(\$andOr, \$resolvedColumn, \"%| \$value |%\", \$operator);
+                \$this->addFilterWithConjunction(\$andOr, \$resolvedColumn, \"%| \$value |%\", \$operator);
             }
             if (\$comparison == Criteria::CONTAINS_NONE) {
                 \$this->addOr(\$resolvedColumn, null, Criteria::ISNULL);

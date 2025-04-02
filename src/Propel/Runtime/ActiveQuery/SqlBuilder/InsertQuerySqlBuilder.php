@@ -34,38 +34,36 @@ class InsertQuerySqlBuilder extends AbstractSqlQueryBuilder
      */
     public function build(): PreparedStatementDto
     {
-        $qualifiedColumnNames = $this->criteria->keys();
-        if (!$qualifiedColumnNames) {
+        $updateValues = $this->criteria->getUpdateValues();
+        if (!$updateValues) {
             throw new PropelException('Database insert attempted without anything specified to insert.');
         }
 
-        $tableName = $this->criteria->getTableName($qualifiedColumnNames[0]);
+        $tableName = reset($updateValues)->getTableAlias();
         $tableName = $this->quoteIdentifierTable($tableName);
 
-        $columnCsv = $this->buildSimpleColumnNamesCsv($qualifiedColumnNames);
+        $columnCsv = $this->buildSimpleColumnNamesCsv($updateValues);
 
-        $numberOfColumns = count($qualifiedColumnNames);
+        $numberOfColumns = count($updateValues);
         $parameterPlaceholdersCsv = $this->buildParameterPlaceholdersCsv($numberOfColumns);
 
         $insertStatement = "INSERT INTO $tableName ($columnCsv) VALUES ($parameterPlaceholdersCsv)";
-        $params = $this->buildParams($qualifiedColumnNames);
+        $params = $this->buildParamsFromUpdateValues($updateValues);
 
         return new PreparedStatementDto($insertStatement, $params);
     }
 
     /**
-     * @param array<string> $qualifiedColumnNames
+     * @param array<\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\AbstractUpdateColumn> $qualifiedColumnNames
      *
      * @return string
      */
     protected function buildSimpleColumnNamesCsv(array $qualifiedColumnNames): string
     {
         $columnNames = [];
-        foreach ($qualifiedColumnNames as $qualifiedCol) {
-            $dotPos = strrpos($qualifiedCol, '.');
-            $columnNames[] = substr($qualifiedCol, $dotPos + 1);
+        foreach ($qualifiedColumnNames as $updateColumn) {
+            $columnNames[] = $updateColumn->getColumnExpressionInQuery(true); // TODO remove tableAlias
         }
-        $columnNames = array_map([$this->criteria, 'quoteIdentifier'], $columnNames);
 
         return implode(',', $columnNames);
     }
