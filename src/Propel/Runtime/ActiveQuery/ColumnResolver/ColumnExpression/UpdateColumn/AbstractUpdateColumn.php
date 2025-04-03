@@ -67,7 +67,7 @@ abstract class AbstractUpdateColumn extends RemoteTypedColumnExpression
      */
     public function buildAssignmentClause(int &$positionIndex): string
     {
-        $columnNameInUpdate = $this->getColumnExpressionInQuery(true);
+        $columnNameInUpdate = $this->getColumnExpressionInQuery(true, true);
         $expression = $this->buildExpression($positionIndex);
 
         return "$columnNameInUpdate=$expression";

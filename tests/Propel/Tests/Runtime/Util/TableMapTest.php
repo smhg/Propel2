@@ -380,7 +380,7 @@ class TableMapTest extends BookstoreTestBase
         $c1->setPrimaryTableName(BookTableMap::TABLE_NAME);
         $c1->setComment('Foo');
         $c2 = new Criteria();
-        $c2->add(BookTableMap::COL_TITLE, 'Updated Title');
+        $c2->setUpdateValue(BookTableMap::COL_TITLE, 'Updated Title', \PDO::PARAM_STR);
         $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
         $c1->doUpdate($c2, $con);
         $expected = $this->getSql('UPDATE /* Foo */ book SET title=\'Updated Title\'');

@@ -10,6 +10,7 @@ namespace Propel\Runtime\ActiveQuery\SqlBuilder;
 
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
+use Propel\Runtime\ActiveQuery\ModelCriteria;
 
 /**
  * This class produces the base object class (e.g. BaseMyTable) which contains
@@ -49,7 +50,8 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
         $selectSql = $this->buildSelectClause($sourceTableNamesCollector);
         $joinClauses = $this->buildJoinClauses($params, $sourceTableNamesCollector); // we want params from joins resolved before params from where
         $whereSql = $this->buildWhereClause($params, $sourceTableNamesCollector);
-        $fromSql = $this->buildFromClause($params, $sourceTableNamesCollector, $joinClauses);
+        $ignoreCollectedTableNames = $this->criteria instanceof ModelCriteria && $this->criteria->getPrimaryTableName(); // HACK: Criteria relies on table information from outside. Tests use ModelCriteria without model.
+        $fromSql = $this->buildFromClause($params, $ignoreCollectedTableNames ? [] : $sourceTableNamesCollector, $joinClauses);
 
         [$orderBySql, $additionalSelectStatements] = $this->buildOrderByClause($params);
         $selectSql .= $additionalSelectStatements;
@@ -232,6 +234,8 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
         $whereClause = [];
 
         foreach ($columnNameToCriterions as $criterion) {
+            $p = [];
+            $this->buildStatementFromCriterion($criterion, $p);
             foreach ($criterion->getAttachedFilter() as $attachedCriterion) {
                 $rawTableName = $attachedCriterion->getTableAlias();
                 if (!$rawTableName) {

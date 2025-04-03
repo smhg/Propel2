@@ -62,7 +62,7 @@ class InsertQuerySqlBuilder extends AbstractSqlQueryBuilder
     {
         $columnNames = [];
         foreach ($qualifiedColumnNames as $updateColumn) {
-            $columnNames[] = $updateColumn->getColumnExpressionInQuery(true); // TODO remove tableAlias
+            $columnNames[] = $updateColumn->getColumnExpressionInQuery(true, true);
         }
 
         return implode(',', $columnNames);

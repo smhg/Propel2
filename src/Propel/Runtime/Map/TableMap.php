@@ -980,16 +980,12 @@ class TableMap
         $pk = [];
         foreach ($pkCols as $pkCol) {
             $fqName = $pkCol->getFullyQualifiedName();
-            $name = $pkCol->getName();
-
-            if ($criteria->hasUpdateValue($fqName)) {
-                $value = $criteria->getUpdateValue($fqName);
-            } elseif ($criteria->hasUpdateValue($name)) {
-                $value = $criteria->getUpdateValue($name);
-            } else {
+            $filter = $criteria->findFilterByColumn($fqName);
+            if (!$filter) {
                 return null;
             }
-
+            $value = $filter->getValue();
+            $name = $pkCol->getName();
             $pk[$name] = $value;
         }
 

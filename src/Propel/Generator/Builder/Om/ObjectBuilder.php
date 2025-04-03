@@ -6390,7 +6390,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
             } elseif (!$this->getPlatform()->supportsInsertNullPk()) {
                 $script .= "
         // remove pkey col if it is null since this table does not accept that
-        if (\$criteria->hasUpdateValueForColumn($colConst) && !\$criteria->keyContainsValue($colConst) ) {
+        if (\$criteria->hasUpdateValue($colConst) && !\$criteria->keyContainsValue($colConst) ) {
             \$criteria->remove($colConst);
         }";
             }

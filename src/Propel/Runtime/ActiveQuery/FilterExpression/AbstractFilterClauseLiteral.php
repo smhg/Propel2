@@ -168,11 +168,11 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
     }
 
     /**
-     * @return null
+     * @return string|null
      */
     public function getTableAlias(): ?string
     {
-        return null;
+        return $this->resolvedColumns ? $this->resolvedColumns[0]->getTableAlias() : null;
     }
 
     /**

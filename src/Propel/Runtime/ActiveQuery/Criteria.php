@@ -10,11 +10,13 @@ namespace Propel\Runtime\ActiveQuery;
 
 use Exception;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\LocalColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\RemoteColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\RemoteTypedColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\AbstractUpdateColumn;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\UpdateColumn;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\UpdateExpression;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnResolver;
 use Propel\Runtime\ActiveQuery\ColumnResolver\NormalizedFilterExpression;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterFactory;
@@ -31,6 +33,7 @@ use Propel\Runtime\DataFetcher\DataFetcherInterface;
 use Propel\Runtime\Exception\LogicException;
 use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Map\ColumnMap;
+use Propel\Runtime\Map\DatabaseMap;
 use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\Util\PropelConditionalProxy;
@@ -659,15 +662,15 @@ class Criteria
     /**
      * Does this Criteria object contain the specified key?
      *
-     * @param string $columnName [table.]column
+     * @param string $columnIdentifier [table.]column
      *
      * @return bool True if this Criteria object contain the specified key.
      */
-    public function hasUpdateValue(string $columnName): bool
+    public function hasUpdateValue(string $columnIdentifier): bool
     {
         // must use array_key_exists() because the key could
         // exist but have a NULL value (that'd be valid).
-        return isset($this->updateValues[$columnName]);
+        return isset($this->updateValues[$columnIdentifier]);
     }
 
     /**
@@ -873,8 +876,8 @@ class Criteria
     {
         $tables = [];
         foreach ($this->columnFilters as $filter) {
-            $tableName = $filter->getTableAlias();
-            $tables[$tableName][] = $filter;
+            $tableAlias = $filter->getTableAlias() ?? $this->getTableNameInQuery();
+            $tables[$tableAlias][] = $filter;
         }
 
         return $tables;
@@ -902,6 +905,16 @@ class Criteria
     public function getDbName(): string
     {
         return $this->dbName;
+    }
+
+    /**
+     * Get the DatabaseMap name.
+     *
+     * @return \Propel\Runtime\Map\DatabaseMap
+     */
+    protected function getDatabaseMap(): DatabaseMap
+    {
+        return Propel::getServiceContainer()->getDatabaseMap($this->dbName);
     }
 
     /**
@@ -1008,13 +1021,13 @@ class Criteria
      */
     public function getUpdateValue(string $name)
     {
-        if (isset($this->updateValues[$name])) {
-            return $this->updateValues[$name] instanceof AbstractUpdateColumn
-                ? $this->updateValues[$name]->getValue()
-                : $this->updateValues[$name];
+        if (!isset($this->updateValues[$name])) {
+            return null;
         }
 
-        return null;
+        return $this->updateValues[$name] instanceof AbstractUpdateColumn
+            ? $this->updateValues[$name]->getValue()
+            : $this->updateValues[$name];
     }
 
     /**
@@ -1046,13 +1059,11 @@ class Criteria
      * @param string $key
      * @param mixed $value
      *
-     * @return $this
+     * @return static
      */
     public function put(string $key, $value)
     {
-        $this->addFilter($key, $value);
-
-        return $this;
+        return $this->addFilter($key, $value);
     }
 
     /**
@@ -1138,7 +1149,8 @@ class Criteria
      */
     public function setUpdateValue($columnIdentifierOrMap, $value, $pdoType = null)
     {
-        // NOTE: $pdoType is not typed as `?int` due to fallback.
+// NOTE: $pdoType is not typed as `?int` due to fallback.
+
         if (is_array($value) && isset($value['raw'])) {
             trigger_error('Use Criteria::setUpdateExpression() instead of deprecated column value ' . print_r($value, true), E_USER_WARNING);
 
@@ -2126,6 +2138,16 @@ class Criteria
     }
 
     /**
+     * @return bool
+     */
+    protected function isEmpty(): bool
+    {
+        return !($this->selectColumns || $this->asColumns || $this->selectModifiers
+            || $this->updateValues || $this->columnFilters || $this->having || $this->joins
+        );
+    }
+
+    /**
      * This method checks another Criteria to see if they contain
      * the same attributes and hashtable entries.
      *
@@ -2293,6 +2315,11 @@ class Criteria
         $this->aliases = array_merge($this->getAliases(), $criteria->getAliases());
 
         // merge join
+        foreach ($criteria->getJoins() as $key => $join) {
+            if ($join->getLeftTableName() !== $this->getPrimaryTableName() && $join->getRightTableName() === $this->getPrimaryTableName()) {
+                $join->invert();
+            }
+        }
         $this->joins = array_merge($this->getJoins(), $criteria->getJoins());
 
         return $this;
@@ -2517,7 +2544,7 @@ class Criteria
         $tableMapName = $this->getTableForAlias($tableName) ?: $tableName;
 
         if ($tableMapName) {
-            $dbMap = Propel::getServiceContainer()->getDatabaseMap($this->getDbName());
+            $dbMap = $this->getDatabaseMap();
             if ($dbMap->hasTable($tableMapName)) {
                 $tableMap = $dbMap->getTable($tableMapName);
                 if ($tableMap->isIdentifierQuotingEnabled()) {
@@ -2569,6 +2596,14 @@ class Criteria
      */
     public function resolveColumn(string $columnIdentifier, bool $hasAccessToOutputColumns = false, bool $failSilently = true): AbstractColumnExpression
     {
+        [$tableAlias, $columnName] = ColumnResolver::splitColumnLiteralParts($columnIdentifier);
+        $dbMap = $this->getDatabaseMap();
+        if ($tableAlias && $dbMap->hasTable($tableAlias) && $dbMap->getTable($tableAlias)->hasColumn($columnName)) {
+            $columnMap = $dbMap->getTable($tableAlias)->getColumn($columnName);
+
+            return new LocalColumnExpression($this, $tableAlias, $columnMap);
+        }
+
         // Regular Criteria has no TableMap, all columns can be considered remote.
         return RemoteColumnExpression::fromString($this, $columnIdentifier);
     }
@@ -2629,6 +2664,34 @@ class Criteria
     }
 
     /**
+     * Returns the TableMap object for this Criteria
+     *
+     * @return \Propel\Runtime\Map\TableMap|null
+     */
+    public function getTableMap(): ?TableMap
+    {
+        return $this->primaryTableName ? $this->getDatabaseMap()->getTable($this->primaryTableName) : null;
+    }
+
+    /**
+     * Returns the TableMap object for this Criteria
+     *
+     * @throws \Propel\Runtime\Exception\LogicException
+     *
+     * @return \Propel\Runtime\Map\TableMap
+     */
+    public function getTableMapOrFail(): TableMap
+    {
+        $tableMap = $this->getTableMap();
+
+        if ($tableMap === null) {
+            throw new LogicException('Table map is not defined.');
+        }
+
+        return $tableMap;
+    }
+
+    /**
      * @deprecated get primary keys in a reliable way from TableMap.
      *
      * @param self|null $criteria
@@ -2668,7 +2731,7 @@ class Criteria
      * WHERE some_column = some value AND could_have_another_column =
      * another value AND so on.
      *
-     * @param \Propel\Runtime\ActiveQuery\Criteria $updateValues A Criteria object containing values used in set clause.
+     * @param \Propel\Runtime\ActiveQuery\Criteria|null $updateValues A Criteria object containing values used in set clause.
      * @param \Propel\Runtime\Connection\ConnectionInterface $con The ConnectionInterface connection object to use.
      *
      * @return int The number of rows affected by last update statement.
@@ -2677,12 +2740,31 @@ class Criteria
      *             Note that the return value does require that this information is returned
      *             (supported) by the Propel db driver.
      */
-    public function doUpdate(Criteria $updateValues, ConnectionInterface $con): int
+    public function doUpdate(?Criteria $updateValues, ConnectionInterface $con): int
     {
-        // HACK - temp workaround for poc
-        $this->updateValues = array_merge($this->updateValues, $updateValues->updateValues);
+        if ($updateValues) {
+            $updateValues->turnFiltersToUpdateValues();
+            $this->updateValues = array_merge($this->updateValues, $updateValues->updateValues);
+        }
 
         return UpdateQueryExecutor::execute($this, $con);
+    }
+
+    /**
+     * Turn column filters into update values.
+     *
+     * Old interface used filters as update values, method is used to patch
+     * situations where old interface is used.
+     *
+     * @return void
+     */
+    public function turnFiltersToUpdateValues()
+    {
+        foreach ($this->columnFilters as $filter) {
+            $columnIdentifier = $filter->getLocalColumnName();
+            $value = $filter->getValue();
+            $this->setUpdateValue($columnIdentifier, $value);
+        }
     }
 
     /**
@@ -2877,9 +2959,8 @@ class Criteria
      */
     public function __clone()
     {
-        foreach ($this->columnFilters as $filter) {
-            $this->columnFilters[] = clone $filter;
-        }
+        $this->columnFilters = array_map(fn (ColumnFilterInterface $f) => clone $f, $this->columnFilters);
+
         foreach ($this->updateValues as $key => $value) {
             $this->updateValues[$key] = $value instanceof AbstractColumnExpression ? clone $value : $value;
         }

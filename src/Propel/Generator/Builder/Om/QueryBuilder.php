@@ -561,11 +561,7 @@ class QueryBuilder extends AbstractOMBuilder
 
         \$this->basePreSelect(\$con);
 
-        if (
-            \$this->formatter || \$this->modelAlias || \$this->with || \$this->select
-            || \$this->selectColumns || \$this->asColumns || \$this->selectModifiers
-            || \$this->map || \$this->having || \$this->joins
-        ) {
+        if (!\$this->isEmpty()) {
             return \$this->findPkComplex(\$key, \$con);
         }
 

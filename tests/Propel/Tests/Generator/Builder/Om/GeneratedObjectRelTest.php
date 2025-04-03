@@ -234,9 +234,10 @@ class GeneratedObjectRelTest extends BookstoreEmptyTestBase
         $blc1 = BookClubListQuery::create()->findOneByGroupLeader('Crazyleggs');
         $nbBooks = $blc1->countBooks();
         $this->assertEquals(2, $nbBooks, 'countCrossRefFK() returns the correct list of objects');
+
         $query = BookQuery::create()
             ->filterByTitle('Harry Potter and the Order of the Phoenix');
-        $nbBooks = $blc1->countBooks($query);
+        $nbBooks = $blc1->countBooks($query); // adds a join
 
         $bla = BookListRelQuery::create(null)
             ->filterByBookClubList($blc1);

@@ -25,24 +25,24 @@ class UpdateQuerySqlBuilder extends AbstractSqlQueryBuilder
     }
 
     /**
-     * @param string $tableName
+     * @param string $realTableName
      * @param array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface> $columnFilters
      * @param array<\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\AbstractUpdateColumn> $updateValues
      *
      * @return \Propel\Runtime\ActiveQuery\SqlBuilder\PreparedStatementDto
      */
-    public function build(string $tableName, array $columnFilters, array $updateValues): PreparedStatementDto
+    public function build(string $realTableName, array $columnFilters, array $updateValues): PreparedStatementDto
     {
-        [$tableName, $updateTable] = $this->getTableNameWithAlias($tableName);
+        [$realTableName, $aliasedTableName] = $this->getTableNameWithAlias($realTableName);
 
         $updateSql = ['UPDATE'];
         $queryComment = $this->criteria->getComment();
         if ($queryComment) {
             $updateSql[] = '/* ' . $queryComment . ' */';
         }
-        $updateSql[] = $this->quoteIdentifierTable($updateTable);
+        $updateSql[] = $this->quoteIdentifierTable($aliasedTableName);
         $updateSql[] = 'SET';
-        $updateSql[] = $this->buildAssignmentList($tableName, $updateValues);
+        $updateSql[] = $this->buildAssignmentList($realTableName, $updateValues);
 
         $params = $this->buildParamsFromUpdateValues($updateValues);
         $whereClause = $this->buildWhereClause($columnFilters, $params);

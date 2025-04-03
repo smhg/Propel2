@@ -710,10 +710,9 @@ static public function sortableShiftRank(\$delta, \$first, \$last = null, " . ($
         }
         $script .= "
 
-    \$valuesCriteria = new Criteria({$this->tableMapClassName}::DATABASE_NAME);
-    \$valuesCriteria->addUpdateValue({$this->tableMapClassName}::RANK_COL, array('raw' => {$this->tableMapClassName}::RANK_COL . ' + ?', 'value' => \$delta), Criteria::CUSTOM_EQUAL);
+    \$whereCriteria->setUpdateExpression({$this->tableMapClassName}::RANK_COL, {$this->tableMapClassName}::RANK_COL . ' + ?', \$delta, \\PDO::PARAM_INT);
 
-    \$whereCriteria->doUpdate(\$valuesCriteria, \$con);
+    \$whereCriteria->doUpdate(null, \$con);
     {$this->tableMapClassName}::clearInstancePool();
 }
 ";

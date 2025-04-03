@@ -1578,8 +1578,10 @@ class ModelCriteria extends BaseModelCriteria
             /** @phpstan-var \Propel\Runtime\ActiveRecord\ActiveRecordInterface $obj */
             $obj = new $class();
             if (method_exists($obj, 'setByName')) {
-                foreach (array_keys($this->updateValues) as $columnIdentifier) {
-                    $value = $this->getUpdateValue($columnIdentifier);
+                // turn column filters to values (this is very messy...)
+                foreach ($this->columnFilters as $filter) {
+                    $columnIdentifier = $filter->getLocalColumnName();
+                    $value = $filter->getValue();
                     $obj->setByName($columnIdentifier, $value, TableMap::TYPE_COLNAME);
                 }
             }
@@ -2067,7 +2069,7 @@ class ModelCriteria extends BaseModelCriteria
      * Issue an UPDATE query based the current ModelCriteria and a list of changes.
      * This method is called by ModelCriteria::update() inside a transaction.
      *
-     * @param \Propel\Runtime\ActiveQuery\Criteria|array $updateValues Associative array of keys and values to replace
+     * @param \Propel\Runtime\ActiveQuery\Criteria|array|null $updateValues Associative array of keys and values to replace
      * @param \Propel\Runtime\Connection\ConnectionInterface $con a connection object
      * @param bool $forceIndividualSaves If false (default), the resulting call is a Criteria::doUpdate(), otherwise it is a series of save() calls on all the found objects
      *
@@ -2093,16 +2095,16 @@ class ModelCriteria extends BaseModelCriteria
         } else {
             // update rows in a single query
             if ($updateValues instanceof Criteria) {
-                $set = $updateValues;
-            } else {
-                $set = new Criteria($this->getDbName());
+                $this->updateValues = array_merge($this->updateValues, $updateValues->updateValues);
+            } elseif (is_array($updateValues)) {
+                $tableMap = $this->getTableMapOrFail();
                 foreach ($updateValues as $columnName => $value) {
-                    $columnMap = $this->getTableMapOrFail()->getColumnByPhpName($columnName);
-                    $set->setUpdateValue($columnMap, $value);
+                    $columnMap = $tableMap->getColumnByPhpName($columnName);
+                    $this->setUpdateValue($columnMap, $value);
                 }
             }
 
-            $affectedRows = parent::doUpdate($set, $con);
+            $affectedRows = parent::doUpdate(null, $con);
             if ($this->getTableMapOrFail()->extractPrimaryKey($this)) {
                 // this criteria updates only one object defined by a concrete primary key,
                 // therefore there's no need to remove anything from the pool
@@ -2535,5 +2537,13 @@ class ModelCriteria extends BaseModelCriteria
         $this->isSelfSelected = true;
 
         return parent::addSelectColumn($name);
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isEmpty(): bool
+    {
+        return parent::isEmpty() && !($this->formatter || $this->modelAlias || $this->with || $this->select);
     }
 }
