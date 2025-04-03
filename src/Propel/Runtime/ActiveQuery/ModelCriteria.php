@@ -2105,10 +2105,8 @@ class ModelCriteria extends BaseModelCriteria
             }
 
             $affectedRows = parent::doUpdate(null, $con);
-            if ($this->getTableMapOrFail()->extractPrimaryKey($this)) {
-                // this criteria updates only one object defined by a concrete primary key,
-                // therefore there's no need to remove anything from the pool
-            } else {
+            if (!$this->updateAffectsSingleRow()) {
+                // clear instance pool if update affects multiple rows (we don't know which)
                 $modelTableMapName = $this->modelTableMapName;
                 if ($modelTableMapName === null) {
                     throw new LogicException('modelTableMapName is not set');
@@ -2119,6 +2117,32 @@ class ModelCriteria extends BaseModelCriteria
         }
 
         return $affectedRows;
+    }
+
+    /**
+     * Tests if the filters in this query cover the full primary key.
+     *
+     * Currently does not consider operator, OR, etc. see commented test cases
+     * in {@see \Propel\Tests\Runtime\ActiveQuery\ModelCriteriaPkFilterDetectionTest::UpdateAffectsSingleRowDataProvider()}.
+     *
+     * @return bool
+     */
+    protected function updateAffectsSingleRow(): bool
+    {
+        $pkCols = $this->getTableMapOrFail()->getPrimaryKeys();
+        if (count($pkCols) !== count($this->getColumnFilters())) {
+            return false;
+        }
+
+        foreach ($pkCols as $pkCol) {
+            $fqName = $pkCol->getFullyQualifiedName();
+            $filter = $this->findFilterByColumn($fqName);
+            if (!$filter) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
