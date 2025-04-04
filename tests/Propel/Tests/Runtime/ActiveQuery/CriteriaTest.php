@@ -60,7 +60,7 @@ class CriteriaTest extends BookstoreTestBase
         $this->c->setUpdateValue($columnIdentifier, $value, 1);
 
         $this->assertTrue($this->c->hasUpdateValue($columnIdentifier));
-        $this->assertEquals($value, $this->c->getColumnUpdateValue($columnIdentifier));
+        $this->assertEquals($value, $this->c->getUpdateValue($columnIdentifier));
     }
 
     /**
@@ -77,7 +77,7 @@ class CriteriaTest extends BookstoreTestBase
         $this->c->setUpdateValue($columnIdentifier, $value, 1);
 
         $this->assertTrue($this->c->hasUpdateValue($columnIdentifier));
-        $this->assertEquals($value, $this->c->getColumnUpdateValue($columnIdentifier));
+        $this->assertEquals($value, $this->c->getUpdateValue($columnIdentifier));
     }
 
     /**

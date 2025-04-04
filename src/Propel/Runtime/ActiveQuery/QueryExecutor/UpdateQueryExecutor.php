@@ -44,7 +44,7 @@ class UpdateQueryExecutor extends AbstractQueryExecutor
      */
     protected function runUpdate(): int
     {
-        $updateValuesByTable = $this->criteria->getUpdateValuesByTable(); // TODO move getUpdateValuesByTable() here
+        $updateValuesByTable = $this->criteria->getUpdateValues()->groupUpdateValuesByTable();
 
         if (!$updateValuesByTable) {
             return 0;

@@ -34,20 +34,25 @@ class InsertQuerySqlBuilder extends AbstractSqlQueryBuilder
      */
     public function build(): PreparedStatementDto
     {
-        $updateValues = $this->criteria->getUpdateValues();
-        if (!$updateValues) {
-            throw new PropelException('Database insert attempted without anything specified to insert.');
+        $updateValuesByTable = $this->criteria->getUpdateValues()->groupUpdateValuesByTable();
+
+        if (count($updateValuesByTable) > 1) {
+            $message = 'Cannot insert into multiple tables in same query, but found tables: ' . implode(', ', array_keys($updateValuesByTable));
+            throw new PropelException($message);
         }
 
-        $tableName = reset($updateValues)->getTableAlias();
-        $tableName = $this->quoteIdentifierTable($tableName);
-
+        $tableName = array_key_first($updateValuesByTable);
+        $updateValues = $updateValuesByTable[$tableName];
+        if (count($updateValues) === 0) {
+            throw new PropelException('Database insert attempted without anything specified to insert.');
+        }
         $columnCsv = $this->buildSimpleColumnNamesCsv($updateValues);
-
+        
         $numberOfColumns = count($updateValues);
         $parameterPlaceholdersCsv = $this->buildParameterPlaceholdersCsv($numberOfColumns);
-
-        $insertStatement = "INSERT INTO $tableName ($columnCsv) VALUES ($parameterPlaceholdersCsv)";
+        
+        $quotedTableName = $this->quoteIdentifierTable($tableName);
+        $insertStatement = "INSERT INTO $quotedTableName ($columnCsv) VALUES ($parameterPlaceholdersCsv)";
         $params = $this->buildParamsFromUpdateValues($updateValues);
 
         return new PreparedStatementDto($insertStatement, $params);

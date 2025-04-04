@@ -87,7 +87,7 @@ class InsertQueryExecutor extends AbstractQueryExecutor
         }
 
         $pkFullName = $this->primaryKeyColumn->getFullyQualifiedName();
-        if ($this->criteria->getColumnUpdateValue($pkFullName) !== null) {
+        if ($this->criteria->getUpdateValue($pkFullName) !== null) {
             return;
         }
 

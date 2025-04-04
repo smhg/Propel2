@@ -13,8 +13,8 @@ use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExp
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\LocalColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\RemoteColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\RemoteTypedColumnExpression;
-use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\AbstractUpdateColumn;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\UpdateColumn;
+use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\UpdateColumnCollector;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\UpdateExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnResolver;
 use Propel\Runtime\ActiveQuery\ColumnResolver\NormalizedFilterExpression;
@@ -290,9 +290,9 @@ class Criteria
     /**
      * Storage of conditions data. Collection of Criterion objects.
      *
-     * @var array<string, \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\AbstractUpdateColumn|scalar>
+     * @var \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\UpdateColumnCollector
      */
-    protected $updateValues = [];
+    protected $updateValues;
 
     /**
      * Storage of ordering data. Collection of column names.
@@ -427,6 +427,7 @@ class Criteria
     {
         $this->setDbName($dbName);
         $this->originalDbName = $dbName;
+        $this->updateValues = new UpdateColumnCollector();
     }
 
     /**
@@ -450,9 +451,9 @@ class Criteria
     }
 
     /**
-     * @return array<string, \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\AbstractUpdateColumn|mixed>
+     * @return \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\UpdateColumnCollector
      */
-    public function getUpdateValues(): array
+    public function getUpdateValues(): UpdateColumnCollector
     {
         return $this->updateValues;
     }
@@ -467,7 +468,7 @@ class Criteria
     public function clear()
     {
         $this->columnFilters = [];
-        $this->updateValues = [];
+        $this->updateValues->clear();
         $this->namedCriterions = [];
         $this->ignoreCase = false;
         $this->singleRecord = false;
@@ -627,10 +628,9 @@ class Criteria
      */
     public function keys(): array
     {
-        $updateKeys = array_keys($this->updateValues);
         $filterKeys = array_map(fn ($c) => $c->getLocalColumnName(), $this->columnFilters);
 
-        return array_merge($updateKeys, $filterKeys);
+        return array_merge($this->updateValues->getColumnExpressionsInQuery(), $filterKeys);
     }
 
     /**
@@ -648,7 +648,7 @@ class Criteria
     }
 
     /**
-     * @deprecated use {@see static::getColumnUpdateValue()} and check against null yourself.
+     * @deprecated use {@see static::getUpdateValue()} and check against null yourself.
      *
      * @param string $columnName [table.]column
      *
@@ -656,7 +656,7 @@ class Criteria
      */
     public function keyContainsValue(string $columnName): bool
     {
-        return $this->getColumnUpdateValue($columnName) !== null;
+        return $this->getUpdateValue($columnName) !== null;
     }
 
     /**
@@ -668,26 +668,7 @@ class Criteria
      */
     public function hasUpdateValue(string $columnIdentifier): bool
     {
-        // must use array_key_exists() because the key could
-        // exist but have a NULL value (that'd be valid).
-        return isset($this->updateValues[$columnIdentifier]);
-    }
-
-    /**
-     * @param string $columnName [table.]column
-     *
-     * @return mixed
-     */
-    public function getColumnUpdateValue(string $columnName)
-    {
-        if (!isset($this->updateValues[$columnName])) {
-            return null;
-        }
-        $value = $this->updateValues[$columnName];
-
-        return $value instanceof AbstractUpdateColumn
-            ? $value = $value->getValue()
-            : $value;
+        return $this->updateValues->hasUpdateValue($columnIdentifier);
     }
 
     /**
@@ -767,13 +748,13 @@ class Criteria
     /**
      * Method to return criteria related to columns in a table.
      *
-     * @param string $column Column name.
+     * @param string $columnIdentifier Column name.
      *
      * @return \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\AbstractUpdateColumn|mixed
      */
-    public function getUpdateValueForColumn(string $column)
+    public function getUpdateValueForColumn(string $columnIdentifier)
     {
-        return $this->updateValues[$column];
+        return $this->updateValues->getUpdateColumn($columnIdentifier);
     }
 
     /**
@@ -838,32 +819,9 @@ class Criteria
             $tableName = $filter->getTableAlias();
             $tables[$tableName][] = $filter->getLocalColumnName();
         }
-        foreach ($this->updateValues as $key => $values) {
-            $tableName = substr($key, 0, strrpos($key, '.') ?: null);
-            $tables[$tableName][] = $tableName;
-        }
-
-        return $tables;
-    }
-
-    /**
-     * Shortcut method to get an array of columns indexed by table.
-     * <code>
-     * print_r($c->getTablesColumns());
-     *  => array(
-     *       'book' => array('book.price', 'book.title'),
-     *       'author' => array('author.first_name')
-     *     )
-     * </code>
-     *
-     * @return array<string, array<\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\AbstractUpdateColumn|mixed>> array(table => array(table.column1, table.column2))
-     */
-    public function getUpdateValuesByTable(): array
-    {
-        $tables = [];
-        foreach ($this->updateValues as $key => $values) {
-            $tableName = substr($key, 0, strrpos($key, '.') ?: null);
-            $tables[$tableName][] = $values;
+        foreach ($this->updateValues->getColumnExpressionsInQuery() as $columnExpression) {
+            $tableName = substr($columnExpression, 0, strrpos($columnExpression, '.') ?: null);
+            $tables[$tableName][] = $columnExpression;
         }
 
         return $tables;
@@ -1005,33 +963,23 @@ class Criteria
      */
     public function getTableName(string $name): ?string
     {
-        if (isset($this->updateValues[$name]) && $this->updateValues[$name] instanceof AbstractUpdateColumn) {
-            return $this->updateValues[$name]->getTableAlias();
-        }
+        $updateColumn = $this->updateValues->getUpdateColumn($name);
 
-        return null;
+        return $updateColumn ? $updateColumn->getTableAlias() : null;
     }
 
     /**
-     * Method to return the value that was added to Criteria.
-     *
      * @param string $name A String with the name of the key.
      *
      * @return mixed The value of object at key.
      */
     public function getUpdateValue(string $name)
     {
-        if (!isset($this->updateValues[$name])) {
-            return null;
-        }
-
-        return $this->updateValues[$name] instanceof AbstractUpdateColumn
-            ? $this->updateValues[$name]->getValue()
-            : $this->updateValues[$name];
+        return $this->updateValues->getUpdateValue($name);
     }
 
     /**
-     * @deprecated Use {@see static::getUpdateValue()}.
+     * @deprecated Use aptly named {@see static::getUpdateValue()}.
      *
      * An alias to getValue() -- exposing a Hashtable-like interface.
      *
@@ -1163,8 +1111,9 @@ class Criteria
         }
 
         $updateColumn = UpdateColumn::build($this, $columnIdentifierOrMap, $value, $pdoType);
+        $this->updateValues->setUpdateColumn($updateColumn);
 
-        return $this->setUpdateColumn($updateColumn);
+        return $this;
     }
 
     /**
@@ -1180,19 +1129,7 @@ class Criteria
     public function setUpdateExpression($columnIdentifierOrMap, string $expression, $values = null, $pdoTypes = null)
     {
         $updateExpression = UpdateExpression::build($this, $columnIdentifierOrMap, $expression, $values, $pdoTypes);
-
-        return $this->setUpdateColumn($updateExpression);
-    }
-
-    /**
-     * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\AbstractUpdateColumn $updateColumn
-     *
-     * @return static
-     */
-    protected function setUpdateColumn(AbstractUpdateColumn $updateColumn)
-    {
-        $key = $updateColumn->getColumnExpressionInQuery();
-        $this->updateValues[$key] = $updateColumn;
+        $this->updateValues->setUpdateColumn($updateExpression);
 
         return $this;
     }
@@ -2059,22 +1996,13 @@ class Criteria
     /**
      * @deprecated should not be necessary.
      *
-     * Remove an object from the criteria.
-     *
      * @param string $key A string with the key to be removed.
      *
      * @return mixed|null The removed value.
      */
     public function removeUpdateValue(string $key)
     {
-        if (!isset($this->updateValues[$key])) {
-            return null;
-        }
-
-        $removed = $this->updateValues[$key];
-        unset($this->updateValues[$key]);
-
-        return $removed instanceof AbstractUpdateColumn ? $removed->getValue() : $removed;
+        return $this->updateValues->removeUpdateValue($key);
     }
 
     /**
@@ -2128,13 +2056,11 @@ class Criteria
     }
 
     /**
-     * Returns the size (count) of this criteria.
-     *
      * @return int
      */
     public function countUpdateValues(): int
     {
-        return count($this->updateValues);
+        return $this->updateValues->countUpdateValues();
     }
 
     /**
@@ -2143,8 +2069,8 @@ class Criteria
     protected function isEmpty(): bool
     {
         return !($this->selectColumns || $this->asColumns || $this->selectModifiers
-            || $this->updateValues || $this->columnFilters || $this->having || $this->joins
-        );
+            || $this->columnFilters || $this->having || $this->joins
+        ) && $this->updateValues->isEmpty();
     }
 
     /**
@@ -2178,17 +2104,9 @@ class Criteria
             || $this->orderByColumns !== $criteria->getOrderByColumns()
             || $this->groupByColumns !== $criteria->getGroupByColumns()
             || $this->aliases !== $criteria->getAliases()
+            || !$this->updateValues->equals($crit->updateValues)
         ) {
             return false;
-        }
-
-        foreach ($this->updateValues as $columnName => $value) {
-            if (
-                !$crit->hasUpdateValue($columnName)
-                || $crit->getColumnUpdateValue($columnName) !== $this->getColumnUpdateValue($columnName)
-            ) {
-                return false;
-            }
         }
 
         foreach ($criteria->getColumnFilters() as $otherFilter) {
@@ -2295,7 +2213,7 @@ class Criteria
         }
 
         // merge update values
-        $this->updateValues = array_merge($this->updateValues, $criteria->updateValues);
+        $this->updateValues->merge($criteria->updateValues);
 
         // merge having
         $having = $criteria->getHaving();
@@ -2704,8 +2622,7 @@ class Criteria
             $criteria = $this;
         }
         // Assume all the keys are for the same table.
-        $keys = array_keys($this->updateValues);
-        $key = $keys[0];
+        $key = $this->updateValues->getColumnExpressionsInQuery()[0];
         $table = $criteria->getTableName($key);
 
         $pk = null;
@@ -2744,7 +2661,7 @@ class Criteria
     {
         if ($updateValues) {
             $updateValues->turnFiltersToUpdateValues();
-            $this->updateValues = array_merge($this->updateValues, $updateValues->updateValues);
+            $this->updateValues->merge($updateValues->updateValues);
         }
 
         return UpdateQueryExecutor::execute($this, $con);
@@ -2960,10 +2877,7 @@ class Criteria
     public function __clone()
     {
         $this->columnFilters = array_map(fn (ColumnFilterInterface $f) => clone $f, $this->columnFilters);
-
-        foreach ($this->updateValues as $key => $value) {
-            $this->updateValues[$key] = $value instanceof AbstractColumnExpression ? clone $value : $value;
-        }
+        $this->updateValues = clone $this->updateValues;
 
         foreach ($this->joins as $key => $join) {
             $this->joins[$key] = clone $join;

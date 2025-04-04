@@ -14,8 +14,6 @@ use Propel\Runtime\Map\ColumnMap;
 
 /**
  * A column used in an insert or update, including value expression.
- *
- * @phpstan-consistent-constructor
  */
 abstract class AbstractUpdateColumn extends RemoteTypedColumnExpression
 {

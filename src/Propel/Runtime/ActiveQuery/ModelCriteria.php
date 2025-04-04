@@ -2095,7 +2095,8 @@ class ModelCriteria extends BaseModelCriteria
         } else {
             // update rows in a single query
             if ($updateValues instanceof Criteria) {
-                $this->updateValues = array_merge($this->updateValues, $updateValues->updateValues);
+                $updateValues->turnFiltersToUpdateValues();
+                $this->updateValues->merge($updateValues->updateValues);
             } elseif (is_array($updateValues)) {
                 $tableMap = $this->getTableMapOrFail();
                 foreach ($updateValues as $columnName => $value) {
