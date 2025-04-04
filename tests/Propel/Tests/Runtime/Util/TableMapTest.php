@@ -20,6 +20,7 @@ use Propel\Tests\Bookstore\Map\AuthorTableMap;
 use Propel\Tests\Bookstore\Map\BookstoreTableMap;
 use Propel\Tests\Bookstore\Map\BookTableMap;
 use Propel\Tests\Bookstore\Map\PublisherTableMap;
+use Propel\Tests\Helpers\Bookstore\BookstoreDataPopulator;
 use Propel\Tests\Helpers\Bookstore\BookstoreTestBase;
 
 /**
@@ -32,6 +33,13 @@ use Propel\Tests\Helpers\Bookstore\BookstoreTestBase;
  */
 class TableMapTest extends BookstoreTestBase
 {
+    public static function setUpBeforeClass(): void
+    {
+        parent::setUpBeforeClass();
+        BookstoreDataPopulator::depopulate();
+        BookstoreDataPopulator::populate();
+    }
+
     /**
      * @doesNotPerformAssertions
      * @group pgsql

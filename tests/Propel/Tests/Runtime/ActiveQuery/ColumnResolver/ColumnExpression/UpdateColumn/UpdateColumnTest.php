@@ -9,12 +9,12 @@
 namespace Propel\Tests\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn;
 
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Tests\Helpers\Bookstore\BookstoreTestBase;
+use Propel\Tests\TestCaseFixtures;
 
 /**
- *
+ * @group database
  */
-class UpdateColumnTest extends BookstoreTestBase
+class UpdateColumnTest extends TestCaseFixtures
 {
     public function testMissingPdoTypeCreatesNotice(): void
     {

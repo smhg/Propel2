@@ -596,11 +596,7 @@ class Criteria
      */
     public function getTableForAlias(string $alias): ?string
     {
-        if (isset($this->aliases[$alias])) {
-            return $this->aliases[$alias];
-        }
-
-        return null;
+        return $this->aliases[$alias] ?? null;
     }
 
     /**

@@ -11,12 +11,12 @@ namespace Propel\Tests\Runtime\ActiveQuery;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\Formatter\ArrayFormatter;
-use Propel\Tests\TestCaseFixturesDatabase;
+use Propel\Tests\TestCaseFixtures;
 
 /**
- * 
+ * @group database
  */
-class CriteriaIsEmptyTest extends TestCaseFixturesDatabase
+class CriteriaIsEmptyTest extends TestCaseFixtures
 {
     public function IsEmptyDataProvider(): array
     {

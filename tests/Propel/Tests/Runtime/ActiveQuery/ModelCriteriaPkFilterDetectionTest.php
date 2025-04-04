@@ -11,12 +11,12 @@ namespace Propel\Tests\Runtime\ActiveQuery;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Tests\Bookstore\BookQuery;
 use Propel\Tests\Bookstore\RecordLabelQuery;
-use Propel\Tests\TestCaseFixturesDatabase;
+use Propel\Tests\TestCaseFixtures;
 
 /**
- * 
+ * @group database
  */
-class ModelCriteriaPkFilterDetectionTest extends TestCaseFixturesDatabase
+class ModelCriteriaPkFilterDetectionTest extends TestCaseFixtures
 {
     public function UpdateAffectsSingleRowDataProvider(): array
     {

@@ -63,7 +63,7 @@ abstract class AbstractSqlQueryBuilder
         if (!$realTableName) {
             return [$tableName, $tableName];
         }
-        $aliasedTableName = $realTableName . ' ' . $tableName;
+        $aliasedTableName = "$realTableName $tableName";
 
         return [$realTableName, $aliasedTableName];
     }

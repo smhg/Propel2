@@ -1182,7 +1182,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
     public static function populateObject(array \$row, int \$offset = 0, string \$indexType = TableMap::TYPE_NUM): array
     {
         \$key = {$this->getTableMapClassName()}::getPrimaryKeyHashFromRow(\$row, \$offset, \$indexType);
-        if (null !== (\$obj = {$this->getTableMapClassName()}::getInstanceFromPool(\$key))) {
+        if ((\$obj = {$this->getTableMapClassName()}::getInstanceFromPool(\$key)) !== null) {
             // We no longer rehydrate the object, since this can cause data loss.
             // See http://www.propelorm.org/ticket/509
             // \$obj->hydrate(\$row, \$offset, true); // rehydrate
@@ -1250,7 +1250,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
         // populate the object(s)
         while (\$row = \$dataFetcher->fetch()) {
             \$key = {$this->getTableMapClassName()}::getPrimaryKeyHashFromRow(\$row, 0, \$dataFetcher->getIndexType());
-            if (null !== (\$obj = {$this->getTableMapClassName()}::getInstanceFromPool(\$key))) {
+            if ((\$obj = {$this->getTableMapClassName()}::getInstanceFromPool(\$key)) !== null) {
                 // We no longer rehydrate the object, since this can cause data loss.
                 // See http://www.propelorm.org/ticket/509
                 // \$obj->hydrate(\$row, 0, true); // rehydrate

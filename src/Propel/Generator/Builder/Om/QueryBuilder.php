@@ -473,7 +473,7 @@ class QueryBuilder extends AbstractOMBuilder
             return \$criteria;
         }
         \$query = new " . $classname . "();
-        if (null !== \$modelAlias) {
+        if (\$modelAlias !== null) {
             \$query->setModelAlias(\$modelAlias);
         }
         if (\$criteria instanceof Criteria) {
