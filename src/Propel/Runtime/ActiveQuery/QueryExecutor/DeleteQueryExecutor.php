@@ -41,7 +41,7 @@ class DeleteQueryExecutor extends AbstractQueryExecutor
             throw new PropelException('Delete does not support join');
         }
 
-        $tableFilters = $this->criteria->getFiltersByTable();
+        $tableFilters = $this->criteria->getFilterCollector()->groupFiltersByTable($this->criteria->getTableNameInQuery());
         if (!$tableFilters) {
             throw new PropelException('Cannot delete from an empty Criteria');
         }

@@ -50,7 +50,7 @@ class UpdateQueryExecutor extends AbstractQueryExecutor
             return 0;
         }
 
-        $filtersByTable = $this->criteria->getFiltersByTable(); // TODO move getFiltersByTable() here
+        $filtersByTable = $this->criteria->getFilterCollector()->groupFiltersByTable($this->criteria->getTableNameInQuery());
         $table = $this->criteria->getTableNameInQuery();
         if (!$filtersByTable && $table) {
             $filtersByTable = [$table => []];

@@ -121,6 +121,10 @@ class UpdateColumnCollector
      */
     public function equals(UpdateColumnCollector $collector): bool
     {
+        if (count($this->updateValues) !== count($collector->updateValues)) {
+            return false;
+        }
+
         foreach ($this->updateValues as $columnName => $value) {
             if (
                 !$collector->hasUpdateValue($columnName)

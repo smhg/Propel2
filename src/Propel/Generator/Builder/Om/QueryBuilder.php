@@ -985,7 +985,7 @@ class QueryBuilder extends AbstractOMBuilder
                 ($i > 0) && $script .= "\n";
                 $script .= "
             \$resolvedColumn$i = \$this->resolveLocalColumnByName('$colName');
-            \$filter$i = \$this->getCriterionForCondition(\$resolvedColumn$i, \$key[$i], Criteria::EQUAL);
+            \$filter$i = \$this->buildFilter(\$resolvedColumn$i, \$key[$i], Criteria::EQUAL);
             {$addOp}";
             }
             $script .= "
