@@ -38,6 +38,7 @@ class InsertQuerySqlBuilder extends AbstractSqlQueryBuilder
 
         if (count($updateValuesByTable) > 1) {
             $message = 'Cannot insert into multiple tables in same query, but found tables: ' . implode(', ', array_keys($updateValuesByTable));
+
             throw new PropelException($message);
         }
 
@@ -47,10 +48,10 @@ class InsertQuerySqlBuilder extends AbstractSqlQueryBuilder
             throw new PropelException('Database insert attempted without anything specified to insert.');
         }
         $columnCsv = $this->buildSimpleColumnNamesCsv($updateValues);
-        
+
         $numberOfColumns = count($updateValues);
         $parameterPlaceholdersCsv = $this->buildParameterPlaceholdersCsv($numberOfColumns);
-        
+
         $quotedTableName = $this->quoteIdentifierTable($tableName);
         $insertStatement = "INSERT INTO $quotedTableName ($columnCsv) VALUES ($parameterPlaceholdersCsv)";
         $params = $this->buildParamsFromUpdateValues($updateValues);

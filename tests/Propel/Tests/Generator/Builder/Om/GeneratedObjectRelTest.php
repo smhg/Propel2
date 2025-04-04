@@ -418,7 +418,7 @@ class GeneratedObjectRelTest extends BookstoreEmptyTestBase
         $books = $author->getBooks(null, $con);
         $sql = $con->getLastExecutedQuery();
         $author = $books[0]->getAuthor($con);
-        $this->assertEquals($sql, $con->getLastExecutedQuery(), 'refFK getter uses instance pool if possible');
+        $this->assertEquals($sql, $con->getLastExecutedQuery(), 'refFK getter uses instance pool instead of a new query');
     }
 
     /**
