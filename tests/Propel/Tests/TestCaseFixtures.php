@@ -8,7 +8,6 @@
 
 namespace Propel\Tests;
 
-use PDO;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Propel;
 use ReflectionClass;
@@ -71,12 +70,13 @@ class TestCaseFixtures extends TestCase
     protected static $activeConfigsVersion;
 
     /**
-     * Setup fixture. Needed here because we want to have a realistic code coverage value.
+     * Setup fixture.
      *
      * @return void
      */
-    protected function setUp(): void
+    public static function setUpBeforeClass(): void
     {
+        parent::setUpBeforeClass();
         static::checkInit();
     }
 
