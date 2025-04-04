@@ -235,7 +235,6 @@ class SelectQuerySqlBuilder extends AbstractSqlQueryBuilder
 
         foreach ($columnFilters as $criterion) {
             $p = [];
-            $this->buildStatementFromCriterion($criterion, $p);
             foreach ($criterion->getAttachedFilter() as $attachedCriterion) {
                 $rawTableName = $attachedCriterion->getTableAlias();
                 if (!$rawTableName) {
