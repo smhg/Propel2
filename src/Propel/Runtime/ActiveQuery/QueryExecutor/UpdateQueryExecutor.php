@@ -11,6 +11,7 @@ namespace Propel\Runtime\ActiveQuery\QueryExecutor;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\SqlBuilder\UpdateQuerySqlBuilder;
 use Propel\Runtime\Connection\ConnectionInterface;
+use Propel\Runtime\Exception\PropelException;
 
 class UpdateQueryExecutor extends AbstractQueryExecutor
 {
@@ -36,6 +37,8 @@ class UpdateQueryExecutor extends AbstractQueryExecutor
      * WHERE some_column = some value AND could_have_another_column =
      * another value AND so on.
      *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
      * @return int The number of rows affected by last update statement.
      *             For most uses there is only one update statement executed, so this number will
      *             correspond to the number of rows affected by the call to this method.
@@ -44,32 +47,26 @@ class UpdateQueryExecutor extends AbstractQueryExecutor
      */
     protected function runUpdate(): int
     {
-        $updateValuesByTable = $this->criteria->getUpdateValues()->groupUpdateValuesByTable();
-
-        if (!$updateValuesByTable) {
+        $updateValues = $this->criteria->getUpdateValues()->getUpdateValues();
+        if (!$updateValues) {
             return 0;
         }
 
-        $filtersByTable = $this->criteria->getFilterCollector()->groupFiltersByTable($this->criteria->getTableNameInQuery());
-        $table = $this->criteria->getTableNameInQuery();
-        if (!$filtersByTable && $table) {
-            $filtersByTable = [$table => []];
-        }
-
-        $builder = new UpdateQuerySqlBuilder($this->criteria);
-
-        $affectedRows = 0;
-        foreach ($filtersByTable as $tableName => $filters) {
-            $updateValues = $updateValuesByTable[$tableName];
-            if (!$updateValues) {
-                continue;
+        $tableName = null;
+        foreach ($updateValues as $updateValue) {
+            $tableAlias = $updateValue->getTableAlias();
+            if ($tableName && $tableAlias && $tableName !== $tableAlias) {
+                throw new PropelException("Cannot update multiple tables in the same statement. Tables found: $tableAlias, $tableName");
             }
-            $preparedStatementDto = $builder->build($tableName, $filters, $updateValues);
-            /** @var \Propel\Runtime\Connection\StatementInterface $stmt */
-            $stmt = $this->executeStatement($preparedStatementDto);
-            $affectedRows += $stmt->rowCount();
+            $tableName = $tableAlias ?? $tableName;
         }
+        $tableName = $tableName ?? $this->criteria->getTableNameInQuery();
+        $filters = $this->criteria->getFilterCollector()->getColumnFilters();
+        $builder = new UpdateQuerySqlBuilder($this->criteria);
+        $preparedStatementDto = $builder->build($tableName, $filters, $updateValues);
+        /** @var \Propel\Runtime\Connection\StatementInterface $stmt */
+        $stmt = $this->executeStatement($preparedStatementDto);
 
-        return $affectedRows;
+        return $stmt->rowCount();
     }
 }

@@ -105,6 +105,14 @@ class UpdateColumnCollector
     }
 
     /**
+     * @return array<\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\AbstractUpdateColumn|mixed>
+     */
+    public function getUpdateValues(): array
+    {
+        return $this->updateValues;
+    }
+
+    /**
      * @param \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\UpdateColumnCollector $collector
      *
      * @return void

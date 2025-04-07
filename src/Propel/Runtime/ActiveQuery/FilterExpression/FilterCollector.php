@@ -20,7 +20,7 @@ class FilterCollector
     /**
      * Ensures deep cloning of attached objects
      *
-     * @return array
+     * @return array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
      */
     public function getColumnFilters(): array
     {
