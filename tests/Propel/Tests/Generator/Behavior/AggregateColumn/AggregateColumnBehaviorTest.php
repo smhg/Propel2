@@ -161,6 +161,9 @@ class AggregateColumnBehaviorTest extends BookstoreTestBase
      */
     public function testUpdateRelatedWithQueryUsingAlias()
     {
+        if ($this->runningOnSQLite()) {
+            $this->markTestSkipped('Forcing an alias in UPDATE produces invalid SQL on SQLite.');
+        }
         [$poll, $item1, $item2] = $this->populatePoll();
         $this->assertEquals(19, $poll->getTotalScore());
         $this->assertEquals(2, $poll->getNbVotes());
