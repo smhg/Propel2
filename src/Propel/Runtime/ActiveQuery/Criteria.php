@@ -587,7 +587,7 @@ class Criteria
      *
      * @param string $tableAliasOrName
      *
-     * @return array
+     * @return array{0:string, 1: string|null}
      */
     public function getTableNameAndAlias(string $tableAliasOrName): array
     {
@@ -896,51 +896,22 @@ class Criteria
      *                        among Criteria::INNER_JOIN, Criteria::LEFT_JOIN,
      *                        and Criteria::RIGHT_JOIN
      *
-     * @return $this A modified Criteria object.
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return static A modified Criteria object.
      */
     public function addJoin($left, $right, ?string $joinType = null)
     {
-        if (is_array($left) && is_array($right)) {
-            $conditions = [];
-            foreach ($left as $key => $value) {
-                $condition = [$value, $right[$key]];
-                $conditions[] = $condition;
+        if (is_array($left) || is_array($right)) {
+            if (!is_array($left) || !is_array($right) || count($left) !== count($right)) {
+                throw new PropelException('addJoin expects both sides to be strings or array of same length. Found ' . var_export($left, true) . ' and ' . var_export($right, true));
             }
+            $conditions = array_map(fn ($l, $r) => [$l, $r], $left, $right);
 
-            $this->addMultipleJoin($conditions, $joinType);
-
-            return $this;
+            return $this->addMultipleJoin($conditions, $joinType);
         }
 
-        $join = new Join();
-        $join->setIdentifierQuoting($this->isIdentifierQuotingEnabled());
-
-        // is the left table an alias ?
-        /** @phpstan-var string $left */
-        $dotpos = strrpos($left, '.') ?: null;
-        $leftTableAlias = substr($left, 0, $dotpos);
-        $leftColumnName = substr($left, $dotpos + 1);
-        [$leftTableName, $leftTableAlias] = $this->getTableNameAndAlias($leftTableAlias);
-
-        // is the right table an alias ?
-        /** @phpstan-var string $right */
-        $dotpos = strrpos($right, '.') ?: null;
-        $rightTableAlias = substr($right, 0, $dotpos);
-        $rightColumnName = substr($right, $dotpos + 1);
-        [$rightTableName, $rightTableAlias] = $this->getTableNameAndAlias($rightTableAlias);
-
-        $join->addExplicitCondition(
-            $leftTableName,
-            $leftColumnName,
-            $leftTableAlias,
-            $rightTableName,
-            $rightColumnName,
-            $rightTableAlias,
-            Join::EQUAL,
-        );
-
-        $join->setJoinType($joinType);
-
+        $join = JoinBuilder::buildJoin($this, $left, $right, $joinType);
         $this->addJoinObject($join);
 
         return $this;
@@ -948,8 +919,6 @@ class Criteria
 
     /**
      * Add a join with multiple conditions
-     *
-     * @deprecated Use {@link \Propel\Runtime\ActiveQuery\Join::setJoinCondition()} instead
      *
      * @see http://propel.phpdb.org/trac/ticket/167, http://propel.phpdb.org/trac/ticket/606
      *
@@ -960,66 +929,15 @@ class Criteria
      *   ),
      *   Criteria::LEFT_JOIN
      * );
-     * @see addJoin()
      *
-     * @param array $conditions An array of conditions, each condition being an array (left, right, operator)
+     * @param array<array{0: string|mixed, 1: string|mixed, 2?: string|null}> $conditions An array of conditions, each condition being an array (left, right, operator)
      * @param string|null $joinType A String with the join operator. Defaults to an implicit join.
      *
      * @return $this A modified Criteria object.
      */
     public function addMultipleJoin(array $conditions, ?string $joinType = null)
     {
-        $join = new Join();
-        $join->setIdentifierQuoting($this->isIdentifierQuotingEnabled());
-        $joinCondition = null;
-        foreach ($conditions as $condition) {
-            $left = $condition[0];
-            $right = $condition[1];
-            $pos = strrpos($left, '.');
-            if ($pos) {
-                $leftTableAlias = substr($left, 0, $pos);
-                $leftColumnName = substr($left, $pos + 1);
-                [$leftTableName, $leftTableAlias] = $this->getTableNameAndAlias($leftTableAlias);
-            } else {
-                [$leftTableName, $leftTableAlias] = [null, null];
-                $leftColumnName = $left;
-            }
-
-            $pos = strrpos($right, '.');
-            if ($pos) {
-                $rightTableAlias = substr($right, 0, $pos);
-                $rightColumnName = substr($right, $pos + 1);
-                [$rightTableName, $rightTableAlias] = $this->getTableNameAndAlias($rightTableAlias);
-            } else {
-                [$rightTableName, $rightTableAlias] = [null, null];
-                $rightColumnName = $right;
-            }
-
-            if (!$join->getRightTableName()) {
-                $join->setRightTableName($rightTableName);
-            }
-
-            if (!$join->getRightTableAlias() && $rightTableAlias) {
-                $join->setRightTableAlias($rightTableAlias);
-            }
-
-            $conditionClause = $leftTableAlias ? $leftTableAlias . '.' : ($leftTableName ? $leftTableName . '.' : '');
-            $conditionClause .= $leftColumnName;
-            $conditionClause .= $condition[2] ?? Join::EQUAL;
-            $conditionClause .= $rightTableAlias ? $rightTableAlias . '.' : ($rightTableName ? $rightTableName . '.' : '');
-            $conditionClause .= $rightColumnName;
-            $fullColumnName = $leftTableName . '.' . $leftColumnName;
-            $criterion = FilterFactory::build($this, $fullColumnName, self::CUSTOM, $conditionClause);
-
-            if ($joinCondition === null) {
-                $joinCondition = $criterion;
-            } else {
-                $joinCondition = $joinCondition->addAnd($criterion);
-            }
-        }
-        $join->setJoinType($joinType);
-        $join->setJoinCondition($joinCondition);
-
+        $join = JoinBuilder::buildJoinWithMultipleConditions($this, $conditions, $joinType);
         $this->addJoinObject($join);
 
         return $this;
