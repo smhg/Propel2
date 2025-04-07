@@ -2434,7 +2434,6 @@ class ModelCriteria extends BaseModelCriteria
     public function buildBindParams(): array
     {
         $params = [];
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap($this->getDbName());
 
         foreach ($this->filterCollector->getColumnFilters() as $filter) {
             $filter->collectParameters($params);
@@ -2442,7 +2441,6 @@ class ModelCriteria extends BaseModelCriteria
 
         $having = $this->getHaving();
         if ($having !== null) {
-            $sb = '';
             $having->collectParameters($params);
         }
 

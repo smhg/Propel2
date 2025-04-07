@@ -279,8 +279,6 @@ class DeprecatedCriteriaMethods extends Criteria
     }
 
     /**
-     * @deprecated old interface should not be used anymore.
-     *
      * This method creates a new criterion but keeps it for later use with combine()
      * Until combine() is called, the condition is not added to the query
      *

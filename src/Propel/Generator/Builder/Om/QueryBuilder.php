@@ -973,7 +973,7 @@ class QueryBuilder extends AbstractOMBuilder
             // composite primary key
             $script .= "
         if (empty(\$keys)) {
-            \$this->add(null, '1<>1', Criteria::CUSTOM);
+            \$this->addFilter(null, '1<>1', Criteria::CUSTOM);
 
             return \$this;
         }
