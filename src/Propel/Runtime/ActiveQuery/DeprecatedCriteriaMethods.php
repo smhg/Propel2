@@ -370,7 +370,7 @@ class DeprecatedCriteriaMethods extends Criteria
      * @param \Propel\Runtime\ActiveQuery\Criteria $subQueryCriteria Criteria to build the subquery from
      * @param string|null $alias alias for the subQuery
      *
-     * @return \Propel\Runtime\ActiveQuery\Criteria The current object, for fluid interface
+     * @return \Propel\Runtime\ActiveQuery\Criteria
      */
     public function addSelectQuery(Criteria $subQueryCriteria, ?string $alias = null)
     {

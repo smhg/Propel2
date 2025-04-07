@@ -454,7 +454,7 @@ protected function makeSlugUnique(string \$slug, string \$separator = '" . $this
  *
  * @param string \$slug The value to use as filter.
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function filterBySlug(string \$slug)
 {

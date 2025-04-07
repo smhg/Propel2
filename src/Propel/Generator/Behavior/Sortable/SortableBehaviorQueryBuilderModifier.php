@@ -192,7 +192,7 @@ static public function sortableApplyScopeCriteria(Criteria \$criteria, \$scope, 
  *
 $paramsDoc
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function inList($methodSignature)
 {
@@ -228,7 +228,7 @@ $paramsDoc
         }
         $script .= "
  *
- * @return static The current object, for fluid interface
+ * @return static
  */
 public function filterByRank(\$rank" . ($useScope ? ", $methodSignature" : '') . ")
 {";
@@ -263,7 +263,7 @@ public function filterByRank(\$rank" . ($useScope ? ", $methodSignature" : '') .
  *
  * @param string \$order either Criteria::ASC (default) or Criteria::DESC
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function orderByRank(string \$order = Criteria::ASC)
 {

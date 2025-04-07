@@ -191,7 +191,7 @@ public function keepUpdateDateUnchanged()
  *
  * @param int \$nbDays Maximum age of the latest update in days
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function recentlyUpdated(\$nbDays = 7)
 {
@@ -203,7 +203,7 @@ public function recentlyUpdated(\$nbDays = 7)
 /**
  * Order by update date desc
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function lastUpdatedFirst()
 {
@@ -215,7 +215,7 @@ public function lastUpdatedFirst()
 /**
  * Order by update date asc
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function firstUpdatedFirst()
 {
@@ -232,7 +232,7 @@ public function firstUpdatedFirst()
 /**
  * Order by create date desc
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function lastCreatedFirst()
 {
@@ -246,7 +246,7 @@ public function lastCreatedFirst()
  *
  * @param int \$nbDays Maximum age of in days
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function recentlyCreated(\$nbDays = 7)
 {
@@ -258,7 +258,7 @@ public function recentlyCreated(\$nbDays = 7)
 /**
  * Order by create date asc
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function firstCreatedFirst()
 {

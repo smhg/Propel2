@@ -151,7 +151,7 @@ class ModelJoin extends Join
      *
      * @param \Propel\Runtime\Map\TableMap $tableMap The table map to use
      *
-     * @return $this The current join object, for fluid interface
+     * @return $this
      */
     public function setTableMap(TableMap $tableMap)
     {

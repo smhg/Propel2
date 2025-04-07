@@ -877,7 +877,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @param mixed \$key Primary key to use for the query
      *
-     * @return \$this The current query, for fluid interface
+     * @return \$this
      */
     public function filterByPrimaryKey(\$key)
     {";
@@ -941,7 +941,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @param array|int \$keys The list of primary key to use for the query
      *
-     * @return \$this The current query, for fluid interface
+     * @return \$this
      */
     public function filterByPrimaryKeys(\$keys)
     {";
@@ -1086,7 +1086,7 @@ class QueryBuilder extends AbstractOMBuilder
         $script .= "
      * @param string|null \$comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return \$this The current query, for fluid interface
+     * @return \$this
      */
     public function filterBy$colPhpName(\$$variableName = null, ?string \$comparison = null)
     {
@@ -1228,7 +1228,7 @@ class QueryBuilder extends AbstractOMBuilder
      * @param mixed \$$variableName The value to use as filter
      * @param string|null \$comparison Operator to use for the column comparison, defaults to Criteria::CONTAINS_ALL
      *
-     * @return \$this The current query, for fluid interface
+     * @return \$this
      */
     public function filterBy$singularPhpName(\$$variableName = null, ?string \$comparison = null)
     {
@@ -1273,7 +1273,7 @@ class QueryBuilder extends AbstractOMBuilder
      * @param mixed \$$variableName The value to use as filter
      * @param string \$comparison Operator to use for the column comparison, defaults to Criteria::CONTAINS_ALL
      *
-     * @return \$this The current query, for fluid interface
+     * @return \$this
      */
     public function filterBy$singularPhpName(\$$variableName = null, ?string \$comparison = null)
     {
@@ -1321,7 +1321,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @throws \\Propel\\Runtime\\Exception\\PropelException
      *
-     * @return \$this The current query, for fluid interface
+     * @return \$this
      */
     public function filterBy$relationName($objectName, ?string \$comparison = null)
     {
@@ -1397,7 +1397,7 @@ class QueryBuilder extends AbstractOMBuilder
      * @param $fkPhpName|ObjectCollection $objectName the related object to use as filter
      * @param string|null \$comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return \$this The current query, for fluid interface
+     * @return \$this
      */
     public function filterBy$relationName($objectName, ?string \$comparison = null)
     {
@@ -1506,7 +1506,7 @@ class QueryBuilder extends AbstractOMBuilder
      * @param string|null \$relationAlias Optional alias for the relation
      * @param string|null \$joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return \$this The current query, for fluid interface
+     * @return \$this
      */
     public function join" . $relationName . '(?string $relationAlias = null, ?string $joinType = ' . $joinType . ")
     {
@@ -1749,7 +1749,7 @@ class QueryBuilder extends AbstractOMBuilder
      * @param $fkPhpName $objectName the related object to use as filter
      * @param string \$comparison Operator to use for the column comparison, defaults to Criteria::EQUAL and Criteria::IN for queries
      *
-     * @return \$this The current query, for fluid interface
+     * @return \$this
      */
     public function filterBy{$relName}($objectName, string \$comparison = null)
     {
@@ -1783,7 +1783,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @param $class $objectName Object to remove from the list of results
      *
-     * @return \$this The current query, for fluid interface
+     * @return \$this
      */
     public function prune($objectName = null)
     {

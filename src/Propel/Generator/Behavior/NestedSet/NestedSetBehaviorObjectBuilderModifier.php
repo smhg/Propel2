@@ -641,7 +641,7 @@ public function hasParent(): bool
  * Use moveTofirstChildOf() or moveToLastChildOf() for that purpose
  *
  * @param $objectClassName \$parent
- * @return \$this The current object, for fluid interface
+ * @return \$this
  */
 public function setParent($objectClassName \$parent = null)
 {

@@ -154,7 +154,7 @@ class NestedSetBehaviorQueryBuilderModifier
 /**
  * Filter the query to restrict the result to root objects
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function treeRoots()
 {
@@ -178,7 +178,7 @@ public function treeRoots()
  *
  * @param int|null \$scope Scope to determine which objects node to return
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function inTree(?int \$scope = null)
 {
@@ -203,7 +203,7 @@ public function inTree(?int \$scope = null)
  *
  * @param {$this->objectClassName} $objectName The object to use for descendant search
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function descendantsOf($this->objectClassName $objectName)
 {
@@ -236,7 +236,7 @@ public function descendantsOf($this->objectClassName $objectName)
  *
  * @param {$this->objectClassName} $objectName The object to use for branch search
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function branchOf($this->objectClassName $objectName)
 {
@@ -268,7 +268,7 @@ public function branchOf($this->objectClassName $objectName)
  *
  * @param {$this->objectClassName} $objectName The object to use for child search
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function childrenOf($this->objectClassName $objectName)
 {
@@ -297,7 +297,7 @@ public function childrenOf($this->objectClassName $objectName)
  * @param {$this->objectClassName} $objectName The object to use for sibling search
  * @param ConnectionInterface \$con Connection to use.
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function siblingsOf($this->objectClassName $objectName, ?ConnectionInterface \$con = null)
 {
@@ -329,7 +329,7 @@ public function siblingsOf($this->objectClassName $objectName, ?ConnectionInterf
  *
  * @param {$this->objectClassName} $objectName The object to use for ancestors search
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function ancestorsOf($this->objectClassName $objectName)
 {
@@ -362,7 +362,7 @@ public function ancestorsOf($this->objectClassName $objectName)
  *
  * @param {$this->objectClassName} $objectName The object to use for roots search
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function rootsOf($this->objectClassName $objectName)
 {
@@ -393,7 +393,7 @@ public function rootsOf($this->objectClassName $objectName)
  *
  * @param bool \$reverse if true, reverses the order
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function orderByBranch(\$reverse = false)
 {
@@ -423,7 +423,7 @@ public function orderByBranch(\$reverse = false)
  *
  * @param bool \$reverse if true, reverses the order
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function orderByLevel(\$reverse = false)
 {
