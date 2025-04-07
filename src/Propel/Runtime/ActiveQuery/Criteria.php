@@ -33,7 +33,6 @@ use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\DataFetcher\DataFetcherInterface;
 use Propel\Runtime\Exception\LogicException;
 use Propel\Runtime\Exception\PropelException;
-use Propel\Runtime\Map\ColumnMap;
 use Propel\Runtime\Map\DatabaseMap;
 use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Propel;
@@ -50,6 +49,13 @@ use Propel\Runtime\Util\PropelConditionalProxy;
  * @author Eric Dobbs <eric@dobbse.net> (Torque)
  * @author Henning P. Schmiedehausen <hps@intermeta.de> (Torque)
  * @author Sam Joseph <sam@neurogrid.com> (Torque)
+ *
+ * Deprecated methods (trigger deprecation warning on use, resolved in __call()):
+ * @method string|null getTableName(string $name) Deprecated way to find table name of Criteria.
+ * @method static addCond(string $name, string $p1, mixed $value = null, string|null $comparison = null) Deprecated way to build filter - use Criteria::buildFilter() instead.
+ * @method \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface getCriterionForConditions(array $conditions, string|null $operator = null) Deprecated way to build multiple filters from name - use Criteria::buildFilter() and combine manually.
+ * @method bool hasCond(string $name) Check if named filter exists in deprecated named store.
+ * @method \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface getCond(string $name) Get filter from deprecated named storage.
  */
 class Criteria
 {
@@ -384,13 +390,6 @@ class Criteria
     protected $useTransaction = false;
 
     /**
-     * Storage for Criterions expected to be combined
-     *
-     * @var array<string, \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
-     */
-    protected $namedCriterions = [];
-
-    /**
      * Default operator for combination of criterions
      *
      * @see addUsingOperator()
@@ -433,16 +432,6 @@ class Criteria
     }
 
     /**
-     * @deprecated use aptly named {@see static::getColumnFilters()}.
-     *
-     * @return array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
-     */
-    public function getMap(): array
-    {
-        return $this->filterCollector->getColumnFiltersByColumn();
-    }
-
-    /**
      * Get the criteria map, i.e. the array of Criterions
      *
      * @return \Propel\Runtime\ActiveQuery\FilterExpression\FilterCollector
@@ -481,7 +470,6 @@ class Criteria
     {
         $this->filterCollector->clear();
         $this->updateValues->clear();
-        $this->namedCriterions = [];
         $this->ignoreCase = false;
         $this->singleRecord = false;
         $this->selectModifiers = [];
@@ -498,6 +486,9 @@ class Criteria
         $this->limit = -1;
         $this->aliases = [];
         $this->useTransaction = false;
+        if ($this->deprecatedMethods) {
+            $this->deprecatedMethods->clear();
+        }
 
         return $this;
     }
@@ -620,48 +611,6 @@ class Criteria
     }
 
     /**
-     * @deprecated if needed, resolve manually from filterColumns or updateValues.
-     *
-     * Get the keys of the criteria map, i.e. the list of columns bearing a condition
-     * <code>
-     * print_r($c->keys());
-     *  => array('book.price', 'book.title', 'author.first_name')
-     * </code>
-     *
-     * @return array
-     */
-    public function keys(): array
-    {
-        return array_merge($this->updateValues->getColumnExpressionsInQuery(), $this->filterCollector->getColumnExpressionsInQuery());
-    }
-
-    /**
-     * @deprecated use {@see Criteria::hasUpdateValue()}
-     *
-     * Does this Criteria object contain the specified key?
-     *
-     * @param string $column [table.]column
-     *
-     * @return bool True if this Criteria object contain the specified key.
-     */
-    public function containsKey(string $column): bool
-    {
-        return $this->hasUpdateValue($column);
-    }
-
-    /**
-     * @deprecated use {@see static::getUpdateValue()} and check against null yourself.
-     *
-     * @param string $columnName [table.]column
-     *
-     * @return bool True if this Criteria object contain the specified key and a value for that key
-     */
-    public function keyContainsValue(string $columnName): bool
-    {
-        return $this->getUpdateValue($columnName) !== null;
-    }
-
-    /**
      * Does this Criteria object contain the specified key?
      *
      * @param string $columnIdentifier [table.]column
@@ -714,22 +663,6 @@ class Criteria
     }
 
     /**
-     * @deprecated use {@see static::findFilterByColumn()} or {@see static::getUpdateValueForColumn()}
-     * Method to return criteria related to columns in a table.
-     *
-     * Make sure you call containsKey($column) prior to calling this method,
-     * since no check on the existence of the $column is made in this method.
-     *
-     * @param string $column Column name.
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface A Criterion object.
-     */
-    public function getCriterion(string $column): ColumnFilterInterface
-    {
-        return $this->findFilterByColumn($column);
-    }
-
-    /**
      * Method to return criteria related to columns in a table.
      *
      * @param string $columnName Column name.
@@ -751,16 +684,6 @@ class Criteria
     public function getUpdateValueForColumn(string $columnIdentifier)
     {
         return $this->updateValues->getUpdateColumn($columnIdentifier);
-    }
-
-    /**
-     * @deprecated use aptly named {@see static::getLastFilter()}
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|null A Criterion or null no Criterion is added.
-     */
-    public function getLastCriterion(): ?ColumnFilterInterface
-    {
-        return $this->getLastFilter();
     }
 
     /**
@@ -792,49 +715,6 @@ class Criteria
         }
 
         return FilterFactory::build($this, $column, $comparison, $value);
-    }
-
-    /**
-     * @deprecated use {@see static::getUpdateValuesByTable()} or {@see static::getFiltersByTable()}.
-     *
-     * Shortcut method to get an array of columns indexed by table.
-     * <code>
-     * print_r($c->getTablesColumns());
-     *  => array(
-     *       'book' => array('book.price', 'book.title'),
-     *       'author' => array('author.first_name')
-     *     )
-     * </code>
-     *
-     * @return array array(table => array(table.column1, table.column2))
-     */
-    public function getTablesColumns(): array
-    {
-        $tables = [];
-        foreach ($this->filterCollector->getColumnFilters() as $filter) {
-            $tableName = $filter->getTableAlias();
-            $tables[$tableName][] = $filter->getLocalColumnName();
-        }
-        foreach ($this->updateValues->getColumnExpressionsInQuery() as $columnExpression) {
-            $tableName = substr($columnExpression, 0, strrpos($columnExpression, '.') ?: null);
-            $tables[$tableName][] = $columnExpression;
-        }
-
-        return $tables;
-    }
-
-    /**
-     * @deprecated get the filter or update value manually and lookup operator/comparison.
-     *
-     * Method to return a comparison String.
-     *
-     * @param string $key String name of the key.
-     *
-     * @return string|null A String with the value of the object at key.
-     */
-    public function getComparison(string $key): ?string
-    {
-        return null;
     }
 
     /**
@@ -935,22 +815,6 @@ class Criteria
     }
 
     /**
-     * @deprecated get update value (or filter) and resolve table alias manually.
-     *
-     * Method to return a String table name.
-     *
-     * @param string $name The name of the key.
-     *
-     * @return string|null The value of table for criterion at key.
-     */
-    public function getTableName(string $name): ?string
-    {
-        $updateColumn = $this->updateValues->getUpdateColumn($name);
-
-        return $updateColumn ? $updateColumn->getTableAlias() : null;
-    }
-
-    /**
      * @param string $name A String with the name of the key.
      *
      * @return mixed The value of object at key.
@@ -958,73 +822,6 @@ class Criteria
     public function getUpdateValue(string $name)
     {
         return $this->updateValues->getUpdateValue($name);
-    }
-
-    /**
-     * @deprecated Use aptly named {@see static::getUpdateValue()}.
-     *
-     * An alias to getValue() -- exposing a Hashtable-like interface.
-     *
-     * @param string $key An Object.
-     *
-     * @return mixed The value within the Criterion (not the Criterion object).
-     */
-    public function get(string $key)
-    {
-        return $this->getUpdateValue($key);
-    }
-
-    /**
-     * @deprecated Old interface should not be used anymore.
-     *
-     * Overrides Hashtable put, so that this object is returned
-     * instead of the value previously in the Criteria object.
-     * The reason is so that it more closely matches the behavior
-     * of the add() methods. If you want to get the previous value
-     * then you should first Criteria.get() it yourself. Note, if
-     * you attempt to pass in an Object that is not a String, it will
-     * throw a NPE. The reason for this is that none of the add()
-     * methods support adding anything other than a String as a key.
-     *
-     * @param string $key
-     * @param mixed $value
-     *
-     * @return static
-     */
-    public function put(string $key, $value)
-    {
-        return $this->addFilter($key, $value);
-    }
-
-    /**
-     * @deprecated old interface should not be used anymore.
-     *
-     * Copies all of the mappings from the specified Map to this Criteria
-     * These mappings will replace any mappings that this Criteria had for any
-     * of the keys currently in the specified Map.
-     *
-     * if the map was another Criteria, its attributes are copied to this
-     * Criteria, overwriting previous settings.
-     *
-     * @param mixed $t Mappings to be stored in this map.
-     *
-     * @return $this
-     */
-    public function putAll($t)
-    {
-        if (is_array($t)) {
-            foreach ($t as $key => $value) {
-                if ($value instanceof ColumnFilterInterface) {
-                    $this->filterCollector->addFilter($value);
-                } else {
-                    $this->put($key, $value);
-                }
-            }
-        } elseif ($t instanceof Criteria) {
-            $this->joins = $t->joins;
-        }
-
-        return $this;
     }
 
     /**
@@ -1123,76 +920,6 @@ class Criteria
     public function __toString(): string
     {
         return $this->filterCollector->__toString();
-    }
-
-    /**
-     * @deprecated old interface should not be used anymore.
-     *
-     * This method creates a new criterion but keeps it for later use with combine()
-     * Until combine() is called, the condition is not added to the query
-     *
-     * <code>
-     * $crit = new Criteria();
-     * $crit->addCond('cond1', $column1, $value1, Criteria::GREATER_THAN);
-     * $crit->addCond('cond2', $column2, $value2, Criteria::EQUAL);
-     * $crit->combine(array('cond1', 'cond2'), Criteria::LOGICAL_OR);
-     * </code>
-     *
-     * Any comparison can be used.
-     *
-     * The name of the table must be used implicitly in the column name,
-     * so the Column name must be something like 'TABLE.id'.
-     *
-     * @param string $name name to combine the criterion later
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $columnOrClause The column to run the comparison on, or AbstractCriterion object.
-     * @param mixed|null $value
-     * @param string|null $comparison A String.
-     *
-     * @return $this A modified Criteria object.
-     */
-    public function addCond(string $name, $columnOrClause, $value = null, ?string $comparison = null)
-    {
-        $this->namedCriterions[$name] = $this->buildFilter($columnOrClause, $value, $comparison);
-
-        return $this;
-    }
-
-    /**
-     * @deprecated old interface will be removed at some point.
-     *
-     * Combine several named criterions with a logical operator
-     *
-     * @param array $criterions array of the name of the criterions to combine
-     * @param string $operator logical operator, either Criteria::LOGICAL_AND, or Criteria::LOGICAL_OR
-     * @param string|null $name optional name to combine the criterion later
-     *
-     * @throws \Propel\Runtime\Exception\LogicException
-     *
-     * @return $this
-     */
-    public function combine(array $criterions = [], string $operator = self::LOGICAL_AND, ?string $name = null)
-    {
-        $operatorMethod = (strtoupper($operator) === self::LOGICAL_AND) ? 'addAnd' : 'addOr';
-        $namedCriterions = [];
-        foreach ($criterions as $key) {
-            if (array_key_exists($key, $this->namedCriterions)) {
-                $namedCriterions[] = $this->namedCriterions[$key];
-                unset($this->namedCriterions[$key]);
-            } else {
-                throw new LogicException(sprintf('Cannot combine unknown condition %s', $key));
-            }
-        }
-        $firstCriterion = clone array_shift($namedCriterions);
-        foreach ($namedCriterions as $criterion) {
-            $firstCriterion->$operatorMethod($criterion);
-        }
-        if ($name === null) {
-            $this->addAnd($firstCriterion, null, null);
-        } else {
-            $this->addCond($name, $firstCriterion, null, null);
-        }
-
-        return $this;
     }
 
     /**
@@ -1387,18 +1114,6 @@ class Criteria
     }
 
     /**
-     * @deprecated use aptly named Criteria::findJoinByIdentifier().
-     *
-     * @param string $identifier Propel uses (possibly qualified) PascalCase for logical table name, snake_case for DB table name, or alias
-     *
-     * @return \Propel\Runtime\ActiveQuery\Join|null
-     */
-    public function getJoinByIdentifier(string $identifier): ?Join
-    {
-        return $this->findJoinByIdentifier($identifier);
-    }
-
-    /**
      * @param string $identifier Propel uses (possibly qualified) PascalCase for logical table name, snake_case for DB table name, or alias
      *
      * @return \Propel\Runtime\ActiveQuery\Join|null
@@ -1434,19 +1149,6 @@ class Criteria
         $this->selectQueries[$alias] = $subQuery;
 
         return $this;
-    }
-
-    /**
-     * @deprecated use aptly named Criteria::addSubquery().
-     *
-     * @param \Propel\Runtime\ActiveQuery\Criteria $subQueryCriteria Criteria to build the subquery from
-     * @param string|null $alias alias for the subQuery
-     *
-     * @return static The current object, for fluid interface
-     */
-    public function addSelectQuery(Criteria $subQueryCriteria, ?string $alias = null)
-    {
-        return $this->addSubquery($subQueryCriteria, $alias);
     }
 
     /**
@@ -1964,30 +1666,6 @@ class Criteria
     }
 
     /**
-     * @deprecated use aptly named {@see static::removeUpdateValue()}
-     *
-     * @param string $key A string with the key to be removed.
-     *
-     * @return mixed|null The removed value.
-     */
-    public function remove(string $key)
-    {
-        return $this->removeUpdateValue($key);
-    }
-
-    /**
-     * @deprecated should not be necessary.
-     *
-     * @param string $key A string with the key to be removed.
-     *
-     * @return mixed|null The removed value.
-     */
-    public function removeUpdateValue(string $key)
-    {
-        return $this->updateValues->removeUpdateValue($key);
-    }
-
-    /**
      * Build a string representation of the Criteria.
      *
      * @return string A String with the representation of the Criteria.
@@ -2012,19 +1690,6 @@ class Criteria
         }
 
         return $sb;
-    }
-
-    /**
-     * @deprecated use {@see static::countColumnFilters()}
-     * or {@see static::countUpdateValues()}.
-     *
-     * Returns the size (count) of this criteria.
-     *
-     * @return int
-     */
-    public function size(): int
-    {
-        return $this->countColumnFilters() + $this->countUpdateValues();
     }
 
     /**
@@ -2238,25 +1903,6 @@ class Criteria
     }
 
     /**
-     * @deprecated use aptly named {@see static::buildFilter()}
-     *
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string|null $columnOrClause A Criterion, or a SQL clause with a question mark placeholder, or a column name
-     * @param mixed|null $value The value to bind in the condition
-     * @param string|int|null $comparison A Criteria class constant, or a PDO::PARAM_ class constant
-     * @param bool $hasAccessToOutputColumns If AS columns can be used in the statement (for example in HAVING clauses)
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface
-     */
-    protected function getCriterionForCondition(
-        $columnOrClause,
-        $value = null,
-        $comparison = null,
-        bool $hasAccessToOutputColumns = false
-    ): ColumnFilterInterface {
-        return $this->buildFilter($columnOrClause, $value, $comparison, $hasAccessToOutputColumns);
-    }
-
-    /**
      * Build a Filter.
      *
      * This method has multiple signatures, and behaves differently according to it:
@@ -2398,43 +2044,6 @@ class Criteria
     }
 
     /**
-     * @deprecated resolve the tableMap yourself and use Criteria::quoteColumnIdentifier().
-     *
-     * Quotes identifier based on $this->isIdentifierQuotingEnabled() and $tableMap->isIdentifierQuotingEnabled.
-     *
-     * @param string $string
-     * @param string $tableName
-     *
-     * @return string
-     */
-    public function quoteIdentifier(string $string, string $tableName = ''): string
-    {
-        if ($this->isIdentifierQuotingEnabled()) {
-            return $this->getAdapter()->quote($string);
-        }
-
-        //find table name and ask tableMap if quoting is enabled
-        $pos = strrpos($string, '.');
-        if (!$tableName && $pos !== false) {
-            $tableName = substr($string, 0, $pos);
-        }
-
-        $tableMapName = $this->getTableForAlias($tableName) ?: $tableName;
-
-        if ($tableMapName) {
-            $dbMap = $this->getDatabaseMap();
-            if ($dbMap->hasTable($tableMapName)) {
-                $tableMap = $dbMap->getTable($tableMapName);
-                if ($tableMap->isIdentifierQuotingEnabled()) {
-                    return $this->getAdapter()->quote($string);
-                }
-            }
-        }
-
-        return $string;
-    }
-
-    /**
      * Quotes identifier based on $this->isIdentifierQuotingEnabled() and $tableMap->isIdentifierQuotingEnabled.
      *
      * @param string|null $tableAlias
@@ -2484,21 +2093,6 @@ class Criteria
 
         // Regular Criteria has no TableMap, all columns can be considered remote.
         return RemoteColumnExpression::fromString($this, $columnIdentifier);
-    }
-
-    /**
-     * @deprecated use ModelCriteria::replaceColumnNames()
-     *
-     * @param string $sql
-     *
-     * @return bool
-     */
-    public function replaceNames(string &$sql): bool
-    {
-        $normalizedExpression = $this->normalizeFilterExpression($sql);
-        $sql = $normalizedExpression->getNormalizedFilterExpression();
-
-        return (bool)$normalizedExpression->getReplacedColumns();
     }
 
     /**
@@ -2567,36 +2161,6 @@ class Criteria
         }
 
         return $tableMap;
-    }
-
-    /**
-     * @deprecated get primary keys in a reliable way from TableMap.
-     *
-     * @param self|null $criteria
-     *
-     * @return \Propel\Runtime\Map\ColumnMap|null
-     */
-    public function getPrimaryKey(?self $criteria = null): ?ColumnMap
-    {
-        if (!$criteria) {
-            $criteria = $this;
-        }
-        // Assume all the keys are for the same table.
-        $key = $this->updateValues->getColumnExpressionsInQuery()[0];
-        $table = $criteria->getTableName($key);
-
-        $pk = null;
-
-        if ($table) {
-            $dbMap = Propel::getServiceContainer()->getDatabaseMap($criteria->getDbName());
-
-            $pks = $dbMap->getTable($table)->getPrimaryKeys();
-            if ($pks) {
-                $pk = array_shift($pks);
-            }
-        }
-
-        return $pk;
     }
 
     /**
@@ -2846,6 +2410,12 @@ class Criteria
         if ($this->having !== null) {
             $this->having = clone $this->having;
         }
+
+        if ($this->deprecatedMethods) {
+            $this->deprecatedMethods = clone $this->deprecatedMethods;
+
+            $this->deprecatedMethods->setCriteria($this);
+        }
     }
 
     /**
@@ -2898,5 +2468,38 @@ class Criteria
     public function getAutoAddTable(): bool
     {
         return $this->autoAddTableName;
+    }
+
+    /**
+     * @var \Propel\Runtime\ActiveQuery\DeprecatedCriteriaMethods|null
+     */
+    protected $deprecatedMethods;
+
+    /**
+     * @param string $name
+     * @param array $arguments
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return mixed
+     */
+    public function __call(string $name, array $arguments)
+    {
+        if (
+            in_array($name, ['getMap', 'keys', 'containsKey', 'keyContainsValue', 'getCriterion', 'getLastCriterion', 'getTablesColumns', 'getTablesColumns', 'getTableName',
+            'get', 'put', 'putAll', 'addCond', 'hasCond', 'getCond', 'combine', 'getCriterionForConditions', 'addSelectQuery', 'remove', 'size', 'getNamedCriterions',
+            'getCriterionForCondition', 'quoteIdentifier', 'replaceNames', 'getPrimaryKey', 'getComparison',
+
+            ], true)
+        ) {
+            trigger_deprecation('Propel', '2.0', "Method $name should not be used anymore, see DeprecatedCriteriaMethods::$name how to replace it.");
+            if (!$this->deprecatedMethods) {
+                $this->deprecatedMethods = new DeprecatedCriteriaMethods($this);
+            }
+
+            return $this->deprecatedMethods->$name(...$arguments);
+        }
+
+        throw new PropelException(sprintf('Undefined method %s::%s()', self::class, $name));
     }
 }

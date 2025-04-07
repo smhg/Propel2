@@ -1431,10 +1431,6 @@ class CriteriaTest extends BookstoreTestBase
 
 class CriteriaForClearTest extends Criteria
 {
-    public function getNamedCriterions()
-    {
-        return $this->namedCriterions;
-    }
 
     public function getIgnoreCase()
     {

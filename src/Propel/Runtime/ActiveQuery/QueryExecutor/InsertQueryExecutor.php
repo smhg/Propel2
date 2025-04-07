@@ -12,14 +12,16 @@ use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\SqlBuilder\InsertQuerySqlBuilder;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
+use Propel\Runtime\Map\TableMap;
+use Propel\Runtime\Propel;
 use Throwable;
 
 class InsertQueryExecutor extends AbstractQueryExecutor
 {
     /**
-     * @var \Propel\Runtime\Map\ColumnMap|null
+     * @var \Propel\Runtime\Map\TableMap|null
      */
-    protected $primaryKeyColumn;
+    protected $tableMap;
 
     /**
      * @param \Propel\Runtime\ActiveQuery\Criteria $criteria
@@ -29,7 +31,30 @@ class InsertQueryExecutor extends AbstractQueryExecutor
     {
         parent::__construct($criteria, $con);
 
-        $this->primaryKeyColumn = $criteria->getPrimaryKey();
+        $this->tableMap = $this->findTableMap();
+    }
+
+    /**
+     * @return \Propel\Runtime\Map\TableMap|null
+     */
+    protected function findTableMap(): ?TableMap
+    {
+        $tableMap = $this->criteria->getTableMap();
+        if ($tableMap) {
+            return $tableMap;
+        }
+
+        // legacy way: find from update column
+        $columnName = $this->criteria->getUpdateValues()->getColumnExpressionsInQuery()[0];
+        $table = $this->criteria->getTableName($columnName);
+
+        if (!$table) {
+            return null;
+        }
+
+        $dbMap = Propel::getServiceContainer()->getDatabaseMap($this->criteria->getDbName());
+
+        return $dbMap->getTable($table);
     }
 
     /**
@@ -82,16 +107,16 @@ class InsertQueryExecutor extends AbstractQueryExecutor
      */
     protected function setIdFromSequence(): void
     {
-        if ($this->primaryKeyColumn === null || !$this->primaryKeyColumn->getTableMap()->isUseIdGenerator() || !$this->adapter->isGetIdBeforeInsert()) {
+        if ($this->tableMap === null || !$this->tableMap->isUseIdGenerator() || !$this->adapter->isGetIdBeforeInsert()) {
             return;
         }
 
-        $pkFullName = $this->primaryKeyColumn->getFullyQualifiedName();
+        $pkFullName = $this->tableMap->getPrimaryKeys()[0]->getFullyQualifiedName();
         if ($this->criteria->getUpdateValue($pkFullName) !== null) {
             return;
         }
 
-        $keyInfo = $this->primaryKeyColumn->getTableMap()->getPrimaryKeyMethodInfo();
+        $keyInfo = $this->tableMap->getPrimaryKeyMethodInfo();
         $id = null;
         try {
             $id = $this->adapter->getId($this->con, $keyInfo);
@@ -108,10 +133,10 @@ class InsertQueryExecutor extends AbstractQueryExecutor
      */
     protected function retrieveLastInsertedId()
     {
-        if ($this->primaryKeyColumn === null || !$this->primaryKeyColumn->getTableMap()->isUseIdGenerator() || !$this->adapter->isGetIdAfterInsert()) {
+        if ($this->tableMap === null || !$this->tableMap->isUseIdGenerator() || !$this->adapter->isGetIdAfterInsert()) {
             return null;
         }
-        $keyInfo = $this->primaryKeyColumn->getTableMap()->getPrimaryKeyMethodInfo();
+        $keyInfo = $this->tableMap->getPrimaryKeyMethodInfo();
         try {
             return $this->adapter->getId($this->con, $keyInfo);
         } catch (Throwable $e) {

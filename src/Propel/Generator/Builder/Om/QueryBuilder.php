@@ -1788,25 +1788,21 @@ class QueryBuilder extends AbstractOMBuilder
     public function prune($objectName = null)
     {
         if ($objectName) {";
+
         $pks = $table->getPrimaryKey();
         if (count($pks) > 1) {
-            $i = 0;
-            $conditions = [];
-            foreach ($pks as $col) {
-                $const = $this->getColumnConstant($col);
-                $condName = "'pruneCond" . $i . "'";
-                $conditions[] = $condName;
-                $script .= "
-            \$this->addCond(" . $condName . ", \$this->getAliasedColName($const), " . $objectName . '->get' . $col->getPhpName() . '(), Criteria::NOT_EQUAL);';
-                $i++;
-            }
-            $conditionsString = implode(', ', $conditions);
+            $col1 = array_shift($pks);
             $script .= "
-            \$this->combine(array(" . $conditionsString . '), Criteria::LOGICAL_OR);';
+            \$pkFilter = \$this->buildFilter(\$this->resolveLocalColumnByName('{$col1->getName()}'), {$objectName}->get{$col1->getPhpName()}(), Criteria::NOT_EQUAL);";
+            foreach ($pks as $col) {
+                $script .= "
+            \$pkFilter->addOr(\$this->buildFilter(\$this->resolveLocalColumnByName('{$col->getName()}'), {$objectName}->get{$col->getPhpName()}(), Criteria::NOT_EQUAL));";
+            }
+            $script .= "
+            \$this->addAnd(\$pkFilter);";
         } elseif ($table->hasPrimaryKey()) {
             $col = $pks[0];
             $columnName = $col->getName();
-            $tableMapClassName = $this->getTableMapClassName();
             $script .= "
             \$resolvedColumn = \$this->resolveLocalColumnByName('$columnName');
             \$this->addUsingOperator(\$resolvedColumn, {$objectName}->get" . $col->getPhpName() . '(), Criteria::NOT_EQUAL);';

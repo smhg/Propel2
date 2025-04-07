@@ -234,7 +234,7 @@ class ModelCriteria extends BaseModelCriteria
     {
         if (is_array($clause)) {
             // where(array('cond1', 'cond2'), Criteria::LOGICAL_OR)
-            $criterion = $this->buildMultipleFilters($clause, $value);
+            $criterion = $this->getCriterionForConditions($clause, $value);
         } else {
             // where('Book.AuthorId = ?', 12)
             $criterion = $this->buildFilterForClause($clause, $value, $bindingType);
@@ -312,7 +312,7 @@ class ModelCriteria extends BaseModelCriteria
     {
         if (is_array($clause)) {
             // having(array('cond1', 'cond2'), Criteria::LOGICAL_OR)
-            $criterion = $this->buildMultipleFilters($clause, $value);
+            $criterion = $this->getCriterionForConditions($clause, $value);
         } else {
             // having('Book.AuthorId = ?', 12)
             $criterion = $this->buildFilterForClause($clause, $value, $bindingType);
@@ -722,8 +722,8 @@ class ModelCriteria extends BaseModelCriteria
 
         if ($condition instanceof ColumnFilterInterface) {
             $this->getJoin($name)->setJoinCondition($condition);
-        } elseif (isset($this->namedCriterions[$condition])) {
-            $this->getJoin($name)->setJoinCondition($this->namedCriterions[$condition]);
+        } elseif ($this->hasCond($condition)) {
+            $this->getJoin($name)->setJoinCondition($this->getCond($condition));
         } else {
             throw new PropelException(sprintf('Cannot add condition %s on join %s. setJoinCondition() expects either a Criterion, or a condition added by way of condition()', $condition, $name));
         }
@@ -2147,37 +2147,6 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
-     * @deprecated use aptly named {@see static::buildMultipleFilters()}
-     *
-     * @param array $conditions The list of condition names, e.g. array('cond1', 'cond2')
-     * @param string|null $operator An operator, Criteria::LOGICAL_AND (default) or Criteria::LOGICAL_OR
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface A Criterion or ModelCriterion object
-     */
-    protected function getCriterionForConditions(array $conditions, ?string $operator = null): ColumnFilterInterface
-    {
-        return $this->buildMultipleFilters($conditions, $operator);
-    }
-
-    /**
-     * Creates a Criterion object based on a list of existing condition names and a comparator
-     *
-     * @param array $conditions The list of condition names, e.g. array('cond1', 'cond2')
-     * @param string|null $operator An operator, Criteria::LOGICAL_AND (default) or Criteria::LOGICAL_OR
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface A Criterion or ModelCriterion object
-     */
-    protected function buildMultipleFilters(array $conditions, ?string $operator = null): ColumnFilterInterface
-    {
-        $operator = ($operator === null) ? Criteria::LOGICAL_AND : $operator;
-        $this->combine($conditions, $operator, 'propel_temp_name');
-        $criterion = $this->namedCriterions['propel_temp_name'];
-        unset($this->namedCriterions['propel_temp_name']);
-
-        return $criterion;
-    }
-
-    /**
      * @deprecated use aptly named {@see static::buildFilterForClause()}
      *
      * @param string $clause The pseudo SQL clause, e.g. 'AuthorId = ?'
@@ -2489,8 +2458,6 @@ class ModelCriteria extends BaseModelCriteria
      * @param string $name
      * @param array $arguments
      *
-     * @throws \Propel\Runtime\Exception\PropelException
-     *
      * @return mixed
      */
     public function __call(string $name, array $arguments)
@@ -2556,7 +2523,7 @@ class ModelCriteria extends BaseModelCriteria
             }
         }
 
-        throw new PropelException(sprintf('Undefined method %s::%s()', self::class, $name));
+        return parent::__call($name, $arguments);
     }
 
     /**

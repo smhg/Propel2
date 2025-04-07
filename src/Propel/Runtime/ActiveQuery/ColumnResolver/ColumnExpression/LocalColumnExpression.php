@@ -79,4 +79,11 @@ class LocalColumnExpression extends AbstractColumnExpression
             'value' => $value,
         ];
     }
+
+    /**
+     * @return void
+     */
+    public function resolveTableAlias(): void
+    {
+    }
 }
