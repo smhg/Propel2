@@ -31,20 +31,16 @@ class InsertQueryExecutor extends AbstractQueryExecutor
     {
         parent::__construct($criteria, $con);
 
-        $this->tableMap = $this->findTableMap();
+        $this->tableMap = $this->criteria->getTableMap() ?? $this->findTableMapFromValues();
     }
 
     /**
+     * Legacy way to find TableMap from update column
+     *
      * @return \Propel\Runtime\Map\TableMap|null
      */
-    protected function findTableMap(): ?TableMap
+    protected function findTableMapFromValues(): ?TableMap
     {
-        $tableMap = $this->criteria->getTableMap();
-        if ($tableMap) {
-            return $tableMap;
-        }
-
-        // legacy way: find from update column
         $columnName = $this->criteria->getUpdateValues()->getColumnExpressionsInQuery()[0];
         $table = $this->criteria->getTableName($columnName);
 
@@ -107,11 +103,11 @@ class InsertQueryExecutor extends AbstractQueryExecutor
      */
     protected function setIdFromSequence(): void
     {
-        if ($this->tableMap === null || !$this->tableMap->isUseIdGenerator() || !$this->adapter->isGetIdBeforeInsert()) {
+        $pkFullName = $this->getFirstPkFullyQualifiedName();
+        if (!$pkFullName || !$this->tableMap->isUseIdGenerator() || !$this->adapter->isGetIdBeforeInsert()) {
             return;
         }
 
-        $pkFullName = $this->tableMap->getPrimaryKeys()[0]->getFullyQualifiedName();
         if ($this->criteria->getUpdateValue($pkFullName) !== null) {
             return;
         }
@@ -124,6 +120,20 @@ class InsertQueryExecutor extends AbstractQueryExecutor
             throw new PropelException('Unable to get sequence id.', 0, $e);
         }
         $this->criteria->setUpdateValue($pkFullName, $id);
+    }
+
+    /**
+     * @return string|null
+     */
+    protected function getFirstPkFullyQualifiedName(): ?string
+    {
+        if (!$this->tableMap) {
+            return null;
+        }
+        $pks = $this->tableMap->getPrimaryKeys();
+        $firstPk = reset($pks);
+
+        return $firstPk ? $firstPk->getFullyQualifiedName() : null;
     }
 
     /**

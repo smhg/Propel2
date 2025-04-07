@@ -2486,10 +2486,10 @@ class Criteria
     public function __call(string $name, array $arguments)
     {
         if (
-            in_array($name, ['getMap', 'keys', 'containsKey', 'keyContainsValue', 'getCriterion', 'getLastCriterion', 'getTablesColumns', 'getTablesColumns', 'getTableName',
-            'get', 'put', 'putAll', 'addCond', 'hasCond', 'getCond', 'combine', 'getCriterionForConditions', 'addSelectQuery', 'remove', 'size', 'getNamedCriterions',
-            'getCriterionForCondition', 'quoteIdentifier', 'replaceNames', 'getPrimaryKey', 'getComparison',
-
+            in_array($name, [
+                'getMap', 'keys', 'containsKey', 'keyContainsValue', 'getCriterion', 'getLastCriterion', 'getTablesColumns', 'getTablesColumns', 'getTableName',
+                'get', 'put', 'putAll', 'addCond', 'hasCond', 'getCond', 'combine', 'getCriterionForConditions', 'addSelectQuery', 'remove', 'size', 'getNamedCriterions',
+                'getCriterionForCondition', 'quoteIdentifier', 'replaceNames', 'getPrimaryKey', 'getComparison',
             ], true)
         ) {
             trigger_deprecation('Propel', '2.0', "Method $name should not be used anymore, see DeprecatedCriteriaMethods::$name how to replace it.");
