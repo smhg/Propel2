@@ -28,6 +28,16 @@ class DeprecatedCriteriaMethods extends Criteria
     protected $namedCriterions = [];
 
     /**
+     * @var bool
+     */
+    protected $useTransaction = false;
+
+    /**
+     * @var bool
+     */
+    protected $singleRecord = false;
+
+    /**
      * @param \Propel\Runtime\ActiveQuery\Criteria $criteria
      */
     public function __construct(Criteria $criteria)
@@ -59,6 +69,8 @@ class DeprecatedCriteriaMethods extends Criteria
     public function clear()
     {
         $this->namedCriterions = [];
+        $this->useTransaction = false;
+        $this->singleRecord = false;
 
         return $this->criteria;
     }
@@ -523,5 +535,71 @@ class DeprecatedCriteriaMethods extends Criteria
         unset($this->namedCriterions['propel_temp_name']);
 
         return $criterion;
+    }
+
+    /**
+     * @deprecated value is never used.
+     *
+     * Will force the sql represented by this criteria to be executed within
+     * a transaction. This is here primarily to support the oid type in
+     * postgresql. Though it can be used to require any single sql statement
+     * to use a transaction.
+     *
+     * @param bool $v
+     *
+     * @return $this
+     */
+    public function setUseTransaction(bool $v)
+    {
+        $this->useTransaction = $v;
+
+        return $this;
+    }
+
+    /**
+     * @deprecated value is never used.
+     *
+     * Whether the sql command specified by this criteria must be wrapped
+     * in a transaction.
+     *
+     * @return bool
+     */
+    public function isUseTransaction(): bool
+    {
+        return $this->useTransaction;
+    }
+
+    /**
+     * @deprecated value is never used.
+     *
+     * Set single record? Set this to <code>true</code> if you expect the query
+     * to result in only a single result record (the default behaviour is to
+     * throw a PropelException if multiple records are returned when the query
+     * is executed). This should be used in situations where returning multiple
+     * rows would indicate an error of some sort. If your query might return
+     * multiple records but you are only interested in the first one then you
+     * should be using setLimit(1).
+     *
+     * @param bool $b Set to TRUE if you expect the query to select just one record.
+     *
+     * @return $this Modified Criteria object (for fluent API)
+     */
+    public function setSingleRecord(bool $b)
+    {
+        $this->singleRecord = $b;
+
+        return $this;
+    }
+
+    /**
+     * @deprecated value is never used.
+     *
+     * Is single record?
+     *
+     * @return bool True if a single record is being returned.
+     */
+    public function isSingleRecord(): bool
+    {
+        return $this->singleRecord;
     }
 }

@@ -1215,7 +1215,7 @@ class CriteriaTest extends BookstoreTestBase
 
         $this->assertFalse($c->getIgnoreCase(), 'ignoreCase is false by default');
 
-        $this->assertFalse($c->getSingleRecord(), 'singleRecord is false by default');
+        $this->assertFalse($c->isSingleRecord(), 'singleRecord is false by default');
 
         $this->assertTrue(is_array($c->getSelectModifiers()), 'selectModifiers is an array');
         $this->assertEquals(0, count($c->getSelectModifiers()), 'selectModifiers is empty by default');
@@ -1247,7 +1247,7 @@ class CriteriaTest extends BookstoreTestBase
         $this->assertTrue(is_array($c->getAliases()), 'aliases is an array');
         $this->assertEquals(0, count($c->getAliases()), 'aliases is empty by default');
 
-        $this->assertFalse($c->getUseTransaction(), 'useTransaction is false by default');
+        $this->assertFalse($c->isUseTransaction(), 'useTransaction is false by default');
 
         $this->assertNull($c->getLock(), 'lock is null by default');
     }
@@ -1435,15 +1435,5 @@ class CriteriaForClearTest extends Criteria
     public function getIgnoreCase()
     {
         return $this->ignoreCase;
-    }
-
-    public function getSingleRecord()
-    {
-        return $this->singleRecord;
-    }
-
-    public function getUseTransaction()
-    {
-        return $this->useTransaction;
     }
 }
