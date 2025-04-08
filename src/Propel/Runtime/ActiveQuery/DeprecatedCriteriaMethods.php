@@ -773,7 +773,7 @@ class DeprecatedCriteriaMethods extends Criteria
      * @param mixed $value
      * @param string|null $operator A String, like Criteria::EQUAL.
      *
-     * @return static
+     * @return \Propel\Runtime\ActiveQuery\Criteria
      */
     public function addUsingAlias(string $qualifiedColumnName, $value = null, ?string $operator = null)
     {
