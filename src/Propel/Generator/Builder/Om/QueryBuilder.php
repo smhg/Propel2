@@ -1606,9 +1606,11 @@ class QueryBuilder extends AbstractOMBuilder
      */
     public function use" . $relationName . 'Query($relationAlias = null, $joinType = ' . $joinType . ")
     {
-        return \$this
-            ->join" . $relationName . "(\$relationAlias, \$joinType)
-            ->useQuery(\$relationAlias ? \$relationAlias : '$relationName', '$queryClass');
+        /** @var $queryClass \$query */
+        \$query = \$this->join" . $relationName . "(\$relationAlias, \$joinType)
+            ->useQuery(\$relationAlias ?: '$relationName', '$queryClass');
+
+        return \$query;        
     }
 ";
     }
