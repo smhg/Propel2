@@ -198,12 +198,12 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @psalm-param literal-string|array $clause
      *
-     * @param array|string $clause A string representing the pseudo SQL clause, e.g. 'Book.AuthorId = ?'
+     * @param array<string>|string $clause A string representing the pseudo SQL clause, e.g. 'Book.AuthorId = ?'
      *   Or an array of condition names
      * @param mixed $value A value for the condition
      * @param int|null $bindingType
      *
-     * @return $this
+     * @return static
      */
     public function where($clause, $value = null, ?int $bindingType = null)
     {
@@ -215,9 +215,7 @@ class ModelCriteria extends BaseModelCriteria
             $criterion = $this->buildFilterForClause($clause, $value, $bindingType);
         }
 
-        $this->addUsingOperator($criterion, null, null);
-
-        return $this;
+        return $this->addUsingOperator($criterion, null, null);
     }
 
     /**
@@ -237,15 +235,13 @@ class ModelCriteria extends BaseModelCriteria
      * @param \Propel\Runtime\ActiveQuery\ModelCriteria $existsQueryCriteria the query object used in the EXISTS statement
      * @param string $operator Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS. Defaults to EXISTS
      *
-     * @return $this
+     * @return static
      */
     public function whereExists(ActiveQueryModelCriteria $existsQueryCriteria, string $operator = ExistsQueryCriterion::TYPE_EXISTS)
     {
         $criterion = new ExistsQueryCriterion($this, null, $operator, $existsQueryCriteria);
 
-        $this->addUsingOperator($criterion);
-
-        return $this;
+        return $this->addUsingOperator($criterion);
     }
 
     /**
@@ -253,13 +249,11 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @param \Propel\Runtime\ActiveQuery\ModelCriteria $existsQueryCriteria
      *
-     * @return $this
+     * @return static
      */
     public function whereNotExists(ActiveQueryModelCriteria $existsQueryCriteria)
     {
-        $this->whereExists($existsQueryCriteria, ExistsQueryCriterion::TYPE_NOT_EXISTS);
-
-        return $this;
+        return $this->whereExists($existsQueryCriteria, ExistsQueryCriterion::TYPE_NOT_EXISTS);
     }
 
     /**
@@ -276,12 +270,12 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @see Criteria::addHaving()
      *
-     * @param array|string $clause A string representing the pseudo SQL clause, e.g. 'Book.AuthorId = ?'
+     * @param array<string>|string $clause A string representing the pseudo SQL clause, e.g. 'Book.AuthorId = ?'
      *                      Or an array of condition names
      * @param mixed $value A value for the condition
      * @param int|null $bindingType
      *
-     * @return $this
+     * @return static
      */
     public function having($clause, $value = null, ?int $bindingType = null)
     {
@@ -293,9 +287,7 @@ class ModelCriteria extends BaseModelCriteria
             $criterion = $this->buildFilterForClause($clause, $value, $bindingType);
         }
 
-        $this->addHaving($criterion);
-
-        return $this;
+        return $this->addHaving($criterion);
     }
 
     /**
@@ -313,7 +305,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @throws \Propel\Runtime\Exception\UnexpectedValueException
      *
-     * @return $this
+     * @return static
      */
     public function orderBy(string $columnName, string $order = Criteria::ASC)
     {
@@ -323,18 +315,12 @@ class ModelCriteria extends BaseModelCriteria
         $order = strtoupper($order);
         switch ($order) {
             case Criteria::ASC:
-                $this->addAscendingOrderByColumn($qualifiedColumnName);
-
-                break;
+                return $this->addAscendingOrderByColumn($qualifiedColumnName);
             case Criteria::DESC:
-                $this->addDescendingOrderByColumn($qualifiedColumnName);
-
-                break;
+                return $this->addDescendingOrderByColumn($qualifiedColumnName);
             default:
                 throw new UnexpectedValueException('ModelCriteria::orderBy() only accepts Criteria::ASC or Criteria::DESC as argument');
         }
-
-        return $this;
     }
 
     /**
@@ -403,49 +389,6 @@ class ModelCriteria extends BaseModelCriteria
                 $this->addGroupByColumn($column->getFullyQualifiedName());
             }
         }
-
-        return $this;
-    }
-
-    /**
-     * Adds a DISTINCT clause to the query
-     * Alias for Criteria::setDistinct()
-     *
-     * @return $this
-     */
-    public function distinct()
-    {
-        $this->setDistinct();
-
-        return $this;
-    }
-
-    /**
-     * Adds a LIMIT clause (or its subselect equivalent) to the query
-     * Alias for Criteria::setLimit()
-     *
-     * @param string|int $limit Maximum number of results to return by the query
-     *
-     * @return $this
-     */
-    public function limit($limit)
-    {
-        $this->setLimit((int)$limit);
-
-        return $this;
-    }
-
-    /**
-     * Adds an OFFSET clause (or its subselect equivalent) to the query
-     * Alias for of Criteria::setOffset()
-     *
-     * @param string|int $offset Offset of the first result to return
-     *
-     * @return $this
-     */
-    public function offset($offset)
-    {
-        $this->setOffset((int)$offset);
 
         return $this;
     }
@@ -807,14 +750,6 @@ class ModelCriteria extends BaseModelCriteria
         $this->with[$relation] = new ModelWith($join);
 
         return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isWithOneToMany(): bool
-    {
-        return $this->isWithOneToMany;
     }
 
     /**
@@ -2308,25 +2243,6 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
-     * @param string $andOr
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $columnOrClause
-     * @param mixed $value
-     * @param string|int|null $condition
-     * @param bool $preferColumnCondition
-     *
-     * @return static
-     */
-    protected function addFilterWithConjunction(string $andOr, $columnOrClause, $value = null, $condition = null, bool $preferColumnCondition = true)
-    {
-        if (is_string($columnOrClause)) {
-            $resolvedColumn = $this->resolveColumn($columnOrClause);
-            $columnOrClause = $resolvedColumn;
-        }
-
-        return parent::addFilterWithConjunction($andOr, $columnOrClause, $value, $condition, $preferColumnCondition);
-    }
-
-    /**
      * @deprecated just use ModelCriteria::addUsingOperator(), local columns will be resolved anyway.
      *
      * Overrides Criteria::add() to force the use of a true table alias if it exists
@@ -2335,15 +2251,14 @@ class ModelCriteria extends BaseModelCriteria
      * @param mixed $value
      * @param string|null $operator A String, like Criteria::EQUAL.
      *
-     * @return $this A modified Criteria object.
+     * @return static
      */
     public function addUsingAlias(string $qualifiedColumnName, $value = null, ?string $operator = null)
     {
         $columnName = substr($qualifiedColumnName, (int)strrpos($qualifiedColumnName, '.') + 1);
         $resolvedColumn = $this->resolveLocalColumnByName($columnName);
-        $this->addUsingOperator($resolvedColumn, $value, $operator);
 
-        return $this;
+        return $this->addUsingOperator($resolvedColumn, $value, $operator);
     }
 
     /**

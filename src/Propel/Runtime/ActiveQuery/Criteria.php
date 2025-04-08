@@ -1109,6 +1109,17 @@ class Criteria
     }
 
     /**
+     * Adds a DISTINCT clause to the query
+     * Alias for Criteria::setDistinct()
+     *
+     * @return static
+     */
+    public function distinct()
+    {
+        return $this->setDistinct();
+    }
+
+    /**
      * Adds a modifier to the SQL statement.
      * e.g. self::ALL, self::DISTINCT, 'SQL_CALC_FOUND_ROWS', 'HIGH_PRIORITY', etc.
      *
@@ -1261,6 +1272,19 @@ class Criteria
     }
 
     /**
+     * Adds a LIMIT clause (or its subselect equivalent) to the query
+     * Alias for Criteria::setLimit()
+     *
+     * @param string|int $limit Maximum number of results to return by the query
+     *
+     * @return static
+     */
+    public function limit($limit)
+    {
+        return $this->setLimit((int)$limit);
+    }
+
+    /**
      * Get limit.
      *
      * @return int An int with the value for limit.
@@ -1282,6 +1306,19 @@ class Criteria
         $this->offset = $offset;
 
         return $this;
+    }
+
+    /**
+     * Adds an OFFSET clause (or its subselect equivalent) to the query
+     * Alias for of Criteria::setOffset()
+     *
+     * @param string|int $offset Offset of the first result to return
+     *
+     * @return static
+     */
+    public function offset($offset)
+    {
+        return $this->setOffset((int)$offset);
     }
 
     /**
