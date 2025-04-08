@@ -9,7 +9,9 @@
 namespace Propel\Runtime\ActiveQuery;
 
 use LogicException;
+use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
+use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithColumns;
 use Propel\Runtime\Map\ColumnMap;
 use Propel\Runtime\Propel;
 
@@ -36,6 +38,11 @@ class DeprecatedCriteriaMethods extends Criteria
      * @var bool
      */
     protected $singleRecord = false;
+
+    /**
+     * @var bool
+     */
+    protected $isWithOneToMany = false;
 
     /**
      * @param \Propel\Runtime\ActiveQuery\Criteria $criteria
@@ -636,5 +643,140 @@ class DeprecatedCriteriaMethods extends Criteria
     public function isSingleRecord(): bool
     {
         return $this->singleRecord;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWithOneToMany(): bool
+    {
+        return $this->isWithOneToMany;
+    }
+
+    /**
+     * @deprecated use FilterClauseLiteralWithColumns::convertValueForColumn()
+     *
+     * @param mixed $value The value to convert
+     * @param \Propel\Runtime\Map\ColumnMap $colMap The ColumnMap object
+     *
+     * @return mixed The converted value
+     */
+    public function convertValueForColumn($value, ColumnMap $colMap)
+    {
+        return FilterClauseLiteralWithColumns::convertValueForColumn($value, $colMap);
+    }
+
+    /**
+     * @deprecated Use {@see ModelCriteria::resolveColumn()}
+     *
+     * @param string $columnName String representing the column name in a pseudo SQL clause, e.g. 'Book.Title'
+     * @param bool $failSilently
+     *
+     * @return array List($columnMap, $localColumnName)
+     */
+    public function getColumnFromName(string $columnName, bool $failSilently = true): array
+    {
+        $resolvedColumn = $this->criteria->resolveColumn($columnName, $failSilently);
+
+        return [$resolvedColumn->hasColumnMap() ? $resolvedColumn->getColumnMap() : null, $resolvedColumn->getColumnExpressionInQuery()];
+    }
+
+    /**
+     * Return a fully qualified column name corresponding to a simple column phpName
+     * Uses model alias if it exists
+     * Warning: restricted to the columns of the main model
+     * e.g. => 'Title' => 'book.TITLE'
+     *
+     * @param string $columnName the Column phpName, without the table name
+     *
+     * @throws \Propel\Runtime\ActiveQuery\Exception\UnknownColumnException
+     *
+     * @return \Propel\Runtime\Map\ColumnMap
+     */
+    public function getColumnMapByColumnName(string $columnName): ColumnMap
+    {
+        $tableMap = $this->criteria->getTableMapOrFail();
+        if (!$tableMap->hasColumnByPhpName($columnName)) {
+            throw new UnknownColumnException('Unknown column ' . $columnName . ' in model ' . $tableMap->getName());
+        }
+
+        return $tableMap->getColumnByPhpName($columnName);
+    }
+
+    /**
+     * Return a fully qualified column name corresponding to a simple column phpName
+     * Uses model alias if it exists
+     * Warning: restricted to the columns of the main model
+     * e.g. => 'Title' => 'book.TITLE'
+     *
+     * @param string $columnName the Column phpName, without the table name
+     *
+     * @throws \Propel\Runtime\ActiveQuery\Exception\UnknownColumnException
+     *
+     * @return string the fully qualified column name
+     */
+    public function getRealColumnName(string $columnName): string
+    {
+        $tableMap = $this->criteria->getTableMapOrFail();
+        if (!$tableMap->hasColumnByPhpName($columnName)) {
+            throw new UnknownColumnException('Unknown column ' . $columnName . ' in model ' . $tableMap->getName());
+        }
+        $tableName = $this->criteria->getTableNameInQuery();
+        $columnName = $tableMap->getColumnByPhpName($columnName)->getName();
+
+        return "$tableName.$columnName";
+    }
+
+    /**
+     * @deprecated use ModelCriteria::buildBindParams()
+     *
+     * Get all the parameters to bind to this criteria
+     * Does part of the job of createSelectSql() for the cache
+     *
+     * @return array list of parameters, each parameter being an array like
+     *               array('table' => $realtable, 'column' => $column, 'value' => $value)
+     */
+    public function getParams(): array
+    {
+        return $this->buildBindParams();
+    }
+
+    /**
+     * Get all the parameters to bind to this criteria
+     * Does part of the job of createSelectSql() for the cache
+     *
+     * @return array list of parameters, each parameter being an array like
+     *               array('table' => $realtable, 'column' => $column, 'value' => $value)
+     */
+    public function buildBindParams(): array
+    {
+        $params = [];
+
+        foreach ($this->criteria->filterCollector->getColumnFilters() as $filter) {
+            $filter->collectParameters($params);
+        }
+
+        $having = $this->criteria->getHaving();
+        if ($having !== null) {
+            $having->collectParameters($params);
+        }
+
+        return $params;
+    }
+
+    /**
+     * @deprecated just use ModelCriteria::addUsingOperator(), local columns will be resolved anyway.
+     *
+     * Overrides Criteria::add() to force the use of a true table alias if it exists
+     *
+     * @param string $qualifiedColumnName The colName of column to run the condition on (e.g. BookTableMap::ID)
+     * @param mixed $value
+     * @param string|null $operator A String, like Criteria::EQUAL.
+     *
+     * @return static
+     */
+    public function addUsingAlias(string $qualifiedColumnName, $value = null, ?string $operator = null)
+    {
+        return $this->criteria->addUsingOperator($qualifiedColumnName, $value, $operator);
     }
 }

@@ -2411,7 +2411,9 @@ class Criteria
                 'getNamedCriterions', 'getCriterionForCondition', 'quoteIdentifier',
                 'replaceNames', 'getPrimaryKey', 'getComparison', 'setUseTransaction',
                 'isUseTransaction', 'setSingleRecord', 'isSingleRecord', 'condition',
-                'getCriterionForClause',
+                'getCriterionForClause', 'isWithOneToMany', 'convertValueForColumn',
+                'getColumnFromName', 'getColumnMapByColumnName', 'getRealColumnName',
+                'getParams', 'buildBindParams', 'addUsingAlias',
             ], true)
         ) {
             trigger_deprecation('Propel', '2.0', "Method $name should not be used anymore, see DeprecatedCriteriaMethods::$name how to replace it.");
