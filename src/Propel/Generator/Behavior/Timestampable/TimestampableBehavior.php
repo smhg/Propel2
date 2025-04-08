@@ -185,6 +185,7 @@ public function keepUpdateDateUnchanged()
 
         if ($this->withUpdatedAt()) {
             $updateColumnConstant = $this->getColumnConstant('update_column', $builder);
+            $columnName = $this->getColumnForParameter('update_column')->getName();
             $script .= "
 /**
  * Filter by the latest updated
@@ -195,7 +196,7 @@ public function keepUpdateDateUnchanged()
  */
 public function recentlyUpdated(\$nbDays = 7)
 {
-    \$this->addUsingAlias($updateColumnConstant, time() - \$nbDays * 24 * 60 * 60, Criteria::GREATER_EQUAL);
+    \$this->addUsingOperator(\$this->resolveLocalColumnByName('{$columnName}'), time() - \$nbDays * 24 * 60 * 60, Criteria::GREATER_EQUAL);
 
     return \$this;
 }
@@ -228,6 +229,7 @@ public function firstUpdatedFirst()
 
         if ($this->withCreatedAt()) {
             $createColumnConstant = $this->getColumnConstant('create_column', $builder);
+            $columnName = $this->getColumnForParameter('create_column')->getName();
             $script .= "
 /**
  * Order by create date desc
@@ -246,13 +248,11 @@ public function lastCreatedFirst()
  *
  * @param int \$nbDays Maximum age of in days
  *
- * @return \$this
+ * @return static
  */
 public function recentlyCreated(\$nbDays = 7)
 {
-    \$this->addUsingAlias($createColumnConstant, time() - \$nbDays * 24 * 60 * 60, Criteria::GREATER_EQUAL);
-
-    return \$this;
+    return \$this->addUsingOperator(\$this->resolveLocalColumnByName('{$columnName}'), time() - \$nbDays * 24 * 60 * 60, Criteria::GREATER_EQUAL);
 }
 
 /**

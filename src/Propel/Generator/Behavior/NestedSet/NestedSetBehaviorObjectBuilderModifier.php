@@ -95,11 +95,11 @@ class NestedSetBehaviorObjectBuilderModifier
         $script = "if (\$this->isNew() && \$this->isRoot()) {
     // check if no other root exist in, the tree
     \$rootExists = $queryClassName::create()
-        ->addUsingAlias($objectClassName::LEFT_COL, 1, Criteria::EQUAL)";
+        ->addUsingOperator($objectClassName::LEFT_COL, 1, Criteria::EQUAL)";
 
         if ($this->behavior->useScope()) {
             $script .= "
-        ->addUsingAlias($objectClassName::SCOPE_COL, \$this->getScopeValue(), Criteria::EQUAL)";
+        ->addUsingOperator($objectClassName::SCOPE_COL, \$this->getScopeValue(), Criteria::EQUAL)";
         }
 
         $script .= "

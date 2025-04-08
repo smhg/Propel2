@@ -156,7 +156,7 @@ class SortableBehaviorQueryBuilderModifier
  *
  * @return void
  */
-static public function sortableApplyScopeCriteria(Criteria \$criteria, \$scope, string \$method = 'add'): void
+static public function sortableApplyScopeCriteria(Criteria \$criteria, \$scope, string \$method = 'addFilter'): void
 {
 ";
         if ($this->behavior->hasMultipleScopes()) {
@@ -197,7 +197,7 @@ $paramsDoc
 public function inList($methodSignature)
 {
     $buildScope
-    static::sortableApplyScopeCriteria(\$this, \$scope, 'addUsingAlias');
+    static::sortableApplyScopeCriteria(\$this, \$scope, 'addUsingOperator');
 
     return \$this;
 }
