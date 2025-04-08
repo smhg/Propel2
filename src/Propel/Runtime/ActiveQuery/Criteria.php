@@ -18,7 +18,10 @@ use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\Upda
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UpdateColumn\UpdateExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnResolver;
 use Propel\Runtime\ActiveQuery\ColumnResolver\NormalizedFilterExpression;
+use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
+use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithColumns;
+use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithPdoTypes;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterCollector;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterFactory;
 use Propel\Runtime\ActiveQuery\QueryExecutor\CountQueryExecutor;
@@ -49,13 +52,6 @@ use Propel\Runtime\Util\PropelConditionalProxy;
  * @author Eric Dobbs <eric@dobbse.net> (Torque)
  * @author Henning P. Schmiedehausen <hps@intermeta.de> (Torque)
  * @author Sam Joseph <sam@neurogrid.com> (Torque)
- *
- * Deprecated methods (trigger deprecation warning on use, resolved in __call()):
- * @method string|null getTableName(string $name) Deprecated way to find table name of Criteria.
- * @method static addCond(string $name, string $p1, mixed $value = null, string|null $comparison = null) Deprecated way to build filter - use Criteria::buildFilter() instead.
- * @method \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface getCriterionForConditions(array $conditions, string|null $operator = null) Deprecated way to build multiple filters from name - use Criteria::buildFilter() and combine manually.
- * @method bool hasCond(string $name) Check if named filter exists in deprecated named store.
- * @method \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface getCond(string $name) Get filter from deprecated named storage.
  */
 class Criteria
 {
@@ -1787,6 +1783,31 @@ class Criteria
     }
 
     /**
+     * Creates a Filter based on a SQL clause and a value
+     * Uses introspection to translate the column phpName into a fully qualified name
+     *
+     * @param string $clause The pseudo SQL clause, e.g. 'AuthorId = ?'
+     * @param mixed $value A value for the condition
+     * @param int|null $bindingType
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface a Criterion object
+     */
+    protected function buildFilterForClause(string $clause, $value, ?int $bindingType = null): ColumnFilterInterface
+    {
+        if ($bindingType) {
+            return new FilterClauseLiteralWithPdoTypes($this, $clause, $value, $bindingType);
+        }
+
+        try {
+            return new FilterClauseLiteralWithColumns($this, $clause, $value);
+        } catch (InvalidClauseException $e) {
+            throw new PropelException($e->getMessage(), $e->getCode(), $e); // for BC
+        }
+    }
+
+    /**
      * If a criterion for the requested column already exists, the condition is "AND"ed to the existing criterion (necessary for Propel 1.4 compatibility).
      * If no criterion for the requested column already exists, the condition is "AND"ed to the latest criterion.
      * If no criterion exist, the condition is added a new criterion
@@ -2318,6 +2339,18 @@ class Criteria
     }
 
     /**
+     * @return \Propel\Runtime\ActiveQuery\DeprecatedCriteriaMethods
+     */
+    protected function getDeprecatedMethods(): DeprecatedCriteriaMethods
+    {
+        if (!$this->deprecatedMethods) {
+            $this->deprecatedMethods = new DeprecatedCriteriaMethods($this);
+        }
+
+        return $this->deprecatedMethods;
+    }
+
+    /**
      * @var \Propel\Runtime\ActiveQuery\DeprecatedCriteriaMethods|null
      */
     protected $deprecatedMethods;
@@ -2340,15 +2373,13 @@ class Criteria
                 'getCriterionForConditions', 'addSelectQuery', 'remove', 'size',
                 'getNamedCriterions', 'getCriterionForCondition', 'quoteIdentifier',
                 'replaceNames', 'getPrimaryKey', 'getComparison', 'setUseTransaction',
-                'isUseTransaction', 'setSingleRecord', 'isSingleRecord',
+                'isUseTransaction', 'setSingleRecord', 'isSingleRecord', 'condition',
+                'getCriterionForClause',
             ], true)
         ) {
             trigger_deprecation('Propel', '2.0', "Method $name should not be used anymore, see DeprecatedCriteriaMethods::$name how to replace it.");
-            if (!$this->deprecatedMethods) {
-                $this->deprecatedMethods = new DeprecatedCriteriaMethods($this);
-            }
 
-            return $this->deprecatedMethods->$name(...$arguments);
+            return $this->getDeprecatedMethods()->$name(...$arguments);
         }
 
         throw new PropelException(sprintf('Undefined method %s::%s()', self::class, $name));

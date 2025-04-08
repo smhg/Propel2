@@ -42,15 +42,16 @@ class InsertQueryExecutor extends AbstractQueryExecutor
     protected function findTableMapFromValues(): ?TableMap
     {
         $columnName = $this->criteria->getUpdateValues()->getColumnExpressionsInQuery()[0];
-        $table = $this->criteria->getTableName($columnName);
+        $updateColumn = $this->criteria->getUpdateValues()->getUpdateColumn($columnName);
+        $tableAlias = $updateColumn ? $updateColumn->getTableAlias() : null;
 
-        if (!$table) {
+        if (!$tableAlias) {
             return null;
         }
 
         $dbMap = Propel::getServiceContainer()->getDatabaseMap($this->criteria->getDbName());
 
-        return $dbMap->getTable($table);
+        return $dbMap->getTable($tableAlias);
     }
 
     /**

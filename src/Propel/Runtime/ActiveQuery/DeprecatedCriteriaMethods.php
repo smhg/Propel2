@@ -309,6 +309,43 @@ class DeprecatedCriteriaMethods extends Criteria
     }
 
     /**
+     * Adds a condition on a column based on a pseudo SQL clause
+     * but keeps it for later use with combine()
+     * Until combine() is called, the condition is not added to the query
+     * Uses introspection to translate the column phpName into a fully qualified name
+     * <code>
+     * $c->condition('cond1', 'b.Title = ?', 'foo');
+     * </code>
+     *
+     * @param string $conditionName A name to store the condition for a later combination with combine()
+     * @param string $clause The pseudo SQL clause, e.g. 'AuthorId = ?'
+     * @param mixed $value A value for the condition
+     * @param mixed $bindingType A value for the condition
+     *
+     * @return \Propel\Runtime\ActiveQuery\Criteria
+     */
+    public function condition(string $conditionName, string $clause, $value = null, $bindingType = null)
+    {
+        $this->addCond($conditionName, $this->criteria->buildFilterForClause($clause, $value, $bindingType), null, $bindingType);
+
+        return $this->criteria;
+    }
+
+    /**
+     * @deprecated use aptly named {@see static::buildFilterForClause()}
+     *
+     * @param string $clause The pseudo SQL clause, e.g. 'AuthorId = ?'
+     * @param mixed $value A value for the condition
+     * @param int|null $bindingType
+     *
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface a Criterion object
+     */
+    public function getCriterionForClause(string $clause, $value, ?int $bindingType = null): ColumnFilterInterface
+    {
+        return $this->buildFilterForClause($clause, $value, $bindingType);
+    }
+
+    /**
      * @param string $name
      *
      * @return bool
@@ -412,7 +449,7 @@ class DeprecatedCriteriaMethods extends Criteria
      *
      * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface
      */
-    protected function getCriterionForCondition(
+    public function getCriterionForCondition(
         $columnOrClause,
         $value = null,
         $comparison = null,
@@ -487,7 +524,7 @@ class DeprecatedCriteriaMethods extends Criteria
         }
         // Assume all the keys are for the same table.
         $key = $this->criteria->updateValues->getColumnExpressionsInQuery()[0];
-        $table = $criteria->getTableName($key);
+        $table = $criteria->getDeprecatedMethods()->getTableName($key);
 
         $pk = null;
 
@@ -525,7 +562,7 @@ class DeprecatedCriteriaMethods extends Criteria
      *
      * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface A Criterion or ModelCriterion object
      */
-    protected function getCriterionForConditions(array $conditions, ?string $operator = null): ColumnFilterInterface
+    public function getCriterionForConditions(array $conditions, ?string $operator = null): ColumnFilterInterface
     {
         $operator = ($operator === null) ? Criteria::LOGICAL_AND : $operator;
         $this->combine($conditions, $operator, 'propel_temp_name');

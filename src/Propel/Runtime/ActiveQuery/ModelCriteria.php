@@ -13,7 +13,6 @@ use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExp
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\LocalColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UnresolvedColumnExpression;
 use Propel\Runtime\ActiveQuery\Criterion\ClauseList;
-use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException;
 use Propel\Runtime\ActiveQuery\Criterion\ExistsQueryCriterion;
 use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
 use Propel\Runtime\ActiveQuery\Exception\UnknownRelationException;
@@ -21,7 +20,6 @@ use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnToQueryFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\ExistsFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithColumns;
-use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithPdoTypes;
 use Propel\Runtime\ActiveQuery\ModelCriteria as ActiveQueryModelCriteria;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\DataFetcher\DataFetcherInterface;
@@ -135,29 +133,6 @@ class ModelCriteria extends BaseModelCriteria
     protected $isInnerQueryInCriterion = false;
 
     /**
-     * Adds a condition on a column based on a pseudo SQL clause
-     * but keeps it for later use with combine()
-     * Until combine() is called, the condition is not added to the query
-     * Uses introspection to translate the column phpName into a fully qualified name
-     * <code>
-     * $c->condition('cond1', 'b.Title = ?', 'foo');
-     * </code>
-     *
-     * @param string $conditionName A name to store the condition for a later combination with combine()
-     * @param string $clause The pseudo SQL clause, e.g. 'AuthorId = ?'
-     * @param mixed $value A value for the condition
-     * @param mixed $bindingType A value for the condition
-     *
-     * @return $this
-     */
-    public function condition(string $conditionName, string $clause, $value = null, $bindingType = null)
-    {
-        $this->addCond($conditionName, $this->buildFilterForClause($clause, $value, $bindingType), null, $bindingType);
-
-        return $this;
-    }
-
-    /**
      * Adds a condition on a column based on a column phpName and a value
      * Uses introspection to translate the column phpName into a fully qualified name
      * Warning: recognizes only the phpNames of the main Model (not joined tables)
@@ -234,7 +209,7 @@ class ModelCriteria extends BaseModelCriteria
     {
         if (is_array($clause)) {
             // where(array('cond1', 'cond2'), Criteria::LOGICAL_OR)
-            $criterion = $this->getCriterionForConditions($clause, $value);
+            $criterion = $this->getDeprecatedMethods()->getCriterionForConditions($clause, $value);
         } else {
             // where('Book.AuthorId = ?', 12)
             $criterion = $this->buildFilterForClause($clause, $value, $bindingType);
@@ -312,7 +287,7 @@ class ModelCriteria extends BaseModelCriteria
     {
         if (is_array($clause)) {
             // having(array('cond1', 'cond2'), Criteria::LOGICAL_OR)
-            $criterion = $this->getCriterionForConditions($clause, $value);
+            $criterion = $this->getDeprecatedMethods()->getCriterionForConditions($clause, $value);
         } else {
             // having('Book.AuthorId = ?', 12)
             $criterion = $this->buildFilterForClause($clause, $value, $bindingType);
@@ -722,8 +697,8 @@ class ModelCriteria extends BaseModelCriteria
 
         if ($condition instanceof ColumnFilterInterface) {
             $this->getJoin($name)->setJoinCondition($condition);
-        } elseif ($this->hasCond($condition)) {
-            $this->getJoin($name)->setJoinCondition($this->getCond($condition));
+        } elseif ($this->getDeprecatedMethods()->hasCond($condition)) {
+            $this->getJoin($name)->setJoinCondition($this->getDeprecatedMethods()->getCond($condition));
         } else {
             throw new PropelException(sprintf('Cannot add condition %s on join %s. setJoinCondition() expects either a Criterion, or a condition added by way of condition()', $condition, $name));
         }
@@ -2144,45 +2119,6 @@ class ModelCriteria extends BaseModelCriteria
         }
 
         return true;
-    }
-
-    /**
-     * @deprecated use aptly named {@see static::buildFilterForClause()}
-     *
-     * @param string $clause The pseudo SQL clause, e.g. 'AuthorId = ?'
-     * @param mixed $value A value for the condition
-     * @param int|null $bindingType
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface a Criterion object
-     */
-    protected function getCriterionForClause(string $clause, $value, ?int $bindingType = null): ColumnFilterInterface
-    {
-        return $this->buildFilterForClause($clause, $value, $bindingType);
-    }
-
-    /**
-     * Creates a Filter based on a SQL clause and a value
-     * Uses introspection to translate the column phpName into a fully qualified name
-     *
-     * @param string $clause The pseudo SQL clause, e.g. 'AuthorId = ?'
-     * @param mixed $value A value for the condition
-     * @param int|null $bindingType
-     *
-     * @throws \Propel\Runtime\Exception\PropelException
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface a Criterion object
-     */
-    protected function buildFilterForClause(string $clause, $value, ?int $bindingType = null): ColumnFilterInterface
-    {
-        if ($bindingType) {
-            return new FilterClauseLiteralWithPdoTypes($this, $clause, $value, $bindingType);
-        }
-
-        try {
-            return new FilterClauseLiteralWithColumns($this, $clause, $value);
-        } catch (InvalidClauseException $e) {
-            throw new PropelException($e->getMessage(), $e->getCode(), $e); // for BC
-        }
     }
 
     /**
