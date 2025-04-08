@@ -2910,64 +2910,64 @@ class ModelCriteriaTest extends BookstoreTestBase
     public function testAddUsingAliasNoAlias()
     {
         $c1 = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book');
-        $c1->addUsingAlias(BookTableMap::COL_TITLE, 'foo');
+        $c1->addUsingOperator(BookTableMap::COL_TITLE, 'foo');
         $c2 = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book');
-        $c2->add(BookTableMap::COL_TITLE, 'foo');
-        $this->assertEquals($c2, $c1, 'addUsingalias() translates to add() when the table has no alias');
+        $c2->addFilter(BookTableMap::COL_TITLE, 'foo');
+        $this->assertEquals($c2, $c1, 'addUsingOperator() translates to add() when the table has no alias');
     }
 
     /**
      * @return void
      */
-    public function testAddUsingAliasQueryAlias()
+    public function testAddUsingOperatorQueryAlias()
     {
         $c1 = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book', 'b');
-        $c1->addUsingAlias(BookTableMap::COL_TITLE, 'foo');
+        $c1->addUsingOperator(BookTableMap::COL_TITLE, 'foo');
         $c2 = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book', 'b');
-        $c2->add(BookTableMap::COL_TITLE, 'foo');
-        $this->assertEquals($c2, $c1, 'addUsingalias() translates the colname using the table alias before calling add() when the table has a true alias');
+        $c2->addFilter(BookTableMap::COL_TITLE, 'foo');
+        $this->assertEquals($c2, $c1, 'addUsingOperator() translates the colname using the table alias before calling add() when the table has a true alias');
     }
 
     /**
      * @return void
      */
-    public function testAddUsingAliasTrueAlias()
+    public function testAddUsingOperatorTrueAlias()
     {
         $c1 = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book');
         $c1->setModelAlias('b', true);
-        $c1->addUsingAlias(BookTableMap::COL_TITLE, 'foo');
+        $c1->addUsingOperator(BookTableMap::COL_TITLE, 'foo');
         $c2 = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book');
         $c2->setModelAlias('b', true);
-        $c2->add('b.title', 'foo');
-        $this->assertEquals($c2, $c1, 'addUsingalias() translates to add() when the table has a true alias');
+        $c2->addFilter('b.title', 'foo');
+        $this->assertEquals($c2, $c1, 'addUsingOperator() translates to add() when the table has a true alias');
     }
 
     /**
      * @return void
      */
-    public function testAddUsingAliasTwice()
+    public function testAddUsingOperatorTwice()
     {
         $c1 = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book');
-        $c1->addUsingAlias(BookTableMap::COL_TITLE, 'foo');
-        $c1->addUsingAlias(BookTableMap::COL_TITLE, 'bar');
+        $c1->addUsingOperator(BookTableMap::COL_TITLE, 'foo');
+        $c1->addUsingOperator(BookTableMap::COL_TITLE, 'bar');
         $c2 = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book');
-        $c2->add(BookTableMap::COL_TITLE, 'foo');
+        $c2->addFilter(BookTableMap::COL_TITLE, 'foo');
         $c2->addAnd(BookTableMap::COL_TITLE, 'bar');
-        $this->assertEquals($c2, $c1, 'addUsingalias() translates to addAnd() when the table already has a condition on the column');
+        $this->assertEquals($c2, $c1, 'addUsingOperator() translates to addAnd() when the table already has a condition on the column');
     }
 
     /**
      * @return void
      */
-    public function testAddUsingAliasTrueAliasTwice()
+    public function testAddUsingOperatorTrueAliasTwice()
     {
         $c1 = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book');
         $c1->setModelAlias('b', true);
-        $c1->addUsingAlias(BookTableMap::COL_TITLE, 'foo');
-        $c1->addUsingAlias(BookTableMap::COL_TITLE, 'bar');
+        $c1->addUsingOperator(BookTableMap::COL_TITLE, 'foo');
+        $c1->addUsingOperator(BookTableMap::COL_TITLE, 'bar');
         $c2 = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book');
         $c2->setModelAlias('b', true);
-        $c2->add('b.title', 'foo');
+        $c2->addFilter('b.title', 'foo');
         $c2->addAnd('b.title', 'bar');
         $this->assertEquals($c2, $c1, 'addUsingalias() translates to addAnd() when the table already has a condition on the column');
     }

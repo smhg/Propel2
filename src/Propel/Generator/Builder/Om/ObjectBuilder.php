@@ -3399,7 +3399,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
      * @param string \$data The source data to import from
      * @param string \$keyType The type of keys the array uses.
      *
-     * @return \$this The current object, for fluid interface
+     * @return \$this
      */
     public function importFrom(\$parser, string \$data, string \$keyType = TableMap::$defaultKeyType)
     {

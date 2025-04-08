@@ -29,7 +29,7 @@ class CriteriaIsEmptyTest extends TestCaseFixtures
             ['select modifier', false, (new Criteria())->addSelectModifier('DISTINCT')],
             ['column filters', false, (new Criteria())->addFilter('id', 5)],
             ['having', false, (new Criteria())->addHaving('id')],
-            ['join', false, (new Criteria())->addJoin('l', 'r')],
+            ['join', false, (new Criteria())->addJoin('l.id', 'r.id')],
             ['update values', false, (new Criteria())->setUpdateValue('id', 3, \PDO::PARAM_STR)],
             
             ['select', false, (new ModelCriteria())->select('id')],

@@ -150,15 +150,16 @@ class NestedSetBehaviorQueryBuilderModifier
      */
     protected function addTreeRoots(string &$script): void
     {
+        $leftColumnName = $this->behavior->getColumnConstant('left_column');
         $script .= "
 /**
  * Filter the query to restrict the result to root objects
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function treeRoots()
 {
-    \$this->addUsingAlias({$this->objectClassName}::LEFT_COL, 1, Criteria::EQUAL);
+    \$this->addUsingOperator(\$this->resolveLocalColumnByName('{$leftColumnName}'), 1, Criteria::EQUAL);
 
     return \$this;
 }
@@ -172,17 +173,18 @@ public function treeRoots()
      */
     protected function addInTree(string &$script): void
     {
+        $scopeColumnName = $this->behavior->getColumnConstant('scope_column');
         $script .= "
 /**
  * Returns the objects in a certain tree, from the tree scope
  *
  * @param int|null \$scope Scope to determine which objects node to return
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function inTree(?int \$scope = null)
 {
-    \$this->addUsingAlias({$this->objectClassName}::SCOPE_COL, \$scope, Criteria::EQUAL);
+    \$this->addUsingOperator(\$this->resolveLocalColumnByName('{$scopeColumnName}'), \$scope, Criteria::EQUAL);
 
     return \$this;
 }
@@ -197,24 +199,26 @@ public function inTree(?int \$scope = null)
     protected function addDescendantsOf(string &$script): void
     {
         $objectName = '$' . $this->table->getCamelCaseName();
+        $leftColumnName = $this->behavior->getColumnConstant('left_column');
         $script .= "
 /**
  * Filter the query to restrict the result to descendants of an object
  *
  * @param {$this->objectClassName} $objectName The object to use for descendant search
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function descendantsOf($this->objectClassName $objectName)
 {
+    \$leftColumn = \$this->resolveLocalColumnByName('{$leftColumnName}');
     \$this";
         if ($this->behavior->useScope()) {
             $script .= "
         ->inTree({$objectName}->getScopeValue())";
         }
         $script .= "
-        ->addUsingAlias({$this->objectClassName}::LEFT_COL, {$objectName}->getLeftValue(), Criteria::GREATER_THAN)
-        ->addUsingAlias({$this->objectClassName}::LEFT_COL, {$objectName}->getRightValue(), Criteria::LESS_THAN);
+        ->addUsingOperator(\$leftColumn, {$objectName}->getLeftValue(), Criteria::GREATER_THAN)
+        ->addUsingOperator(\$leftColumn, {$objectName}->getRightValue(), Criteria::LESS_THAN);
 
     return \$this;
 }
@@ -229,6 +233,7 @@ public function descendantsOf($this->objectClassName $objectName)
     protected function addBranchOf(string &$script): void
     {
         $objectName = '$' . $this->table->getCamelCaseName();
+        $leftColumnName = $this->behavior->getColumnConstant('left_column');
         $script .= "
 /**
  * Filter the query to restrict the result to the branch of an object.
@@ -236,18 +241,19 @@ public function descendantsOf($this->objectClassName $objectName)
  *
  * @param {$this->objectClassName} $objectName The object to use for branch search
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function branchOf($this->objectClassName $objectName)
 {
+    \$leftColumn = \$this->resolveLocalColumnByName('{$leftColumnName}');
     \$this";
         if ($this->behavior->useScope()) {
             $script .= "
         ->inTree({$objectName}->getScopeValue())";
         }
         $script .= "
-        ->addUsingAlias({$this->objectClassName}::LEFT_COL, {$objectName}->getLeftValue(), Criteria::GREATER_EQUAL)
-        ->addUsingAlias({$this->objectClassName}::LEFT_COL, {$objectName}->getRightValue(), Criteria::LESS_EQUAL);
+        ->addUsingOperator(\$leftColumn, {$objectName}->getLeftValue(), Criteria::GREATER_EQUAL)
+        ->addUsingOperator(\$leftColumn, {$objectName}->getRightValue(), Criteria::LESS_EQUAL);
 
     return \$this;
 }
@@ -262,19 +268,20 @@ public function branchOf($this->objectClassName $objectName)
     protected function addChildrenOf(string &$script): void
     {
         $objectName = '$' . $this->table->getCamelCaseName();
+        $levelColumnName = $this->behavior->getColumnConstant('level_column');
         $script .= "
 /**
  * Filter the query to restrict the result to children of an object
  *
  * @param {$this->objectClassName} $objectName The object to use for child search
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function childrenOf($this->objectClassName $objectName)
 {
     \$this
         ->descendantsOf($objectName)
-        ->addUsingAlias({$this->objectClassName}::LEVEL_COL, {$objectName}->getLevel() + 1, Criteria::EQUAL);
+        ->addUsingOperator(\$this->resolveLocalColumnByName('{$levelColumnName}'), {$objectName}->getLevel() + 1, Criteria::EQUAL);
 
     return \$this;
 }
@@ -297,7 +304,7 @@ public function childrenOf($this->objectClassName $objectName)
  * @param {$this->objectClassName} $objectName The object to use for sibling search
  * @param ConnectionInterface \$con Connection to use.
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function siblingsOf($this->objectClassName $objectName, ?ConnectionInterface \$con = null)
 {
@@ -323,13 +330,15 @@ public function siblingsOf($this->objectClassName $objectName, ?ConnectionInterf
     protected function addAncestorsOf(string &$script): void
     {
         $objectName = '$' . $this->table->getCamelCaseName();
+        $leftColumnName = $this->behavior->getColumnConstant('left_column');
+        $rightColumnName = $this->behavior->getColumnConstant('right_column');
         $script .= "
 /**
  * Filter the query to restrict the result to ancestors of an object
  *
  * @param {$this->objectClassName} $objectName The object to use for ancestors search
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function ancestorsOf($this->objectClassName $objectName)
 {
@@ -339,8 +348,8 @@ public function ancestorsOf($this->objectClassName $objectName)
         ->inTree({$objectName}->getScopeValue())";
         }
         $script .= "
-        ->addUsingAlias({$this->objectClassName}::LEFT_COL, {$objectName}->getLeftValue(), Criteria::LESS_THAN)
-        ->addUsingAlias({$this->objectClassName}::RIGHT_COL, {$objectName}->getRightValue(), Criteria::GREATER_THAN);
+        ->addUsingOperator(\$this->resolveLocalColumnByName('{$leftColumnName}'), {$objectName}->getLeftValue(), Criteria::LESS_THAN)
+        ->addUsingOperator(\$this->resolveLocalColumnByName('{$rightColumnName}'), {$objectName}->getRightValue(), Criteria::GREATER_THAN);
 
     return \$this;
 }
@@ -355,6 +364,8 @@ public function ancestorsOf($this->objectClassName $objectName)
     protected function addRootsOf(string &$script): void
     {
         $objectName = '$' . $this->table->getCamelCaseName();
+        $leftColumnName = $this->behavior->getColumnConstant('left_column');
+        $rightColumnName = $this->behavior->getColumnConstant('right_column');
         $script .= "
 /**
  * Filter the query to restrict the result to roots of an object.
@@ -362,7 +373,7 @@ public function ancestorsOf($this->objectClassName $objectName)
  *
  * @param {$this->objectClassName} $objectName The object to use for roots search
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function rootsOf($this->objectClassName $objectName)
 {
@@ -372,8 +383,8 @@ public function rootsOf($this->objectClassName $objectName)
         ->inTree({$objectName}->getScopeValue())";
         }
         $script .= "
-        ->addUsingAlias({$this->objectClassName}::LEFT_COL, {$objectName}->getLeftValue(), Criteria::LESS_EQUAL)
-        ->addUsingAlias({$this->objectClassName}::RIGHT_COL, {$objectName}->getRightValue(), Criteria::GREATER_EQUAL);
+        ->addUsingOperator(\$this->resolveLocalColumnByName('{$leftColumnName}'), {$objectName}->getLeftValue(), Criteria::LESS_EQUAL)
+        ->addUsingOperator(\$this->resolveLocalColumnByName('{$rightColumnName}'), {$objectName}->getRightValue(), Criteria::GREATER_EQUAL);
 
     return \$this;
 }
@@ -393,7 +404,7 @@ public function rootsOf($this->objectClassName $objectName)
  *
  * @param bool \$reverse if true, reverses the order
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function orderByBranch(\$reverse = false)
 {
@@ -423,7 +434,7 @@ public function orderByBranch(\$reverse = false)
  *
  * @param bool \$reverse if true, reverses the order
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function orderByLevel(\$reverse = false)
 {
@@ -450,6 +461,7 @@ public function orderByLevel(\$reverse = false)
     protected function addFindRoot(string &$script): void
     {
         $useScope = $this->behavior->useScope();
+        $leftColumnName = $this->behavior->getColumnConstant('left_column');
         $script .= "
 /**
  * Returns " . ($useScope ? 'a' : 'the') . " root node for the tree
@@ -467,7 +479,7 @@ public function orderByLevel(\$reverse = false)
 public function findRoot(" . ($useScope ? '$scope = null, ' : '') . "ConnectionInterface \$con = null)
 {
     return \$this
-        ->addUsingAlias({$this->objectClassName}::LEFT_COL, 1, Criteria::EQUAL)";
+        ->addUsingOperator(\$this->resolveLocalColumnByName('{$leftColumnName}'), 1, Criteria::EQUAL)";
         if ($useScope) {
             $script .= "
         ->inTree(\$scope)";

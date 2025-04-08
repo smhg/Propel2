@@ -448,17 +448,18 @@ protected function makeSlugUnique(string \$slug, string \$separator = '" . $this
      */
     protected function addFilterBySlug(string &$script): void
     {
+        $slugColumnName = $this->getColumnForParameter('slug_column')->getName();
         $script .= "
 /**
  * Filter the query on the slug column
  *
  * @param string \$slug The value to use as filter.
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function filterBySlug(string \$slug)
 {
-    \$this->addUsingAlias(" . $this->builder->getColumnConstant($this->getColumnForParameter('slug_column')) . ", \$slug, Criteria::EQUAL);
+    \$this->addUsingOperator(\$this->resolveLocalColumnByName('{$slugColumnName}'), \$slug, Criteria::EQUAL);
 
     return \$this;
 }

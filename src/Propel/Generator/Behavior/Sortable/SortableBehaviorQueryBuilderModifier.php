@@ -156,7 +156,7 @@ class SortableBehaviorQueryBuilderModifier
  *
  * @return void
  */
-static public function sortableApplyScopeCriteria(Criteria \$criteria, \$scope, string \$method = 'add'): void
+static public function sortableApplyScopeCriteria(Criteria \$criteria, \$scope, string \$method = 'addFilter'): void
 {
 ";
         if ($this->behavior->hasMultipleScopes()) {
@@ -192,12 +192,12 @@ static public function sortableApplyScopeCriteria(Criteria \$criteria, \$scope, 
  *
 $paramsDoc
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function inList($methodSignature)
 {
     $buildScope
-    static::sortableApplyScopeCriteria(\$this, \$scope, 'addUsingAlias');
+    static::sortableApplyScopeCriteria(\$this, \$scope, 'addUsingOperator');
 
     return \$this;
 }
@@ -228,7 +228,7 @@ $paramsDoc
         }
         $script .= "
  *
- * @return static The current object, for fluid interface
+ * @return static
  */
 public function filterByRank(\$rank" . ($useScope ? ", $methodSignature" : '') . ")
 {";
@@ -263,7 +263,7 @@ public function filterByRank(\$rank" . ($useScope ? ", $methodSignature" : '') .
  *
  * @param string \$order either Criteria::ASC (default) or Criteria::DESC
  *
- * @return \$this The current query, for fluid interface
+ * @return \$this
  */
 public function orderByRank(string \$order = Criteria::ASC)
 {

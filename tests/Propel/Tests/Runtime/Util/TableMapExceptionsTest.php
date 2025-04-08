@@ -60,7 +60,7 @@ class TableMapExceptionsTest extends BookstoreTestBase
         $c1->setUpdateValue(BookTableMap::COL_ID, 12);
 
         $c1->setUpdateValue('book.unknown_column', 'Foo', \PDO::PARAM_STR);
-        $this->expectException(\Propel\Runtime\ActiveQuery\QueryExecutor\QueryExecutionException::class);
+        $this->expectException(QueryExecutionException::class);
         $c1->doUpdate(null,$this->con);
     }
 

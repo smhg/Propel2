@@ -13,15 +13,12 @@ use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExp
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\LocalColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UnresolvedColumnExpression;
 use Propel\Runtime\ActiveQuery\Criterion\ClauseList;
-use Propel\Runtime\ActiveQuery\Criterion\Exception\InvalidClauseException;
 use Propel\Runtime\ActiveQuery\Criterion\ExistsQueryCriterion;
 use Propel\Runtime\ActiveQuery\Exception\UnknownColumnException;
 use Propel\Runtime\ActiveQuery\Exception\UnknownRelationException;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnToQueryFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\ExistsFilter;
-use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithColumns;
-use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithPdoTypes;
 use Propel\Runtime\ActiveQuery\ModelCriteria as ActiveQueryModelCriteria;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\DataFetcher\DataFetcherInterface;
@@ -31,7 +28,6 @@ use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Exception\RuntimeException;
 use Propel\Runtime\Exception\UnexpectedValueException;
 use Propel\Runtime\Formatter\SimpleArrayFormatter;
-use Propel\Runtime\Map\ColumnMap;
 use Propel\Runtime\Map\Exception\ColumnNotFoundException;
 use Propel\Runtime\Map\RelationMap;
 use Propel\Runtime\Map\TableMap;
@@ -88,11 +84,6 @@ class ModelCriteria extends BaseModelCriteria
     protected $entityNotFoundExceptionClass;
 
     /**
-     * @var bool
-     */
-    protected $isWithOneToMany = false;
-
-    /**
      * This is introduced to prevent useQuery->join from going wrong
      *
      * @var \Propel\Runtime\ActiveQuery\Join|null
@@ -135,29 +126,6 @@ class ModelCriteria extends BaseModelCriteria
     protected $isInnerQueryInCriterion = false;
 
     /**
-     * Adds a condition on a column based on a pseudo SQL clause
-     * but keeps it for later use with combine()
-     * Until combine() is called, the condition is not added to the query
-     * Uses introspection to translate the column phpName into a fully qualified name
-     * <code>
-     * $c->condition('cond1', 'b.Title = ?', 'foo');
-     * </code>
-     *
-     * @param string $conditionName A name to store the condition for a later combination with combine()
-     * @param string $clause The pseudo SQL clause, e.g. 'AuthorId = ?'
-     * @param mixed $value A value for the condition
-     * @param mixed $bindingType A value for the condition
-     *
-     * @return $this The current object, for fluid interface
-     */
-    public function condition(string $conditionName, string $clause, $value = null, $bindingType = null)
-    {
-        $this->addCond($conditionName, $this->buildFilterForClause($clause, $value, $bindingType), null, $bindingType);
-
-        return $this;
-    }
-
-    /**
      * Adds a condition on a column based on a column phpName and a value
      * Uses introspection to translate the column phpName into a fully qualified name
      * Warning: recognizes only the phpNames of the main Model (not joined tables)
@@ -169,7 +137,7 @@ class ModelCriteria extends BaseModelCriteria
      * @param mixed $value A value for the condition
      * @param string|null $comparison What to use for the column comparison, defaults to Criteria::EQUAL or Criteria::IN for subqueries
      *
-     * @return static The current object, for fluid interface
+     * @return static
      */
     public function filterBy(string $columnPhpName, $value, ?string $comparison = null)
     {
@@ -193,7 +161,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @param mixed $conditions An array of conditions, using column phpNames as key
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function filterByArray($conditions)
     {
@@ -223,26 +191,24 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @psalm-param literal-string|array $clause
      *
-     * @param array|string $clause A string representing the pseudo SQL clause, e.g. 'Book.AuthorId = ?'
+     * @param array<string>|string $clause A string representing the pseudo SQL clause, e.g. 'Book.AuthorId = ?'
      *   Or an array of condition names
      * @param mixed $value A value for the condition
      * @param int|null $bindingType
      *
-     * @return $this The current object, for fluid interface
+     * @return static
      */
     public function where($clause, $value = null, ?int $bindingType = null)
     {
         if (is_array($clause)) {
             // where(array('cond1', 'cond2'), Criteria::LOGICAL_OR)
-            $criterion = $this->buildMultipleFilters($clause, $value);
+            $criterion = $this->getDeprecatedMethods()->getCriterionForConditions($clause, $value);
         } else {
             // where('Book.AuthorId = ?', 12)
             $criterion = $this->buildFilterForClause($clause, $value, $bindingType);
         }
 
-        $this->addUsingOperator($criterion, null, null);
-
-        return $this;
+        return $this->addUsingOperator($criterion, null, null);
     }
 
     /**
@@ -262,15 +228,13 @@ class ModelCriteria extends BaseModelCriteria
      * @param \Propel\Runtime\ActiveQuery\ModelCriteria $existsQueryCriteria the query object used in the EXISTS statement
      * @param string $operator Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS. Defaults to EXISTS
      *
-     * @return $this
+     * @return static
      */
     public function whereExists(ActiveQueryModelCriteria $existsQueryCriteria, string $operator = ExistsQueryCriterion::TYPE_EXISTS)
     {
         $criterion = new ExistsQueryCriterion($this, null, $operator, $existsQueryCriteria);
 
-        $this->addUsingOperator($criterion);
-
-        return $this;
+        return $this->addUsingOperator($criterion);
     }
 
     /**
@@ -278,13 +242,11 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @param \Propel\Runtime\ActiveQuery\ModelCriteria $existsQueryCriteria
      *
-     * @return $this
+     * @return static
      */
     public function whereNotExists(ActiveQueryModelCriteria $existsQueryCriteria)
     {
-        $this->whereExists($existsQueryCriteria, ExistsQueryCriterion::TYPE_NOT_EXISTS);
-
-        return $this;
+        return $this->whereExists($existsQueryCriteria, ExistsQueryCriterion::TYPE_NOT_EXISTS);
     }
 
     /**
@@ -301,26 +263,24 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @see Criteria::addHaving()
      *
-     * @param array|string $clause A string representing the pseudo SQL clause, e.g. 'Book.AuthorId = ?'
+     * @param array<string>|string $clause A string representing the pseudo SQL clause, e.g. 'Book.AuthorId = ?'
      *                      Or an array of condition names
      * @param mixed $value A value for the condition
      * @param int|null $bindingType
      *
-     * @return $this The current object, for fluid interface
+     * @return static
      */
     public function having($clause, $value = null, ?int $bindingType = null)
     {
         if (is_array($clause)) {
             // having(array('cond1', 'cond2'), Criteria::LOGICAL_OR)
-            $criterion = $this->buildMultipleFilters($clause, $value);
+            $criterion = $this->getDeprecatedMethods()->getCriterionForConditions($clause, $value);
         } else {
             // having('Book.AuthorId = ?', 12)
             $criterion = $this->buildFilterForClause($clause, $value, $bindingType);
         }
 
-        $this->addHaving($criterion);
-
-        return $this;
+        return $this->addHaving($criterion);
     }
 
     /**
@@ -338,7 +298,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @throws \Propel\Runtime\Exception\UnexpectedValueException
      *
-     * @return $this The current object, for fluid interface
+     * @return static
      */
     public function orderBy(string $columnName, string $order = Criteria::ASC)
     {
@@ -348,18 +308,12 @@ class ModelCriteria extends BaseModelCriteria
         $order = strtoupper($order);
         switch ($order) {
             case Criteria::ASC:
-                $this->addAscendingOrderByColumn($qualifiedColumnName);
-
-                break;
+                return $this->addAscendingOrderByColumn($qualifiedColumnName);
             case Criteria::DESC:
-                $this->addDescendingOrderByColumn($qualifiedColumnName);
-
-                break;
+                return $this->addDescendingOrderByColumn($qualifiedColumnName);
             default:
                 throw new UnexpectedValueException('ModelCriteria::orderBy() only accepts Criteria::ASC or Criteria::DESC as argument');
         }
-
-        return $this;
     }
 
     /**
@@ -378,7 +332,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function groupBy($columnNames)
     {
@@ -407,7 +361,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @throws \Propel\Runtime\Exception\ClassNotFoundException
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function groupByClass(string $class)
     {
@@ -428,49 +382,6 @@ class ModelCriteria extends BaseModelCriteria
                 $this->addGroupByColumn($column->getFullyQualifiedName());
             }
         }
-
-        return $this;
-    }
-
-    /**
-     * Adds a DISTINCT clause to the query
-     * Alias for Criteria::setDistinct()
-     *
-     * @return $this The current object, for fluid interface
-     */
-    public function distinct()
-    {
-        $this->setDistinct();
-
-        return $this;
-    }
-
-    /**
-     * Adds a LIMIT clause (or its subselect equivalent) to the query
-     * Alias for Criteria::setLimit()
-     *
-     * @param string|int $limit Maximum number of results to return by the query
-     *
-     * @return $this The current object, for fluid interface
-     */
-    public function limit($limit)
-    {
-        $this->setLimit((int)$limit);
-
-        return $this;
-    }
-
-    /**
-     * Adds an OFFSET clause (or its subselect equivalent) to the query
-     * Alias for of Criteria::setOffset()
-     *
-     * @param string|int $offset Offset of the first result to return
-     *
-     * @return $this The current object, for fluid interface
-     */
-    public function offset($offset)
-    {
-        $this->setOffset((int)$offset);
 
         return $this;
     }
@@ -497,7 +408,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function select($columnArray)
     {
@@ -605,7 +516,7 @@ class ModelCriteria extends BaseModelCriteria
      * @throws \Propel\Runtime\Exception\PropelException
      * @throws \Propel\Runtime\ActiveQuery\Exception\UnknownRelationException
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function join(string $relation, string $joinType = Criteria::INNER_JOIN)
     {
@@ -678,7 +589,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function addJoinCondition(string $name, string $clause, $value = null, ?string $operator = null, ?int $bindingType = null)
     {
@@ -712,7 +623,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function setJoinCondition(string $name, $condition)
     {
@@ -722,8 +633,8 @@ class ModelCriteria extends BaseModelCriteria
 
         if ($condition instanceof ColumnFilterInterface) {
             $this->getJoin($name)->setJoinCondition($condition);
-        } elseif (isset($this->namedCriterions[$condition])) {
-            $this->getJoin($name)->setJoinCondition($this->namedCriterions[$condition]);
+        } elseif ($this->getDeprecatedMethods()->hasCond($condition)) {
+            $this->getJoin($name)->setJoinCondition($this->getDeprecatedMethods()->getCond($condition));
         } else {
             throw new PropelException(sprintf('Cannot add condition %s on join %s. setJoinCondition() expects either a Criterion, or a condition added by way of condition()', $condition, $name));
         }
@@ -739,7 +650,7 @@ class ModelCriteria extends BaseModelCriteria
      * @param \Propel\Runtime\ActiveQuery\Join $join A join object
      * @param string|null $name
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function addJoinObject(Join $join, ?string $name = null)
     {
@@ -769,7 +680,7 @@ class ModelCriteria extends BaseModelCriteria
      * @param string $relation Relation to use for the join
      * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function joinWith(string $relation, ?string $joinType = null)
     {
@@ -802,7 +713,7 @@ class ModelCriteria extends BaseModelCriteria
      * @throws \Propel\Runtime\ActiveQuery\Exception\UnknownRelationException
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function with(string $relation)
     {
@@ -815,10 +726,6 @@ class ModelCriteria extends BaseModelCriteria
         $relationMap = $join->getRelationMap();
         if ($relationMap && $relationMap->getType() === RelationMap::MANY_TO_MANY) {
             throw new PropelException(__METHOD__ . ' does not allow hydration for many-to-many relationships');
-        }
-        if ($relationMap && $relationMap->getType() === RelationMap::ONE_TO_MANY) {
-            // For performance reasons, the formatters will use a special routine in this case
-            $this->isWithOneToMany = true;
         }
 
         // check that the columns of the main class are already added (but only if this isn't a useQuery)
@@ -835,14 +742,6 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
-     * @return bool
-     */
-    public function isWithOneToMany(): bool
-    {
-        return $this->isWithOneToMany;
-    }
-
-    /**
      * @deprecated use addAsColumn() - same effect, no side-effects.
      *
      * Adds a supplementary column to the select clause
@@ -854,7 +753,7 @@ class ModelCriteria extends BaseModelCriteria
      *                       If no alias is provided, the clause is used as a column alias
      *                       This alias is used for retrieving the column via BaseObject::getVirtualColumn($alias)
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function withColumn(string $clause, ?string $name = null)
     {
@@ -1141,7 +1040,7 @@ class ModelCriteria extends BaseModelCriteria
      * @param string|null $alias alias for the subQuery
      * @param bool $addAliasAndSelectColumns Set to false if you want to manually add the aliased select columns
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function addSubquery(Criteria $subQuery, ?string $alias = null, bool $addAliasAndSelectColumns = true)
     {
@@ -1182,7 +1081,7 @@ class ModelCriteria extends BaseModelCriteria
     * @param string|null $alias alias for the subQuery
     * @param bool $addAliasAndSelectColumns Set to false if you want to manually add the aliased select columns
     *
-    * @return static The current object, for fluid interface
+    * @return static
     */
     public function addSelectQuery(Criteria $subQueryCriteria, ?string $alias = null, bool $addAliasAndSelectColumns = true)
     {
@@ -1232,7 +1131,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @param bool $force To enforce removing columns for changed alias, set it to true (f.e. with sub selects)
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function removeSelfSelectColumns(bool $force = false)
     {
@@ -1263,7 +1162,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @param string $relation The relation name or alias, as defined in join()
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function addRelationSelectColumns(string $relation)
     {
@@ -1330,7 +1229,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @param bool $isKeepQuery
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function keepQuery(bool $isKeepQuery = true)
     {
@@ -2147,104 +2046,6 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
-     * @deprecated use aptly named {@see static::buildMultipleFilters()}
-     *
-     * @param array $conditions The list of condition names, e.g. array('cond1', 'cond2')
-     * @param string|null $operator An operator, Criteria::LOGICAL_AND (default) or Criteria::LOGICAL_OR
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface A Criterion or ModelCriterion object
-     */
-    protected function getCriterionForConditions(array $conditions, ?string $operator = null): ColumnFilterInterface
-    {
-        return $this->buildMultipleFilters($conditions, $operator);
-    }
-
-    /**
-     * Creates a Criterion object based on a list of existing condition names and a comparator
-     *
-     * @param array $conditions The list of condition names, e.g. array('cond1', 'cond2')
-     * @param string|null $operator An operator, Criteria::LOGICAL_AND (default) or Criteria::LOGICAL_OR
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface A Criterion or ModelCriterion object
-     */
-    protected function buildMultipleFilters(array $conditions, ?string $operator = null): ColumnFilterInterface
-    {
-        $operator = ($operator === null) ? Criteria::LOGICAL_AND : $operator;
-        $this->combine($conditions, $operator, 'propel_temp_name');
-        $criterion = $this->namedCriterions['propel_temp_name'];
-        unset($this->namedCriterions['propel_temp_name']);
-
-        return $criterion;
-    }
-
-    /**
-     * @deprecated use aptly named {@see static::buildFilterForClause()}
-     *
-     * @param string $clause The pseudo SQL clause, e.g. 'AuthorId = ?'
-     * @param mixed $value A value for the condition
-     * @param int|null $bindingType
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface a Criterion object
-     */
-    protected function getCriterionForClause(string $clause, $value, ?int $bindingType = null): ColumnFilterInterface
-    {
-        return $this->buildFilterForClause($clause, $value, $bindingType);
-    }
-
-    /**
-     * Creates a Filter based on a SQL clause and a value
-     * Uses introspection to translate the column phpName into a fully qualified name
-     *
-     * @param string $clause The pseudo SQL clause, e.g. 'AuthorId = ?'
-     * @param mixed $value A value for the condition
-     * @param int|null $bindingType
-     *
-     * @throws \Propel\Runtime\Exception\PropelException
-     *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface a Criterion object
-     */
-    protected function buildFilterForClause(string $clause, $value, ?int $bindingType = null): ColumnFilterInterface
-    {
-        if ($bindingType) {
-            return new FilterClauseLiteralWithPdoTypes($this, $clause, $value, $bindingType);
-        }
-
-        try {
-            return new FilterClauseLiteralWithColumns($this, $clause, $value);
-        } catch (InvalidClauseException $e) {
-            throw new PropelException($e->getMessage(), $e->getCode(), $e); // for BC
-        }
-    }
-
-    /**
-     * @deprecated use FilterClauseLiteralWithColumns::convertValueForColumn()
-     *
-     * @param mixed $value The value to convert
-     * @param \Propel\Runtime\Map\ColumnMap $colMap The ColumnMap object
-     *
-     * @return mixed The converted value
-     */
-    protected function convertValueForColumn($value, ColumnMap $colMap)
-    {
-        return FilterClauseLiteralWithColumns::convertValueForColumn($value, $colMap);
-    }
-
-    /**
-     * @deprecated Use {@see ModelCriteria::resolveColumn()}
-     *
-     * @param string $columnName String representing the column name in a pseudo SQL clause, e.g. 'Book.Title'
-     * @param bool $failSilently
-     *
-     * @return array List($columnMap, $localColumnName)
-     */
-    public function getColumnFromName(string $columnName, bool $failSilently = true): array
-    {
-        $resolvedColumn = $this->resolveColumn($columnName, $failSilently);
-
-        return [$resolvedColumn->hasColumnMap() ? $resolvedColumn->getColumnMap() : null, $resolvedColumn->getColumnExpressionInQuery()];
-    }
-
-    /**
      * @param string $columnIdentifier
      * @param bool $hasAccessToOutputColumns If AS columns can be used in the statement (for example in HAVING clauses)
      * @param bool $failSilently
@@ -2318,28 +2119,6 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
-     * Return a fully qualified column name corresponding to a simple column phpName
-     * Uses model alias if it exists
-     * Warning: restricted to the columns of the main model
-     * e.g. => 'Title' => 'book.TITLE'
-     *
-     * @param string $columnName the Column phpName, without the table name
-     *
-     * @throws \Propel\Runtime\ActiveQuery\Exception\UnknownColumnException
-     *
-     * @return \Propel\Runtime\Map\ColumnMap
-     */
-    protected function getColumnMapByColumnName(string $columnName): ColumnMap
-    {
-        $tableMap = $this->getTableMapOrFail();
-        if (!$tableMap->hasColumnByPhpName($columnName)) {
-            throw new UnknownColumnException('Unknown column ' . $columnName . ' in model ' . $this->modelName);
-        }
-
-        return $tableMap->getColumnByPhpName($columnName);
-    }
-
-    /**
      * @param string $columnName
      * @param bool $isPhpName
      *
@@ -2361,30 +2140,6 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
-     * Return a fully qualified column name corresponding to a simple column phpName
-     * Uses model alias if it exists
-     * Warning: restricted to the columns of the main model
-     * e.g. => 'Title' => 'book.TITLE'
-     *
-     * @param string $columnName the Column phpName, without the table name
-     *
-     * @throws \Propel\Runtime\ActiveQuery\Exception\UnknownColumnException
-     *
-     * @return string the fully qualified column name
-     */
-    protected function getRealColumnName(string $columnName): string
-    {
-        $tableMap = $this->getTableMapOrFail();
-        if (!$tableMap->hasColumnByPhpName($columnName)) {
-            throw new UnknownColumnException('Unknown column ' . $columnName . ' in model ' . $this->modelName);
-        }
-        $tableName = $this->getTableNameInQuery();
-        $columnName = $tableMap->getColumnByPhpName($columnName)->getName();
-
-        return "$tableName.$columnName";
-    }
-
-    /**
      * Changes the table part of a a fully qualified column name if a true model alias exists
      * e.g. => 'book.TITLE' => 'b.TITLE'
      * This is for use as first argument of Criteria::add()
@@ -2403,84 +2158,6 @@ class ModelCriteria extends BaseModelCriteria
     }
 
     /**
-     * @param string $andOr
-     * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $columnOrClause
-     * @param mixed $value
-     * @param string|int|null $condition
-     * @param bool $preferColumnCondition
-     *
-     * @return static
-     */
-    protected function addFilterWithConjunction(string $andOr, $columnOrClause, $value = null, $condition = null, bool $preferColumnCondition = true)
-    {
-        if (is_string($columnOrClause)) {
-            $resolvedColumn = $this->resolveColumn($columnOrClause);
-            $columnOrClause = $resolvedColumn;
-        }
-
-        return parent::addFilterWithConjunction($andOr, $columnOrClause, $value, $condition, $preferColumnCondition);
-    }
-
-    /**
-     * @deprecated just use ModelCriteria::addUsingOperator(), local columns will be resolved anyway.
-     *
-     * Overrides Criteria::add() to force the use of a true table alias if it exists
-     *
-     * @param string $qualifiedColumnName The colName of column to run the condition on (e.g. BookTableMap::ID)
-     * @param mixed $value
-     * @param string|null $operator A String, like Criteria::EQUAL.
-     *
-     * @return $this A modified Criteria object.
-     */
-    public function addUsingAlias(string $qualifiedColumnName, $value = null, ?string $operator = null)
-    {
-        $columnName = substr($qualifiedColumnName, (int)strrpos($qualifiedColumnName, '.') + 1);
-        $resolvedColumn = $this->resolveLocalColumnByName($columnName);
-        $this->addUsingOperator($resolvedColumn, $value, $operator);
-
-        return $this;
-    }
-
-    /**
-     * @deprecated use ModelCriteria::buildBindParams()
-     *
-     * Get all the parameters to bind to this criteria
-     * Does part of the job of createSelectSql() for the cache
-     *
-     * @return array list of parameters, each parameter being an array like
-     *               array('table' => $realtable, 'column' => $column, 'value' => $value)
-     */
-    public function getParams(): array
-    {
-        return $this->buildBindParams();
-    }
-
-    /**
-     * Get all the parameters to bind to this criteria
-     * Does part of the job of createSelectSql() for the cache
-     *
-     * @return array list of parameters, each parameter being an array like
-     *               array('table' => $realtable, 'column' => $column, 'value' => $value)
-     */
-    public function buildBindParams(): array
-    {
-        $params = [];
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap($this->getDbName());
-
-        foreach ($this->filterCollector->getColumnFilters() as $filter) {
-            $filter->collectParameters($params);
-        }
-
-        $having = $this->getHaving();
-        if ($having !== null) {
-            $sb = '';
-            $having->collectParameters($params);
-        }
-
-        return $params;
-    }
-
-    /**
      * Handle the magic
      * Supports findByXXX(), findOneByXXX(), requireOneByXXX(), filterByXXX(), orderByXXX(), and groupByXXX() methods,
      * where XXX is a column phpName.
@@ -2488,8 +2165,6 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @param string $name
      * @param array $arguments
-     *
-     * @throws \Propel\Runtime\Exception\PropelException
      *
      * @return mixed
      */
@@ -2556,7 +2231,7 @@ class ModelCriteria extends BaseModelCriteria
             }
         }
 
-        throw new PropelException(sprintf('Undefined method %s::%s()', self::class, $name));
+        return parent::__call($name, $arguments);
     }
 
     /**

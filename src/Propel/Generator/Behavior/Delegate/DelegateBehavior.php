@@ -340,7 +340,7 @@ protected \$delegatedFields = [
  * @param mixed \$value A value for the condition
  * @param string \$comparison What to use for the column comparison, defaults to Criteria::EQUAL and Criteria::IN for queries
  *
- * @return \$this The current object, for fluid interface
+ * @return \$this
  */
 public function filterBy(string \$column, \$value, string \$comparison = null)
 {
