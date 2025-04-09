@@ -130,7 +130,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
      *
      * @throws \Propel\Runtime\Exception\InvalidArgumentException
      *
-     * @return $this
+     * @return static
      */
     public function setFormatter($formatter)
     {

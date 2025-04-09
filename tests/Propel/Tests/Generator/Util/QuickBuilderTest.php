@@ -101,7 +101,7 @@ EOF;
         $this->assertStringContainsString('class QuickBuildFoo1 extends BaseQuickBuildFoo1', $script);
         $this->assertStringContainsString('class QuickBuildFoo1Query extends BaseQuickBuildFoo1Query', $script);
         $this->assertStringContainsString('class QuickBuildFoo1 implements ActiveRecordInterface', $script);
-        $this->assertStringContainsString('class QuickBuildFoo1Query extends ModelCriteria', $script);
+        $this->assertStringContainsString('class QuickBuildFoo1Query extends TypedModelCriteria', $script);
     }
 
     /**
@@ -115,7 +115,7 @@ EOF;
         $this->assertStringNotContainsString('class QuickBuildFoo1 extends BaseQuickBuildFoo1', $script);
         $this->assertStringNotContainsString('class QuickBuildFoo1Query extends BaseQuickBuildFoo1Query', $script);
         $this->assertStringContainsString('class QuickBuildFoo1 implements ActiveRecordInterface', $script);
-        $this->assertStringContainsString('class QuickBuildFoo1Query extends ModelCriteria', $script);
+        $this->assertStringContainsString('class QuickBuildFoo1Query extends TypedModelCriteria', $script);
     }
 
     /**

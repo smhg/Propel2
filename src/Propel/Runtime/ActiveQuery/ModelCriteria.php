@@ -1011,7 +1011,7 @@ class ModelCriteria extends BaseModelCriteria
      * @param \Propel\Runtime\ActiveQuery\ModelCriteria $criteria The primary criteria
      * @param \Propel\Runtime\ActiveQuery\Join|null $previousJoin The previousJoin for this ModelCriteria
      *
-     * @return $this
+     * @return static
      */
     public function setPrimaryCriteria(ModelCriteria $criteria, ?Join $previousJoin)
     {
