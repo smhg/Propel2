@@ -210,27 +210,27 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
     }
 
     /**
-     * @param string $index
+     * @param string $offset
      * @param RowFormat $value
      *
      * @return void
      */
-    public function offsetSet($index, $value): void
+    public function offsetSet($offset, $value): void
     {
-        $this->collection->offsetSet($index, $value);
-        parent::offsetSet($index, $value);
+        $this->collection->offsetSet($offset, $value);
+        parent::offsetSet($offset, $value);
         $this->refreshPositions();
     }
 
     /**
-     * @param string $index
+     * @param string $offset
      *
      * @return void
      */
-    public function offsetUnset($index): void
+    public function offsetUnset($offset): void
     {
-        $this->collection->offsetUnset($index);
-        parent::offsetUnset($index);
+        $this->collection->offsetUnset($offset);
+        parent::offsetUnset($offset);
         $this->refreshPositions();
     }
 
@@ -275,28 +275,28 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
     }
 
     /**
-     * @param callable $callback
+     * @param callable $cmp_function
      *
      * @return true
      */
     #[\ReturnTypeWillChange]
-    public function uasort($callback): bool
+    public function uasort($cmp_function): bool
     {
-        parent::uasort($callback);
+        parent::uasort($cmp_function);
         $this->refreshPositions();
 
         return true;
     }
 
     /**
-     * @param callable $callback
+     * @param callable $cmp_function
      *
      * @return true
      */
     #[\ReturnTypeWillChange]
-    public function uksort($callback): bool
+    public function uksort($cmp_function): bool
     {
-        parent::uksort($callback);
+        parent::uksort($cmp_function);
         $this->refreshPositions();
 
         return true;

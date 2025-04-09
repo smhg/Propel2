@@ -502,7 +502,7 @@ class Criteria
     /**
      * Get the column aliases.
      *
-     * @return array An assoc array which map the column alias names
+     * @return array<string, string> An assoc array which map the column alias names
      *               to the alias clauses.
      */
     public function getAsColumns(): array

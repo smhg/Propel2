@@ -54,7 +54,7 @@ class Propel
      *
      * @var int
      */
-    public const LOG_EMERG = 550;
+    public const LOG_EMERG = 600;
 
     /**
      * A constant defining 'Immediate action required' logging level
@@ -89,7 +89,7 @@ class Propel
      *
      * @var int
      */
-    public const LOG_NOTICE = 200;
+    public const LOG_NOTICE = 250;
 
     /**
      * A constant defining 'Informational' logging level
