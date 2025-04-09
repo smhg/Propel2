@@ -12,22 +12,27 @@ use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\ArrayCollection;
 use ReflectionClass;
 
+/**
+ * @template RowFormat
+ * @template ListType of \Traversable<RowFormat>
+ * @extends \Propel\Runtime\Formatter\AbstractFormatter<RowFormat, ListType>
+ */
 abstract class AbstractFormatterWithHydration extends AbstractFormatter
 {
     /**
-     * @var array<mixed>
+     * @var array<string, array<string, array<string, mixed>>>
      */
     protected $alreadyHydratedObjects = [];
 
     /**
-     * @var array
+     * @var array<ListType>
      */
     protected $emptyVariable = [];
 
     /**
      * @param \Propel\Runtime\ActiveRecord\ActiveRecordInterface|null $record
      *
-     * @return array The original record turned into an array
+     * @return array<string, mixed> The original record turned into an array
      */
     public function formatRecord(?ActiveRecordInterface $record = null): array
     {
@@ -35,6 +40,8 @@ abstract class AbstractFormatterWithHydration extends AbstractFormatter
     }
 
     /**
+     * @psalm-return class-string<\Propel\Runtime\Collection\ArrayCollection>
+     *
      * @return string|null
      */
     public function getCollectionClassName(): ?string

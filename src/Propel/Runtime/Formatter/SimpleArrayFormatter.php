@@ -18,6 +18,8 @@ use Propel\Runtime\Exception\LogicException;
  * or an array
  *
  * @author Benjamin Runnels
+ *
+ * @extends \Propel\Runtime\Formatter\AbstractFormatter<array<string, mixed>, \Propel\Runtime\Collection\ArrayCollection>
  */
 class SimpleArrayFormatter extends AbstractFormatter
 {
@@ -26,7 +28,7 @@ class SimpleArrayFormatter extends AbstractFormatter
      *
      * @throws \Propel\Runtime\Exception\LogicException
      *
-     * @return \Propel\Runtime\Collection\Collection|array
+     * @return \Propel\Runtime\Collection\ArrayCollection
      */
     public function format(?DataFetcherInterface $dataFetcher = null)
     {
@@ -58,7 +60,7 @@ class SimpleArrayFormatter extends AbstractFormatter
     }
 
     /**
-     * @return string|null
+     * @return class-string<\Propel\Runtime\Collection\ArrayCollection>|null
      */
     public function getCollectionClassName(): ?string
     {
@@ -70,7 +72,7 @@ class SimpleArrayFormatter extends AbstractFormatter
      *
      * @throws \Propel\Runtime\Exception\LogicException
      *
-     * @return array|string|null
+     * @return array<string, mixed>
      */
     public function formatOne(?DataFetcherInterface $dataFetcher = null)
     {
@@ -105,7 +107,7 @@ class SimpleArrayFormatter extends AbstractFormatter
      *
      * @param \Propel\Runtime\ActiveRecord\ActiveRecordInterface|null $record the object to format
      *
-     * @return array The original record turned into an array
+     * @return array<string, mixed> The original record turned into an array
      */
     public function formatRecord(?ActiveRecordInterface $record = null): array
     {
@@ -123,18 +125,18 @@ class SimpleArrayFormatter extends AbstractFormatter
     /**
      * @param array $row
      *
-     * @return array|string|false
+     * @return array<string, mixed>
      */
     public function getStructuredArrayFromRow(array $row)
     {
         $columnNames = array_keys($this->getAsColumns());
-        if (count($columnNames) > 1 && count($row) > 1) {
-            $finalRow = [];
-            foreach ($row as $index => $value) {
-                $finalRow[str_replace('"', '', $columnNames[$index])] = $value;
-            }
-        } else {
-            $finalRow = $row[0];
+        if (count($columnNames) <= 1 || count($row) <= 1) {
+            return $row[0];
+        }
+        $finalRow = [];
+        foreach ($row as $index => $value) {
+            $key = str_replace('"', '', $columnNames[$index]);
+            $finalRow[$key] = $value;
         }
 
         return $finalRow;

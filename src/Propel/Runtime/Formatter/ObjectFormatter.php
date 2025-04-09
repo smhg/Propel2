@@ -17,11 +17,15 @@ use Propel\Runtime\Exception\LogicException;
  * format() returns a ObjectCollection of Propel model objects
  *
  * @author Francois Zaninotto
+ *
+ * @template RowFormat of \Propel\Runtime\ActiveRecord\ActiveRecordInterface
+ * @template ListType of \Propel\Runtime\Collection\Collection
+ * @extends \Propel\Runtime\Formatter\AbstractFormatter<RowFormat, ListType>
  */
 class ObjectFormatter extends AbstractFormatter
 {
     /**
-     * @var array
+     * @var array<string, RowFormat>
      */
     protected $objects = [];
 
@@ -30,7 +34,7 @@ class ObjectFormatter extends AbstractFormatter
      *
      * @throws \Propel\Runtime\Exception\LogicException
      *
-     * @return \Propel\Runtime\Collection\Collection|array
+     * @return ListType
      */
     public function format(?DataFetcherInterface $dataFetcher = null)
     {
@@ -71,7 +75,7 @@ class ObjectFormatter extends AbstractFormatter
     }
 
     /**
-     * @return string|null
+     * @return class-string<\Propel\Runtime\Collection\Collection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>|null
      */
     public function getCollectionClassName(): ?string
     {
@@ -83,7 +87,7 @@ class ObjectFormatter extends AbstractFormatter
      *
      * @throws \Propel\Runtime\Exception\LogicException
      *
-     * @return \Propel\Runtime\ActiveRecord\ActiveRecordInterface|null
+     * @return RowFormat|null
      */
     public function formatOne(?DataFetcherInterface $dataFetcher = null): ?ActiveRecordInterface
     {
@@ -123,7 +127,7 @@ class ObjectFormatter extends AbstractFormatter
      * @param array $row associative array indexed by column number,
      *                   as returned by DataFetcher::fetch()
      *
-     * @return \Propel\Runtime\ActiveRecord\ActiveRecordInterface
+     * @return RowFormat
      */
     public function getAllObjectsFromRow(array $row): ActiveRecordInterface
     {

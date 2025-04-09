@@ -22,6 +22,9 @@ use Propel\Runtime\Propel;
  * Class for iterating over a list of Propel objects
  *
  * @author Francois Zaninotto
+ *
+ * @template RowFormat
+ * @extends \Propel\Runtime\Collection\Collection<RowFormat>
  */
 class ObjectCollection extends Collection
 {
@@ -45,7 +48,7 @@ class ObjectCollection extends Collection
     }
 
     /**
-     * @param array $input
+     * @param array<RowFormat> $input
      *
      * @return void
      */
@@ -56,7 +59,7 @@ class ObjectCollection extends Collection
     }
 
     /**
-     * @param array $data
+     * @param array<RowFormat> $data
      *
      * @return void
      */
@@ -121,13 +124,13 @@ class ObjectCollection extends Collection
      *
      * @param bool $usePrefix
      *
-     * @return array The list of the primary keys of the collection
+     * @return array<mixed> The list of the primary keys of the collection
      */
     public function getPrimaryKeys(bool $usePrefix = true): array
     {
         $ret = [];
 
-        /** @var \Propel\Runtime\ActiveRecord\ActiveRecordInterface $obj */
+        /** @var RowFormat $obj */
         foreach ($this as $key => $obj) {
             $key = $usePrefix ? ($this->getModel() . '_' . $key) : $key;
             $ret[$key] = $obj->getPrimaryKey();
@@ -141,7 +144,7 @@ class ObjectCollection extends Collection
      * Each object is populated from an array and the result is stored
      * Does not empty the collection before adding the data from the array
      *
-     * @param array $arr
+     * @param array<RowFormat> $arr
      *
      * @return void
      */
@@ -149,7 +152,7 @@ class ObjectCollection extends Collection
     {
         $class = $this->getFullyQualifiedModel();
         foreach ($arr as $element) {
-            /** @var \Propel\Runtime\ActiveRecord\ActiveRecordInterface $obj */
+            /** @var RowFormat $obj */
             $obj = new $class();
             $obj->fromArray($element);
             $this->append($obj);
@@ -188,7 +191,7 @@ class ObjectCollection extends Collection
      * )
      * </code>
      *
-     * @return array<int|string, array>
+     * @return array<int|string, array<string, mixed>>
      */
     public function toArray(
         ?string $keyColumn = null,
@@ -347,7 +350,7 @@ class ObjectCollection extends Collection
      * @throws \Propel\Runtime\Exception\RuntimeException
      * @throws \Propel\Runtime\Collection\Exception\UnsupportedRelationException
      *
-     * @return static The list of related objects.
+     * @return \Propel\Runtime\Collection\Collection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface> The list of related objects.
      */
     public function populateRelation(
         string $relation,
@@ -363,12 +366,13 @@ class ObjectCollection extends Collection
             $relationClassName = $relationMap->getRightTable()->getClassName();
             $collectionClassName = $relationMap->getRightTable()->getCollectionClassName();
 
-            /** @var static $coll */
-            $coll = new $collectionClassName();
-            $coll->setModel($relationClassName);
-            $coll->setFormatter($this->getFormatter());
+            $collection = new $collectionClassName();
+            $collection->setModel($relationClassName);
+            /** @var \Propel\Runtime\Formatter\AbstractFormatter<\Propel\Runtime\ActiveRecord\ActiveRecordInterface, \Propel\Runtime\Collection\Collection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>> $formatter */
+            $formatter = $this->getFormatter();
+            $collection->setFormatter($formatter);
 
-            return $coll;
+            return $collection;
         }
 
         $symRelationMap = $relationMap->getSymmetricalRelation();
@@ -471,7 +475,7 @@ class ObjectCollection extends Collection
     }
 
     /**
-     * @param mixed $value
+     * @param RowFormat $value
      *
      * @return void
      */
@@ -494,7 +498,7 @@ class ObjectCollection extends Collection
 
     /**
      * @param mixed $offset
-     * @param mixed $value
+     * @param RowFormat $value
      *
      * @return void
      */

@@ -11,18 +11,21 @@ namespace Propel\Runtime\Collection;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\DataFetcher\DataFetcherInterface;
 use Propel\Runtime\Exception\PropelException;
-use Propel\Runtime\Formatter\AbstractFormatter;
+use Propel\Runtime\Formatter\ObjectFormatter;
 use Propel\Runtime\Propel;
 
 /**
  * Class for iterating over a statement and returning one Propel object at a time
  *
  * @author Francois Zaninotto
+ *
+ * @template RowFormat of \Propel\Runtime\ActiveRecord\ActiveRecordInterface
+ * @template ListType of \Propel\Runtime\Collection\Collection
  */
 class OnDemandIterator implements IteratorInterface
 {
     /**
-     * @var \Propel\Runtime\Formatter\ObjectFormatter
+     * @var \Propel\Runtime\Formatter\ObjectFormatter<RowFormat, ListType>
      */
     protected $formatter;
 
@@ -52,10 +55,10 @@ class OnDemandIterator implements IteratorInterface
     protected $enableInstancePoolingOnFinish;
 
     /**
-     * @param \Propel\Runtime\Formatter\ObjectFormatter $formatter
+     * @param \Propel\Runtime\Formatter\ObjectFormatter<RowFormat, ListType> $formatter
      * @param \Propel\Runtime\DataFetcher\DataFetcherInterface $dataFetcher
      */
-    public function __construct(AbstractFormatter $formatter, DataFetcherInterface $dataFetcher)
+    public function __construct(ObjectFormatter $formatter, DataFetcherInterface $dataFetcher)
     {
         $this->currentKey = -1;
         $this->formatter = $formatter;
@@ -95,7 +98,7 @@ class OnDemandIterator implements IteratorInterface
      *
      * @see ObjectFormatter::getAllObjectsFromRow()
      *
-     * @return \Propel\Runtime\ActiveRecord\ActiveRecordInterface
+     * @return RowFormat
      */
     #[\ReturnTypeWillChange]
     public function current(): ActiveRecordInterface

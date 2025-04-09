@@ -14,6 +14,9 @@ use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
  * Class for iterating over a list of Propel objects
  *
  * @author Francois Zaninotto
+ *
+ * @template RowFormat
+ * @extends \Propel\Runtime\Collection\ObjectCollection<RowFormat>
  */
 class ObjectCombinationCollection extends ObjectCollection
 {
@@ -45,7 +48,9 @@ class ObjectCombinationCollection extends ObjectCollection
      */
     public function push($value): void
     {
-        parent::push(func_get_args());
+        /** @var RowFormat $args */
+        $args = func_get_args();
+        parent::push($args);
     }
 
     /**

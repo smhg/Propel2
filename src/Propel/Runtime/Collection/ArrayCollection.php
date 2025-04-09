@@ -17,6 +17,8 @@ use Propel\Runtime\Exception\PropelException;
  * Class for iterating over a list of Propel objects stored as arrays
  *
  * @author Francois Zaninotto
+ *
+ * @extends \Propel\Runtime\Collection\Collection<array<string, mixed>>
  */
 class ArrayCollection extends Collection
 {
@@ -105,7 +107,7 @@ class ArrayCollection extends Collection
      * Uses the object model to force the column types
      * Does not empty the collection before adding the data from the array
      *
-     * @param array $arr
+     * @param array<array<string, mixed>> $arr
      *
      * @return void
      */
@@ -145,7 +147,7 @@ class ArrayCollection extends Collection
      * )
      * </code>
      *
-     * @return array
+     * @return array<array<string, mixed>>
      */
     public function toArray(?string $keyColumn = null, bool $usePrefix = false): array
     {
@@ -165,7 +167,7 @@ class ArrayCollection extends Collection
      * @param string|null $keyColumn
      * @param bool $usePrefix
      *
-     * @return array
+     * @return array<array<string, mixed>>
      */
     public function getArrayCopy(?string $keyColumn = null, bool $usePrefix = false): array
     {
@@ -187,7 +189,7 @@ class ArrayCollection extends Collection
      * @param string $keyColumn
      * @param string $valueColumn
      *
-     * @return array
+     * @return array<scalar, mixed>
      */
     public function toKeyValue(string $keyColumn, string $valueColumn): array
     {

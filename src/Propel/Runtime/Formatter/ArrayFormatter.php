@@ -17,6 +17,8 @@ use Propel\Runtime\Exception\LogicException;
  * format() returns a ArrayCollection of associative arrays
  *
  * @author Francois Zaninotto
+ *
+ * @extends \Propel\Runtime\Formatter\AbstractFormatterWithHydration<array<string, mixed>, \Propel\Runtime\Collection\ArrayCollection>
  */
 class ArrayFormatter extends AbstractFormatterWithHydration
 {
@@ -25,7 +27,7 @@ class ArrayFormatter extends AbstractFormatterWithHydration
      *
      * @throws \Propel\Runtime\Exception\LogicException
      *
-     * @return \Propel\Runtime\Collection\Collection|array
+     * @return \Propel\Runtime\Collection\ArrayCollection
      */
     public function format(?DataFetcherInterface $dataFetcher = null)
     {
@@ -65,7 +67,7 @@ class ArrayFormatter extends AbstractFormatterWithHydration
     }
 
     /**
-     * @return string|null
+     * @return class-string<\Propel\Runtime\Collection\ArrayCollection>|null
      */
     public function getCollectionClassName(): ?string
     {
@@ -77,7 +79,7 @@ class ArrayFormatter extends AbstractFormatterWithHydration
      *
      * @throws \Propel\Runtime\Exception\LogicException
      *
-     * @return array|null
+     * @return array<string, mixed>|null
      */
     public function formatOne(?DataFetcherInterface $dataFetcher = null): ?array
     {
@@ -137,7 +139,7 @@ class ArrayFormatter extends AbstractFormatterWithHydration
      * @param array $row associative array indexed by column number,
      *                   as returned by DataFetcher::fetch()
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function &getStructuredArrayFromRow(array $row): array
     {

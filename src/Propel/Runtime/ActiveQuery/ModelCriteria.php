@@ -1746,7 +1746,7 @@ class ModelCriteria extends BaseModelCriteria
      * @param int $maxPerPage maximum number of results per page. Determines the limit
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con an optional connection object
      *
-     * @return \Propel\Runtime\Util\PropelModelPager a pager object, supporting iteration
+     * @return \Propel\Runtime\Util\PropelModelPager<\Propel\Runtime\ActiveRecord\ActiveRecordInterface> a pager object, supporting iteration
      */
     public function paginate(int $page = 1, int $maxPerPage = 10, ?ConnectionInterface $con = null): PropelModelPager
     {
