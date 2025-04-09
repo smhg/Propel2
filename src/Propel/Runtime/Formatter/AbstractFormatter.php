@@ -115,7 +115,7 @@ abstract class AbstractFormatter
     public function init(BaseModelCriteria $criteria, ?DataFetcherInterface $dataFetcher = null)
     {
         $this->dbName = $criteria->getDbName();
-        /** @var class-string<RowFormat> */
+        /** @var class-string<RowFormat> $modelClassName */
         $modelClassName = $criteria->getModelName();
         if (!$modelClassName) {
             throw new LogicException('Cannot initialize formatter on a criteria without model class name (`modelName`)');
