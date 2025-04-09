@@ -79,7 +79,7 @@ class QueryBuilder extends AbstractOMBuilder
             return $baseQueryClass;
         }
 
-        return 'ModelCriteria';
+        return 'TypedModelCriteria';
     }
 
     /**
@@ -169,6 +169,7 @@ class QueryBuilder extends AbstractOMBuilder
         $this->declareClasses(
             '\Propel\Runtime\Propel',
             '\Propel\Runtime\ActiveQuery\ModelCriteria',
+            '\Propel\Runtime\ActiveQuery\TypedModelCriteria',
             '\Propel\Runtime\ActiveQuery\Criteria',
             '\Propel\Runtime\ActiveQuery\FilerExpression\FilterFactory',
             '\Propel\Runtime\ActiveQuery\ModelJoin',
@@ -440,7 +441,7 @@ class QueryBuilder extends AbstractOMBuilder
      * @param string \$modelAlias The alias of a model in the query
      * @param Criteria \$criteria Optional Criteria to build the query from
      *
-     * @return " . $classname . "
+     * @return " . $classname . "<null>
      */";
     }
 
@@ -1602,11 +1603,11 @@ class QueryBuilder extends AbstractOMBuilder
      *                                   to be used as main alias in the secondary query
      * @param string \$joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $queryClass A secondary query class using the current class as primary query
+     * @return $queryClass<static> A secondary query class using the current class as primary query
      */
     public function use" . $relationName . 'Query($relationAlias = null, $joinType = ' . $joinType . ")
     {
-        /** @var $queryClass \$query */
+        /** @var $queryClass<static> \$query */
         \$query = \$this->join" . $relationName . "(\$relationAlias, \$joinType)
             ->useQuery(\$relationAlias ?: '$relationName', '$queryClass');
 

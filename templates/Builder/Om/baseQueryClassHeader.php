@@ -59,10 +59,6 @@
  * @method     <?= $queryClass ?> innerJoinWith<?= $relationName ?>() Adds a INNER JOIN clause and with to the query using the <?= $relationName ?> relation
  *
 <?php endforeach; ?>
-<?php if($relatedTableQueryClassNames): ?>
- * @method     <?= implode('|', $relatedTableQueryClassNames) ?> endUse() Finalizes a secondary criteria and merges it with its primary Criteria
- *
-<?php endif; ?>
  * @method     <?= $modelClass ?>|null findOne(?ConnectionInterface $con = null) Return the first <?= $modelClass ?> matching the query
  * @method     <?= $modelClass ?> findOneOrCreate(?ConnectionInterface $con = null) Return the first <?= $modelClass ?> matching the query, or a new <?= $modelClass ?> object populated from the query conditions when no match is found
  *
@@ -88,6 +84,9 @@
  *
  * @method     <?= $modelClass ?>[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<<?= $modelClass ?>> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
+ *
+ * @template ParentQuery of ModelCriteria|null = null
+ * @extends <?= $parentClass ?><ParentQuery>
  */
 abstract class <?= $unqualifiedClassName ?> extends <?= $parentClass ?> 
 {
