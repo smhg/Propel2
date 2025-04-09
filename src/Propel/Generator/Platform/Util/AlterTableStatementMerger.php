@@ -106,7 +106,7 @@ class AlterTableStatementMerger
     }
 
     /**
-     * @param array $statements
+     * @param array<string> $statements
      *
      * @return string
      */

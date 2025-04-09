@@ -49,7 +49,7 @@ abstract class AbstractFormatter
     protected $with = [];
 
     /**
-     * @var array
+     * @var array<string, string>
      */
     protected $asColumns = [];
 
@@ -191,7 +191,7 @@ abstract class AbstractFormatter
     }
 
     /**
-     * @param array $asColumns
+     * @param array<string, string> $asColumns
      *
      * @return void
      */
@@ -201,7 +201,7 @@ abstract class AbstractFormatter
     }
 
     /**
-     * @return array
+     * @return array<string, string>
      */
     public function getAsColumns(): array
     {
