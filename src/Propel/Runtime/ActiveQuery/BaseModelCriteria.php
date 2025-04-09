@@ -25,6 +25,8 @@ use Traversable;
 class BaseModelCriteria extends Criteria implements IteratorAggregate
 {
     /**
+     * @psalm-var class-string|null
+     *
      * @var string|null
      */
     protected $modelName;
@@ -51,7 +53,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
     protected $tableMap;
 
     /**
-     * @var \Propel\Runtime\Formatter\AbstractFormatter|null
+     * @var \Propel\Runtime\Formatter\AbstractFormatter<array|\Propel\Runtime\ActiveRecord\ActiveRecordInterface, \Propel\Runtime\Collection\Collection<array|\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>|null
      */
     protected $formatter;
 
@@ -61,7 +63,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
     protected $with = [];
 
     /**
-     * @phpstan-var class-string<\Propel\Runtime\Formatter\AbstractFormatter>
+     * @phpstan-var class-string
      *
      * @var string
      */
@@ -124,7 +126,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
      * $c->setFormatter(ModelCriteria::FORMAT_ARRAY);
      * </code>
      *
-     * @param \Propel\Runtime\Formatter\AbstractFormatter|string $formatter a formatter class name, or a formatter instance
+     * @param \Propel\Runtime\Formatter\AbstractFormatter<array|\Propel\Runtime\ActiveRecord\ActiveRecordInterface, \Propel\Runtime\Collection\Collection<array|\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>|string $formatter a formatter class name, or a formatter instance
      *
      * @throws \Propel\Runtime\Exception\InvalidArgumentException
      *
@@ -149,11 +151,12 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
      * Gets the formatter to use for the find() output
      * Defaults to an instance of ModelCriteria::$defaultFormatterClass, i.e. PropelObjectsFormatter
      *
-     * @return \Propel\Runtime\Formatter\AbstractFormatter
+     * @return \Propel\Runtime\Formatter\AbstractFormatter<array|\Propel\Runtime\ActiveRecord\ActiveRecordInterface, \Propel\Runtime\Collection\Collection<array|\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>
      */
     public function getFormatter(): AbstractFormatter
     {
         if ($this->formatter === null) {
+            /** @var class-string<\Propel\Runtime\Formatter\AbstractFormatter<array|\Propel\Runtime\ActiveRecord\ActiveRecordInterface, \Propel\Runtime\Collection\Collection<array|\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>> $formatterClass */
             $formatterClass = $this->defaultFormatterClass;
             $this->formatter = new $formatterClass();
         }
@@ -163,6 +166,8 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
 
     /**
      * Returns the name of the class for this model criteria
+     *
+     * @psalm-return class-string|null
      *
      * @return string|null
      */

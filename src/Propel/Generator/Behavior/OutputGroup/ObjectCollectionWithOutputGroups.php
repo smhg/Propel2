@@ -11,6 +11,10 @@ namespace Propel\Generator\Behavior\OutputGroup;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Map\TableMap;
 
+/**
+ * @template RowFormat of \Propel\Runtime\ActiveRecord\ActiveRecordInterface
+ * @extends \Propel\Runtime\Collection\ObjectCollection<RowFormat>
+ */
 class ObjectCollectionWithOutputGroups extends ObjectCollection
 {
     /**

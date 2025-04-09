@@ -110,6 +110,8 @@ class TableMap
     /**
      * The ClassName for this table
      *
+     * @psalm-var class-string<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>
+     *
      * @var string
      */
     protected $classname;
@@ -317,6 +319,8 @@ class TableMap
      * Set the ClassName of the Table. Could be useful for calling
      * tableMap and Object methods dynamically.
      *
+     * @psalm-param class-string<\Propel\Runtime\ActiveRecord\ActiveRecordInterface> $classname
+     *
      * @param string $classname The ClassName
      *
      * @return void
@@ -328,6 +332,8 @@ class TableMap
 
     /**
      * Get the ClassName of the Propel Class belonging to this table.
+     *
+     * @psalm-return class-string<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>
      *
      * @return string|null
      */
@@ -357,7 +363,7 @@ class TableMap
     /**
      * Get the Collection ClassName to this table.
      *
-     * @return string
+     * @return class-string<\Propel\Runtime\Collection\Collection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>
      */
     public function getCollectionClassName(): string
     {

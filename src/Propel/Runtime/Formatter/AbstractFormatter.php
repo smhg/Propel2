@@ -8,6 +8,7 @@
 
 namespace Propel\Runtime\Formatter;
 
+use LogicException;
 use Propel\Runtime\ActiveQuery\BaseModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\DataFetcher\DataFetcherInterface;
@@ -19,6 +20,9 @@ use Propel\Runtime\Propel;
  * Abstract class for query formatter
  *
  * @author Francois Zaninotto
+ *
+ * @template RowFormat
+ * @template ListType of \Traversable
  */
 abstract class AbstractFormatter
 {
@@ -28,6 +32,8 @@ abstract class AbstractFormatter
     protected $dbName;
 
     /**
+     * @psalm-var class-string<RowFormat>|null
+     *
      * @var string|null
      */
     protected $class;
@@ -102,12 +108,19 @@ abstract class AbstractFormatter
      * @param \Propel\Runtime\ActiveQuery\BaseModelCriteria $criteria
      * @param \Propel\Runtime\DataFetcher\DataFetcherInterface|null $dataFetcher
      *
+     * @throws \LogicException
+     *
      * @return $this The current formatter object
      */
     public function init(BaseModelCriteria $criteria, ?DataFetcherInterface $dataFetcher = null)
     {
         $this->dbName = $criteria->getDbName();
-        $this->setClass((string)$criteria->getModelName());
+        /** @var class-string<RowFormat> $modelClassName */
+        $modelClassName = $criteria->getModelName();
+        if (!$modelClassName) {
+            throw new LogicException('Cannot initialize formatter on a criteria without model class name (`modelName`)');
+        }
+        $this->setClass($modelClassName);
         $this->setWith($criteria->getWith());
         $this->asColumns = $criteria->getAsColumns();
         $this->hasLimit = $criteria->getLimit() != -1;
@@ -139,6 +152,8 @@ abstract class AbstractFormatter
     }
 
     /**
+     * @psalm-param class-string<RowFormat> $class
+     *
      * @param string $class
      *
      * @return void
@@ -214,25 +229,25 @@ abstract class AbstractFormatter
     /**
      * Returns a Collection object or a simple array.
      *
-     * @return \Propel\Runtime\Collection\Collection|array
+     * @return ListType
      */
     protected function getCollection()
     {
-        $collection = [];
-
         $class = $this->getCollectionClassName();
-        if ($class) {
-            /** @var \Propel\Runtime\Collection\Collection $collection */
+        if (!$class) {
+            $collection = [];
+        } else {
             $collection = new $class();
             $collection->setModel((string)$this->class);
             $collection->setFormatter($this);
         }
 
+        /** @var ListType $collection */
         return $collection;
     }
 
     /**
-     * @psalm-return class-string<\Propel\Runtime\Collection\Collection>|null
+     * @psalm-return class-string<\Propel\Runtime\Collection\Collection<RowFormat>|null
      *
      * @return string|null
      */
@@ -246,7 +261,7 @@ abstract class AbstractFormatter
      *
      * @param \Propel\Runtime\ActiveRecord\ActiveRecordInterface|null $record the object to format
      *
-     * @return mixed The original record
+     * @return mixed|null The original record
      */
     public function formatRecord(?ActiveRecordInterface $record = null)
     {
@@ -256,14 +271,14 @@ abstract class AbstractFormatter
     /**
      * @param \Propel\Runtime\DataFetcher\DataFetcherInterface|null $dataFetcher
      *
-     * @return mixed
+     * @return ListType
      */
     abstract public function format(?DataFetcherInterface $dataFetcher = null);
 
     /**
      * @param \Propel\Runtime\DataFetcher\DataFetcherInterface|null $dataFetcher
      *
-     * @return mixed
+     * @return RowFormat
      */
     abstract public function formatOne(?DataFetcherInterface $dataFetcher = null);
 

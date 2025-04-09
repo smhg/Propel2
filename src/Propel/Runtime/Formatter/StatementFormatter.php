@@ -19,6 +19,8 @@ use Propel\Runtime\Exception\PropelException;
  * @author Francois Zaninotto
  *
  * @deprecated Use Query::fetch() to get a data fetcher
+ *
+ * @extends \Propel\Runtime\Formatter\AbstractFormatter<\Propel\Runtime\DataFetcher\DataFetcherInterface, \Propel\Runtime\DataFetcher\DataFetcherInterface>
  */
 class StatementFormatter extends AbstractFormatter
 {

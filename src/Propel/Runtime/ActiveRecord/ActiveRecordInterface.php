@@ -23,4 +23,19 @@ interface ActiveRecordInterface
      * @return bool
      */
     public function isPrimaryKeyNull(): bool;
+
+    /**
+     * @return mixed
+     */
+    public function getPrimaryKey();
+
+    /**
+     * Set the value of a virtual column in this object
+     *
+     * @param string $name The virtual column name
+     * @param mixed $value The value to give to the virtual column
+     *
+     * @return $this The current object, for fluid interface
+     */
+    public function setVirtualColumn(string $name, $value);
 }

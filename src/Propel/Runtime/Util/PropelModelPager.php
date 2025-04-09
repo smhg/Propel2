@@ -24,6 +24,8 @@ use Traversable;
  * @author François Zaninotto
  *
  * @implements \IteratorAggregate<int|string, mixed>
+ *
+ * @template RowFormat
  */
 class PropelModelPager implements IteratorAggregate, Countable
 {
@@ -63,7 +65,7 @@ class PropelModelPager implements IteratorAggregate, Countable
     protected $maxRecordLimit;
 
     /**
-     * @var \Propel\Runtime\Collection\Collection|mixed|array
+     * @var \Propel\Runtime\Collection\Collection<RowFormat>|null
      */
     protected $results;
 
@@ -153,7 +155,7 @@ class PropelModelPager implements IteratorAggregate, Countable
     /**
      * Get the collection of results in the page
      *
-     * @return \Propel\Runtime\Collection\Collection A collection of results
+     * @return \Propel\Runtime\Collection\Collection<RowFormat> A collection of results
      */
     public function getResults(): Collection
     {
@@ -163,14 +165,13 @@ class PropelModelPager implements IteratorAggregate, Countable
                 $newQueryKey = sprintf('%s offset %s limit %s', $queryKey, $this->getQuery()->getOffset(), $this->getQuery()->getLimit());
                 $this->getQuery()->setQueryKey($newQueryKey);
             }
+            /** @var \Propel\Runtime\Collection\Collection<RowFormat>|array<RowFormat> $results */
+            $results = $this->getQuery()->find($this->con);
 
-            $this->results = $this->getQuery()
-                ->find($this->con);
+            $this->results = is_array($results) ? new Collection($results) : $results;
         }
 
-        return is_array($this->results)
-            ? new Collection($this->results)
-            : $this->results;
+        return $this->results;
     }
 
     /**

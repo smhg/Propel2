@@ -13,12 +13,13 @@ use ArrayIterator;
 /**
  * Iterator class for iterating over Collection data
  *
+ * @template RowFormat
  * @extends \ArrayIterator<(int|string), mixed>
  */
 class CollectionIterator extends ArrayIterator implements IteratorInterface
 {
     /**
-     * @var \Propel\Runtime\Collection\Collection
+     * @var \Propel\Runtime\Collection\Collection<RowFormat>
      */
     protected Collection $collection;
 
@@ -30,7 +31,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
     /**
      * Constructor
      *
-     * @param \Propel\Runtime\Collection\Collection $collection
+     * @param \Propel\Runtime\Collection\Collection<RowFormat> $collection
      */
     public function __construct(Collection $collection)
     {
@@ -43,7 +44,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
     /**
      * Returns the collection instance
      *
-     * @return \Propel\Runtime\Collection\Collection
+     * @return \Propel\Runtime\Collection\Collection<RowFormat>
      */
     public function getCollection(): Collection
     {
@@ -81,7 +82,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @psalm-suppress ReservedWord
      *
-     * @return mixed
+     * @return RowFormat|null
      */
     #[\ReturnTypeWillChange]
     public function getFirst()
@@ -110,7 +111,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @psalm-suppress ReservedWord
      *
-     * @return mixed
+     * @return RowFormat|null
      */
     #[\ReturnTypeWillChange]
     public function getPrevious()
@@ -129,7 +130,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @psalm-suppress ReservedWord
      *
-     * @return mixed
+     * @return RowFormat|null
      */
     #[\ReturnTypeWillChange]
     public function getCurrent()
@@ -143,7 +144,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @psalm-suppress ReservedWord
      *
-     * @return mixed
+     * @return RowFormat|null
      */
     #[\ReturnTypeWillChange]
     public function getNext()
@@ -159,7 +160,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @psalm-suppress ReservedWord
      *
-     * @return mixed
+     * @return RowFormat|null
      */
     #[\ReturnTypeWillChange]
     public function getLast()
@@ -210,7 +211,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
 
     /**
      * @param string $index
-     * @param string $value
+     * @param RowFormat $value
      *
      * @return void
      */
@@ -234,7 +235,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
     }
 
     /**
-     * @param mixed $value
+     * @param RowFormat $value
      *
      * @return void
      */

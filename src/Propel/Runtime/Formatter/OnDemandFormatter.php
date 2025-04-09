@@ -21,6 +21,9 @@ use ReflectionClass;
  * This formatter consumes less memory than the ObjectFormatter, but doesn't use Instance Pool
  *
  * @author Francois Zaninotto
+ *
+ * @template RowFormat of \Propel\Runtime\ActiveRecord\ActiveRecordInterface
+ * @extends \Propel\Runtime\Formatter\ObjectFormatter<RowFormat, \Propel\Runtime\Collection\OnDemandCollection<RowFormat>>
  */
 class OnDemandFormatter extends ObjectFormatter
 {
@@ -49,7 +52,7 @@ class OnDemandFormatter extends ObjectFormatter
      *
      * @throws \Propel\Runtime\Exception\LogicException
      *
-     * @return \Propel\Runtime\Collection\OnDemandCollection
+     * @return \Propel\Runtime\Collection\OnDemandCollection<RowFormat>
      */
     public function format(?DataFetcherInterface $dataFetcher = null): OnDemandCollection
     {
@@ -73,26 +76,24 @@ class OnDemandFormatter extends ObjectFormatter
     }
 
     /**
-     * @psalm-return class-string<\Propel\Runtime\Collection\OnDemandCollection>
-     *
-     * @return string
+     * @return class-string<\Propel\Runtime\Collection\Collection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>
      */
     public function getCollectionClassName(): string
     {
-        return '\Propel\Runtime\Collection\OnDemandCollection';
+        return OnDemandCollection::class;
     }
 
     /**
-     * @return \Propel\Runtime\Collection\OnDemandCollection
+     * @return \Propel\Runtime\Collection\OnDemandCollection<RowFormat>
      */
     public function getCollection(): OnDemandCollection
     {
         $class = $this->getCollectionClassName();
 
-        /** @var \Propel\Runtime\Collection\OnDemandCollection $collection */
         $collection = new $class();
         $collection->setModel($this->class);
 
+        /** @var \Propel\Runtime\Collection\OnDemandCollection<RowFormat> $collection */
         return $collection;
     }
 
@@ -103,7 +104,7 @@ class OnDemandFormatter extends ObjectFormatter
      *
      * @param array $row associative array with data
      *
-     * @return \Propel\Runtime\ActiveRecord\ActiveRecordInterface
+     * @return RowFormat
      */
     public function getAllObjectsFromRow(array $row): ActiveRecordInterface
     {
@@ -114,9 +115,9 @@ class OnDemandFormatter extends ObjectFormatter
         /** @var \Propel\Runtime\Map\TableMap $tableMap */
         $tableMap = $this->tableMap;
         $class = $this->isSingleTableInheritance ? $tableMap::getOMClass($row, $col, false) : $this->class;
+        /** @var RowFormat $obj */
         $obj = $this->getSingleObjectFromRow($row, $class, $col);
 
-        //TODO: is this var even useable?
         /** @var array<string, object> $hydrationChain */
         $hydrationChain = [];
 
