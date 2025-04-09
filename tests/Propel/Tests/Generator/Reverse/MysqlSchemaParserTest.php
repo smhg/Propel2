@@ -134,7 +134,7 @@ EOT;
         
         $parserClass = $this->getSchemaParserClass();
         $parser = new $parserClass($this->con);
-        $this->setProperty($parser, 'addVendorInfo', true);
+        $this->setObjectPropertyValue($parser, 'addVendorInfo', true);
         /** @var \Propel\Generator\Model\Column */
         $column = $this->callMethod($parser, 'getColumnFromRow', $args);
         $this->assertNotEmpty($column->getVendorInformation());

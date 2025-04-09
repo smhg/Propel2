@@ -33,7 +33,7 @@ class GeneratedQueryTest extends BookstoreTestBase
 
         \Propel\Tests\Bookstore\Map\CountryTableMap::clearInstancePool();
         \Propel\Tests\Bookstore\CountryQuery::create()->findPk('cd', $this->con);
-        $pool = $this->getProperty(\Propel\Tests\Bookstore\Map\CountryTableMap::class, 'instances')->getValue();
+        $pool = $this->getObjectPropertyValue(\Propel\Tests\Bookstore\Map\CountryTableMap::class, 'instances');
         
         $this->assertEqualsCanonicalizing(['cd', 'ht', 'lb'], array_keys($pool), 'findPk() should load full table into instance pool.');
     }
