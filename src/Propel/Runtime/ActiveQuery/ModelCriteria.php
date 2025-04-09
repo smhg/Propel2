@@ -20,6 +20,8 @@ use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnToQueryFilter;
 use Propel\Runtime\ActiveQuery\FilterExpression\ExistsFilter;
 use Propel\Runtime\ActiveQuery\ModelCriteria as ActiveQueryModelCriteria;
+use Propel\Runtime\Collection\ArrayCollection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\DataFetcher\DataFetcherInterface;
 use Propel\Runtime\Exception\ClassNotFoundException;
@@ -1284,6 +1286,34 @@ class ModelCriteria extends BaseModelCriteria
         $dataFetcher = $criteria->fetch($con);
 
         return $criteria->getFormatter()->init($criteria)->format($dataFetcher);
+    }
+
+    /**
+     * Same as find(), but returns a typed ObjectCollection.
+     *
+     * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
+     *
+     * @return \Propel\Runtime\Collection\ObjectCollection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>
+     */
+    public function findObjects(?ConnectionInterface $con = null): ObjectCollection
+    {
+        $this->setFormatter(static::FORMAT_OBJECT);
+
+        return $this->find($con);
+    }
+
+    /**
+     * Same as find(), but returns a (typed) ArrayCollection.
+     *
+     * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
+     *
+     * @return \Propel\Runtime\Collection\ArrayCollection
+     */
+    public function findTuples(?ConnectionInterface $con = null): ArrayCollection
+    {
+        $this->setFormatter(static::FORMAT_ARRAY);
+
+        return $this->find($con);
     }
 
     /**

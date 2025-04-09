@@ -79,6 +79,7 @@
  *
  * @method     <?= $modelClass ?>[]|Collection find(?ConnectionInterface $con = null) Return <?= $modelClass ?> objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<<?= $modelClass ?>> find(?ConnectionInterface $con = null) Return <?= $modelClass ?> objects based on current ModelCriteria
+ * @method     \Propel\Runtime\Collection\ObjectCollection<<?= $modelClass ?>> findObjects(?ConnectionInterface $con = null) Get <?= $modelClass ?> objects in ObjectCollection
  *
 <?php foreach($columns as $column):?>
  * @method     <?= $modelClass ?>[]|Collection findBy<?= $column->getPhpName() ?>(<?= $column->getPhpType() ?>|array<<?= $column->getPhpType() ?>> $<?= $column->getName() ?>) Return <?= $modelClass ?> objects filtered by the <?= $column->getName() ?> column
