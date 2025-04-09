@@ -9,6 +9,8 @@
 namespace Propel\Tests\Runtime\ActiveQuery;
 
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\Collection\ArrayCollection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Exception\InvalidArgumentException;
 use Propel\Runtime\Formatter\AbstractFormatter;
 use Propel\Runtime\Formatter\ArrayFormatter;
@@ -197,4 +199,24 @@ class ModelCriteriaFormatterTest extends BookstoreTestBase
         $formatter2->test = true;
         $this->assertFalse($formatter1->test);
     }
+
+    /**
+     * @return void
+     */
+    public function testFindObjects()
+    {
+        $collection = BookQuery::create()->findObjects();
+        $this->assertInstanceOf(ObjectCollection::class, $collection);
+    }
+
+    /**
+     * @return void
+     */
+    public function testFindTuples()
+    {
+        $collection = BookQuery::create()->findTuples();
+        $this->assertInstanceOf(ArrayCollection::class, $collection);
+    }
+
+
 }
