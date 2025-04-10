@@ -1,18 +1,20 @@
 {
-    "name": "propel/propel",
+    "name": "perpelorm/perpel",
     "type": "library",
-    "description": "Propel2 is an open-source Object-Relational Mapping (ORM) for PHP.",
+    "description": "Perpel is an improved and still maintained fork of Propel2, an open-source Object-Relational Mapping (ORM) for PHP.",
     "keywords": [
         "ORM",
         "persistence",
-        "Active Record"
+        "Active Record",
+        "Propel",
+        "Propel2"
     ],
     "homepage": "http://www.propelorm.org/",
     "license": "MIT",
     "authors": [
         {
-            "name": "William Durand",
-            "email": "william.durand1@gmail.com"
+            "name": "Moritz Ringler",
+            "email": "m@mringler.net"
         }
     ],
     "require": {
@@ -39,6 +41,9 @@
     },
     "suggest": {
         "monolog/monolog": "The recommended logging library to use with Propel."
+    },
+    "replace": {
+        "propel/propel": "dev-main as 2.0.x-dev"
     },
     "autoload": {
         "psr-4": {
