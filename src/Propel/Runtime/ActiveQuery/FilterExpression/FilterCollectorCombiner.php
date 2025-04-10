@@ -209,7 +209,7 @@ class FilterCollectorCombiner extends FilterCollector
 
         return $this->combiner
             ? $collector instanceof static && $collector->combiner && $this->combiner->equals($collector->combiner)
-            : !$collector instanceof static || !$this->combiner;
+            : !($collector instanceof static && $collector->combiner);
     }
 
     /**

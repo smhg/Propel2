@@ -142,9 +142,9 @@ class CriteriaCombineFiltersTest extends BaseTestCase
                     ->endCombineFilters()
                     ->combineFilters()
                         ->addFilter('D', 4)
-                        ->addAnd('E', 5)
+                        ->addOr('E', 5)
                     ->endCombineFilters(),
-                'A=1 AND (B=2 OR C=3) AND (D=4 AND E=5)'
+                'A=1 AND (B=2 OR C=3) AND (D=4 OR E=5)'
             ], [
                 'combine twice with OR',
                 (new Criteria())
