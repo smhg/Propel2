@@ -18,8 +18,6 @@ class FilterCollector
     protected $columnFilters = [];
 
     /**
-     * Ensures deep cloning of attached objects
-     *
      * @return array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
      */
     public function getColumnFilters(): array
@@ -34,31 +32,30 @@ class FilterCollector
      */
     public function addFilter(ColumnFilterInterface $columnFilter)
     {
-        $this->columnFilters[] = $columnFilter;
+        $this->addFilterWithConjunction(ClauseList::AND_OPERATOR_LITERAL, $columnFilter, false);
     }
 
     /**
      * @param string $andOr
      * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface $filter
-     * @param bool $preferColumnCondition
+     * @param bool $preferColumnCondition Group AND-filter by column.
      *
      * @return void
      */
     public function addFilterWithConjunction(string $andOr, ColumnFilterInterface $filter, bool $preferColumnCondition = true): void
     {
+        $parentFilter = null;
         if ($andOr === Criteria::LOGICAL_OR) {
             $parentFilter = $this->getLastFilter();
-        } else {
+        } elseif ($preferColumnCondition) {
             $key = $filter->getLocalColumnName(false);
-            $parentFilter = $preferColumnCondition ? $this->findFilterByColumn($key) : null;
+            $parentFilter = $this->findFilterByColumn($key);
         }
 
         if (!$parentFilter) {
-            $this->addFilter($filter);
-        } elseif ($andOr === Criteria::LOGICAL_OR) {
-            $parentFilter->addOr($filter);
+            $this->columnFilters[] = $filter;
         } else {
-            $parentFilter->addAnd($filter);
+            $parentFilter->addFilter($filter, $andOr);
         }
     }
 
@@ -195,7 +192,7 @@ class FilterCollector
      */
     public function __toString(): string
     {
-        return implode(', ', $this->columnFilters) . "\n";
+        return implode(' AND ', $this->columnFilters);
     }
 
     /**

@@ -6,9 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Runtime\ActiveQuery\Criterion;
-
-use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
+namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
 /**
  * List of conditions and combine operators (and/or)

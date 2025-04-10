@@ -9,7 +9,6 @@
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\ActiveQuery\Criterion\ClauseList;
 use Propel\Runtime\Adapter\AdapterInterface;
 
 /**
@@ -116,12 +115,13 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
     final public function buildStatement(array &$paramCollector): string
     {
         $this->resolveUnresolved();
+        $ownClause = $this->buildFilterClause($paramCollector);
         if (!$this->clauses) {
-            return $this->buildFilterClause($paramCollector);
+            return $ownClause;
         }
 
-        $statement = str_repeat('(', count($this->clauses));
-        $statement .= $this->buildFilterClause($paramCollector);
+        $openingParens = str_repeat('(', count($this->clauses));
+        $statement = $openingParens . $ownClause;
         foreach ($this->clauses as $key => $clause) {
             $conjunction = $this->conjunctions[$key];
             $filterClause = $clause->buildStatement($paramCollector);
@@ -176,7 +176,13 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
     {
         $params = [];
 
-        return $this->buildStatement($params);
+        $statement = $this->buildStatement($params);
+        $i = 0;
+        $replacer = function (array $match) use ($params, &$i) {
+            return $params[$i++]['value'];
+        };
+
+        return preg_replace_callback('/:p\d+/', $replacer, $statement);
     }
 
     /**

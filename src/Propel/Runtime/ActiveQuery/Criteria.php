@@ -23,6 +23,7 @@ use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithColumns;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterClauseLiteralWithPdoTypes;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterCollector;
+use Propel\Runtime\ActiveQuery\FilterExpression\FilterCollectorCombiner;
 use Propel\Runtime\ActiveQuery\FilterExpression\FilterFactory;
 use Propel\Runtime\ActiveQuery\QueryExecutor\CountQueryExecutor;
 use Propel\Runtime\ActiveQuery\QueryExecutor\DeleteAllQueryExecutor;
@@ -281,7 +282,7 @@ class Criteria
     /**
      * Storage of conditions data. Collection of Criterion objects.
      *
-     * @var \Propel\Runtime\ActiveQuery\FilterExpression\FilterCollector
+     * @var \Propel\Runtime\ActiveQuery\FilterExpression\FilterCollectorCombiner
      */
     protected $filterCollector;
 
@@ -414,7 +415,7 @@ class Criteria
         $this->setDbName($dbName);
         $this->originalDbName = $dbName;
         $this->updateValues = new UpdateColumnCollector();
-        $this->filterCollector = new FilterCollector();
+        $this->filterCollector = new FilterCollectorCombiner();
     }
 
     /**
@@ -1909,6 +1910,37 @@ class Criteria
     }
 
     /**
+     * Put parentheses around the next filters.
+     *
+     * Call {@see static::endCombineFilters()} to close parentheses.
+     *
+     * @param string|null $andOr Operator used between previous filters and
+     *  combined filters. Defaults to AND, respects {@see static::_or()}.
+     *
+     * @return static
+     */
+    public function combineFilters(?string $andOr = null)
+    {
+        $this->filterCollector->combineFilters($andOr ?? $this->getAndResetCombineOperator());
+
+        return $this;
+    }
+
+    /**
+     * Close parentheses.
+     *
+     * Call {@see static::combineFilters()} to open parentheses.
+     *
+     * @return static
+     */
+    public function endCombineFilters()
+    {
+        $this->filterCollector->endCombineFilters();
+
+        return $this;
+    }
+
+    /**
      * Overrides Criteria::add() to use the default combine operator
      *
      * @param \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|\Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression|string $columnOrClause The column to run the comparison on (e.g. BookTableMap::ID), or Criterion object
@@ -1922,10 +1954,20 @@ class Criteria
      */
     public function addUsingOperator($columnOrClause, $value = null, ?string $operator = null, bool $preferColumnCondition = true)
     {
-        $andOr = $this->defaultCombineOperator;
-        $this->defaultCombineOperator = self::LOGICAL_AND; // reset operator
+        $andOr = $this->getAndResetCombineOperator();
 
         return $this->addFilterWithConjunction($andOr, $columnOrClause, $value, $operator, $preferColumnCondition);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getAndResetCombineOperator(): string
+    {
+        $op = $this->defaultCombineOperator;
+        $this->defaultCombineOperator = self::LOGICAL_AND;
+
+        return $op;
     }
 
     /**

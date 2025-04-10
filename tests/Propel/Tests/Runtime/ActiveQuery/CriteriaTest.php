@@ -1207,13 +1207,13 @@ class CriteriaTest extends BookstoreTestBase
      */
     public function testClear()
     {
-        $c = new CriteriaForClearTest();
+        $c = new Criteria();
         $c->clear();
 
         $this->assertTrue(is_array($c->getNamedCriterions()), 'namedCriterions is an array');
         $this->assertSame(0, count($c->getNamedCriterions()), 'namedCriterions is empty by default');
 
-        $this->assertFalse($c->getIgnoreCase(), 'ignoreCase is false by default');
+        $this->assertFalse($this->getObjectPropertyValue($c, 'ignoreCase') , 'ignoreCase is false by default');
 
         $this->assertFalse($c->isSingleRecord(), 'singleRecord is false by default');
 
@@ -1426,14 +1426,5 @@ class CriteriaTest extends BookstoreTestBase
         }
 
         $this->assertEquals($sql, $result);
-    }
-}
-
-class CriteriaForClearTest extends Criteria
-{
-
-    public function getIgnoreCase()
-    {
-        return $this->ignoreCase;
     }
 }

@@ -158,7 +158,7 @@ class TestCase extends PHPUnitTestCase
      *
      * @return ReflectionProperty
      */
-    public function getProperty($obj, string $name): ReflectionProperty
+    public function getReflectionProperty($obj, string $name): ReflectionProperty
     {
         $reflection = new ReflectionClass($obj);
         $property = $reflection->getProperty($name);
@@ -177,9 +177,11 @@ class TestCase extends PHPUnitTestCase
      *
      * @return mixed
      */
-    public function getValue($obj, string $name)
+    public function getObjectPropertyValue($obj, string $name)
     {
-        return $this->getProperty($obj, $name)->getValue();
+        $getValueParam = is_object($obj) ? $obj : null;
+
+        return $this->getReflectionProperty($obj, $name)->getValue($getValueParam);
     }
 
     /**
@@ -191,9 +193,9 @@ class TestCase extends PHPUnitTestCase
      *
      * @return void
      */
-    public function setProperty($obj, string $name, $value): void
+    public function setObjectPropertyValue($obj, string $name, $value): void
     {
-        $this->getProperty($obj, $name)->setValue($obj, $value);
+        $this->getReflectionProperty($obj, $name)->setValue($obj, $value);
     }
 
     /**
