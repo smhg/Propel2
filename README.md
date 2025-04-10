@@ -1,6 +1,6 @@
 # Perpel
 
-Perpel is a fork of the unmaintained [Propel2](https://github.com/propelorm/Propel2), an open-source Object-Relational Mapping (ORM) for PHP. It adds several improvements and fixes.
+Perpel is a fork of the unmaintained [Propel2](https://github.com/propelorm/Propel2), an open-source Object-Relational Mapping (ORM) for PHP. It adds several improvements and fixes, including proper versioning.
 
 [![Github actions Status](https://github.com/propelorm/Propel2/workflows/CI/badge.svg?branch=master)](https://github.com/propelorm/Propel2/actions?query=workflow%3ACI+branch%3Amaster)
 [![codecov](https://codecov.io/gh/propelorm/Propel2/branch/master/graph/badge.svg?token=L1thFB9nOG)](https://codecov.io/gh/propelorm/Propel2)
@@ -13,10 +13,33 @@ Perpel is a fork of the unmaintained [Propel2](https://github.com/propelorm/Prop
 
 ## Installation
 
+- Replace the `require` declaration for Propel with Perpl:
+```diff
+  "require": {
++    "perpelorm/perpel": ">=2.0",
+-    "propel/propel": "dev-main as 2.0.x-dev",
+  },
 ```
-composer require perpelorm/perpel
-composer remove propel/propel
+
+- Remove the `vcs` entry for Propel2 dev in composer.json:
+```diff
+  "repositories": [
+-    {
+-      "type": "vcs",
+-      "url": "git@github.com:propelorm/Propel2.git"
+-    }
+  ],
 ```
+
+- Update libraries:
+```bash
+$ composer update
+```
+- Rebuild models:
+```bash
+$ vendor/bin/propel --config-dir <path/to/config> model:build
+```
+- Open a file where you call `Query::find()` and replace it with `Query::findObjects()`. If everything worked, you get return type `ObjectCollection<YourModelName>`. Yay!
 
 ## Features
 
@@ -53,8 +76,9 @@ Some notable changes:
 
 ### Nested filters through operators
 
-Introduces `Criteria::combineFilters()`/`Criteria::endCombineFilters()` which build nested filter conditions like `A=1 AND (B=2 OR C=3) AND (D=4 OR E=5)`.
+Introduces `Criteria::combineFilters()`/`Criteria::endCombineFilters()` which build nested filter conditions:
 ```php
+// A=1 AND (B=2 OR C=3) AND (D=4 OR E=5)
 (new Criteria())
   ->addFilter('A', 1)
   ->combineFilters()
@@ -70,7 +94,7 @@ Previously, this required to register the individual parts under an arbitrary na
 
 ## Breaking Changes
 
-Perpel is fully backwards compatible with Propel2, with few exceptions. They mostly affect the low-level Criteria interface. Impact for regular users should be minimal.
+Perpel is fully backwards compatible with Propel2, with few exceptions. They mostly affect the low-level Criteria interface. Impact for regular users should be slim to none.
 
 ### Set update value and add filter use dedicated methods
 
@@ -95,7 +119,7 @@ $bookQuery = BookQuery::create()
 The `add()` method can still be used to set filter, but is deprecated in favor of `addFilter()`. Update values cannot be added using `add()`.
 
 ### UPDATE only affects one table per criteria
-*Affects manual use of Criteria::update() -  does not affect deletes through Propel*
+*Affects manual use of Criteria::update() -  does not affect updates through Propel*
 
 Propel allows to update multiple tables in the same query:
 
@@ -134,6 +158,14 @@ Obscure names, replaced functionality, unclear use-case - removing those methods
 The methods are still available, but only through magic `__call()`. They do not appear on the query object interface and thus are not suggested by autocomplete. Using them will trigger a deprecation warning. The method docs in `src/Propel/Runtime/ActiveQuery/DeprecatedCriteriaMethods.php` describe how to replace them.
 
 A full list of deprecated methods can be found in [#28](https://github.com/mringler/perpel/pull/28). The only notable mention is `Criteria::addCond()` and `Criteria::combine()`, which are replaced by `Criteria::combineFilters()` (see above).
+
+## Outlook
+
+Some things I would like to do when I find the time:
+- `Criteria::delete()` should not delete on several tables (similar as `Criteria::update()` above).
+- Delay resolving of column names until query is created.
+- Automatically build subclasses of ObjectCollection for each model class, which provide typed entries to `ObjectCollection::populateRelation()` for model relations (i.e. `AuthorQuery::create()->findObjects()->populateBooks()`).
+- Get prepared statement parameters without building filters for QueryCache behavior.
 
 ## Disclaimer
 
