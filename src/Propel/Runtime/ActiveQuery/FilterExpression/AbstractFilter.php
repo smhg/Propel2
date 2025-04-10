@@ -115,12 +115,13 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
     final public function buildStatement(array &$paramCollector): string
     {
         $this->resolveUnresolved();
+        $ownClause = $this->buildFilterClause($paramCollector);
         if (!$this->clauses) {
-            return $this->buildFilterClause($paramCollector);
+            return $ownClause;
         }
 
-        $statement = str_repeat('(', count($this->clauses));
-        $statement .= $this->buildFilterClause($paramCollector);
+        $openingParens = str_repeat('(', count($this->clauses));
+        $statement = $openingParens . $ownClause;
         foreach ($this->clauses as $key => $clause) {
             $conjunction = $this->conjunctions[$key];
             $filterClause = $clause->buildStatement($paramCollector);
@@ -177,7 +178,7 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
 
         $statement = $this->buildStatement($params);
         $i = 0;
-        $replacer = function(array $match) use ($params, &$i) {
+        $replacer = function (array $match) use ($params, &$i) {
             return $params[$i++]['value'];
         };
 
