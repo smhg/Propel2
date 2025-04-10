@@ -9,7 +9,6 @@
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\ActiveQuery\Criterion\ClauseList;
 use Propel\Runtime\Adapter\AdapterInterface;
 
 /**
@@ -176,7 +175,13 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
     {
         $params = [];
 
-        return $this->buildStatement($params);
+        $statement = $this->buildStatement($params);
+        $i = 0;
+        $replacer = function(array $match) use ($params, &$i) {
+            return $params[$i++]['value'];
+        };
+
+        return preg_replace_callback('/:p\d+/', $replacer, $statement);
     }
 
     /**

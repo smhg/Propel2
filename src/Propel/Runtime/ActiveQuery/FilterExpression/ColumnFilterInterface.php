@@ -8,7 +8,6 @@
 
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
-use Propel\Runtime\ActiveQuery\Criterion\ClauseList;
 use Propel\Runtime\Adapter\AdapterInterface;
 
 interface ColumnFilterInterface

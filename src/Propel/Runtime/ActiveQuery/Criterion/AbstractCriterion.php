@@ -10,6 +10,7 @@ namespace Propel\Runtime\ActiveQuery\Criterion;
 
 use Exception;
 use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\ActiveQuery\FilterExpression\ClauseList;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\Adapter\AdapterInterface;
 use Propel\Runtime\Map\ColumnMap;
