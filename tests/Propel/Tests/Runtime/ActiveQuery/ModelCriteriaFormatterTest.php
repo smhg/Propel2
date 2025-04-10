@@ -205,7 +205,7 @@ class ModelCriteriaFormatterTest extends BookstoreTestBase
      */
     public function testFindObjects()
     {
-        $collection = BookQuery::create()->findObjects();
+        $collection = BookQuery::create()->setFormatter(ModelCriteria::FORMAT_ARRAY)->findObjects();
         $this->assertInstanceOf(ObjectCollection::class, $collection);
     }
 
@@ -214,7 +214,7 @@ class ModelCriteriaFormatterTest extends BookstoreTestBase
      */
     public function testFindTuples()
     {
-        $collection = BookQuery::create()->findTuples();
+        $collection = BookQuery::create()->setFormatter(ModelCriteria::FORMAT_OBJECT)->findTuples();
         $this->assertInstanceOf(ArrayCollection::class, $collection);
     }
 
