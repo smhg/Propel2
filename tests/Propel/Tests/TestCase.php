@@ -207,5 +207,25 @@ class TestCase extends PHPUnitTestCase
         \Propel\Runtime\Propel::enableInstancePooling();
         
         parent::setUpBeforeClass();
+
+        //static::printFileNameOnStart();
+    }
+
+    /**
+     * Seems stupid, but incredible helpful on DB lock errors.
+     *
+     * @return void
+     */
+    public static function printFileNameOnStart(): void
+    {
+        $bt = debug_backtrace();
+        foreach($bt as $call) {
+            if (!isset($call['object'])) {
+                continue;
+            }
+            echo "\n doing " . $call['object']->getName() . "\n";
+            return;
+        }
+        var_dump($bt);
     }
 }
