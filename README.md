@@ -139,6 +139,21 @@ This requires table names in filters to match table names in values, which is no
 
 Now `update()` produces a single query and (in above example) subsequently a database error, when the columns cannot be found on the table. Usage has to be replaced with individual objects.
 
+
+### DELETE only affects one table per criteria
+*Affects manual use of Criteria::delete() or TableMap::doDelete()-  does not affect updates through Propel*
+
+Same as with `Criteria::update()` above, delete can only affect one table per object.
+```php
+// Causes exception now
+$c = new Criteria();
+$c->add(BookTableMap::COL_ID, $hp->getId());
+$c->add(AuthorTableMap::COL_ID, $hp->getAuthorId());
+$c->add(PublisherTableMap::COL_ID, $hp->getPublisherId());
+BookTableMap::doDelete($c);
+```
+Use model objects (`$hp->delete()`) or query (`BookQuery::create()->filterById($hp->getId())->delete()`) to delete, one for each table.
+
 ### Forcing table alias in UPDATE on Sqlite
 *Affects users that force table alias on a DBMS that does not allow table aliases in UPDATE*
 
@@ -162,7 +177,6 @@ A full list of deprecated methods can be found in [#28](https://github.com/mring
 ## Outlook
 
 Some things I would like to do when I find the time:
-- `Criteria::delete()` should not delete on several tables (similar as `Criteria::update()` above).
 - Delay resolving of column names until query is created.
 - Automatically build subclasses of ObjectCollection for each model class, which provide typed entries to `ObjectCollection::populateRelation()` for model relations (i.e. `AuthorQuery::create()->findObjects()->populateBooks()`).
 - Get prepared statement parameters without building filters for QueryCache behavior.

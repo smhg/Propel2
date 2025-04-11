@@ -82,13 +82,9 @@ class GeneratedQueryDoDeleteTest extends BookstoreEmptyTestBase
         // have to be in the criteria).
         $c->add(AuthorTableMap::COL_ID, $hp->getAuthorId());
         $c->add(PublisherTableMap::COL_ID, $hp->getPublisherId());
-        $c->setSingleRecord(true);
-        BookTableMap::doDelete($c);
 
-        // check to make sure the right # of records was removed
-        $this->assertCount(3, AuthorQuery::create()->find(), 'Expected 3 authors after deleting.');
-        $this->assertCount(3, PublisherQuery::create()->find(), 'Expected 3 publishers after deleting.');
-        $this->assertCount(3, BookQuery::create()->find(), 'Expected 3 books after deleting.');
+        $this->expectException(\Propel\Runtime\ActiveQuery\QueryExecutor\QueryExecutionException::class);
+        BookTableMap::doDelete($c);
     }
 
     /**

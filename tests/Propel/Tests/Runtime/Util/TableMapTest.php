@@ -350,9 +350,11 @@ class TableMapTest extends BookstoreTestBase
         $con = Propel::getServiceContainer()->getWriteConnection(BookTableMap::DATABASE_NAME);
         $count = $con->getQueryCount();
         $c = new Criteria(BookTableMap::DATABASE_NAME);
-        $c->add(BookTableMap::COL_TITLE, 'War And Peace');
-        $c->add(AuthorTableMap::COL_FIRST_NAME, 'Leo');
+        $c->addFilter(BookTableMap::COL_TITLE, 'War And Peace');
+        $c->addFilter(AuthorTableMap::COL_FIRST_NAME, 'Leo');
+        $this->expectException(\Propel\Runtime\ActiveQuery\QueryExecutor\QueryExecutionException::class);
         $c->doDelete($con);
+        /*
         $expectedSQL = $this->getSql("DELETE FROM author WHERE author.first_name='Leo'");
         $this->assertEquals($expectedSQL, $con->getLastExecutedQuery(), 'doDelete() issues two DELETE queries when passed conditions on two tables');
         $this->assertEquals($count + 2, $con->getQueryCount(), 'doDelete() issues two DELETE queries when passed conditions on two tables');
@@ -364,6 +366,7 @@ class TableMapTest extends BookstoreTestBase
         $expectedSQL = $this->getSql("DELETE FROM book WHERE book.title='War And Peace'");
         $this->assertEquals($expectedSQL, $con->getLastExecutedQuery(), 'doDelete() issues two DELETE queries when passed conditions on two tables');
         $this->assertEquals($count + 4, $con->getQueryCount(), 'doDelete() issues two DELETE queries when passed conditions on two tables');
+        */
     }
 
     /**
