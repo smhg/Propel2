@@ -13,7 +13,7 @@ Perpel is a fork of the unmaintained [Propel2](https://github.com/propelorm/Prop
 
 # Installation
 
-- Replace the `require` declaration for Propel with Perpl:
+- Replace the `require` declaration for Propel with Perpel:
 ```diff
   "require": {
 +    "perpelorm/perpel": ">=2.0",
@@ -64,6 +64,16 @@ $b = $q->getFirst();                                   // Book|null
 $a = $q->findTuples();                                 // ArrayCollection
 $r = $q->getFirst();                                   // array<string, mixed>|null
 ```
+
+Note that type propagation in `endUse()` requires child query classes to declare and pass on the generic parameter from their parent/base class:
+```php
+/*
+ * @template ParentQuery extends \Propel\Runtime\ActiveQuery\TypedModelCriteria|null = null
+ * @extends BaseBookQuery<ParentQuery>
+ */
+class BookQuery extends BaseBookQuery
+```
+This cannot be added automatically for existing classes. While IDEs seem to figure it out without the declaration, phpstan or psalm will (correctly) see the return type as `null` and report errors. Add the declaration in the child class to fix it.
 
 ## Code cleanup and improved performance
 
