@@ -11,7 +11,7 @@ Perpel is a fork of the unmaintained [Propel2](https://github.com/propelorm/Prop
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/propelorm/Propel)
 
 
-## Installation
+# Installation
 
 - Replace the `require` declaration for Propel with Perpl:
 ```diff
@@ -41,11 +41,11 @@ $ vendor/bin/propel --config-dir <path/to/config> model:build
 ```
 - Open a file where you call `Query::find()` and replace it with `Query::findObjects()`. If everything worked, you get return type `ObjectCollection<YourModelName>`. Yay!
 
-## Features
+# Features
 
 Motivation for Perpel was to make features available around code-style, typing, performance and usability.
 
-### Type-preserving queries
+## Type-preserving queries
 
 Improved types allow for code completion and statistic analysis.
 - preserves types between calls to `useXXXQuery()`/`endUse()`
@@ -65,7 +65,7 @@ $a = $q->findTuples();                                 // ArrayCollection
 $r = $q->getFirst();                                   // array<string, mixed>|null
 ```
 
-### Code cleanup and improved performance
+## Code cleanup and improved performance
 
 These changes mostly improve internal readability/soundness of core Propel code. They mostly allow for easier and safe maintenance, but occasionally lead to performance improvements, for example when repetitive operations on strings are replaced by proper data structures.
 
@@ -74,7 +74,7 @@ Some notable changes:
 - fixes some confusing names (Criteria vs Criterion)
 -  spreads out some "one size fits none" overloads, i.e. `Criteria::map` becomes `Criteria::columnFilters` and `Criteria::updateValues`
 
-### Nested filters through operators
+## Nested filters through operators
 
 Introduces `Criteria::combineFilters()`/`Criteria::endCombineFilters()` which build nested filter conditions:
 ```php
@@ -92,11 +92,15 @@ Introduces `Criteria::combineFilters()`/`Criteria::endCombineFilters()` which bu
 ```
 Previously, this required to register the individual parts under an arbitrary name using `Criteria::addCond()` and then combining them with `Criteria::combine()`, possibly under another arbitrary name for further processing.
 
-## Breaking Changes
+## Read multiple behaviors from same repository
+
+Propel restricts reading behaviors from repositories to one per repo. This allows to read multiple behaviors (see [#25](https://github.com/mringler/perpel/pull/25) for details).
+
+# Breaking Changes
 
 Perpel is fully backwards compatible with Propel2, with few exceptions. They mostly affect the low-level Criteria interface. Impact for regular users should be slim to none.
 
-### Set update value and add filter use dedicated methods
+## Set update value and add filter use dedicated methods
 
 *Affects manual use of Criteria::update() -  does not affect updates through Propel*
 
@@ -118,7 +122,7 @@ $bookQuery = BookQuery::create()
 ```
 The `add()` method can still be used to set filter, but is deprecated in favor of `addFilter()`. Update values cannot be added using `add()`.
 
-### UPDATE only affects one table per criteria
+## UPDATE only affects one table per criteria
 *Affects manual use of Criteria::update() -  does not affect updates through Propel*
 
 Propel allows to update multiple tables in the same query:
@@ -140,7 +144,7 @@ This requires table names in filters to match table names in values, which is no
 Now `update()` produces a single query and (in above example) subsequently a database error, when the columns cannot be found on the table. Usage has to be replaced with individual objects.
 
 
-### DELETE only affects one table per criteria
+## DELETE only affects one table per criteria
 *Affects manual use of Criteria::delete() or TableMap::doDelete()-  does not affect updates through Propel*
 
 Same as with `Criteria::update()` above, delete can only affect one table per object.
@@ -154,7 +158,7 @@ BookTableMap::doDelete($c);
 ```
 Use model objects (`$hp->delete()`) or query (`BookQuery::create()->filterById($hp->getId())->delete()`) to delete, one for each table.
 
-### Forcing table alias in UPDATE on Sqlite
+## Forcing table alias in UPDATE on Sqlite
 *Affects users that force table alias on a DBMS that does not allow table aliases in UPDATE*
 
 Even when forcing an alias in an update, Propel will not use it.
@@ -165,28 +169,30 @@ Now it does, breaking DBMSs that do not allow aliases in UPDATE (like Sqlite).
 
 This will be resolved at some point, but for now: if you don't need it, don't force it.
 
-### Deprecated low-level API methods
+## Deprecated low-level API methods
 *Affects usage of old API methods like `Criteria::get()`, `Criteria::put()`, etc.*
 
 Obscure names, replaced functionality, unclear use-case - removing those methods is part of de-cluttering the query object interface and code. Internally, they are not used anymore.
 
 The methods are still available, but only through magic `__call()`. They do not appear on the query object interface and thus are not suggested by autocomplete. Using them will trigger a deprecation warning. The method docs in `src/Propel/Runtime/ActiveQuery/DeprecatedCriteriaMethods.php` describe how to replace them.
 
-A full list of deprecated methods can be found in [#28](https://github.com/mringler/perpel/pull/28). The only notable mention is `Criteria::addCond()` and `Criteria::combine()`, which are replaced by `Criteria::combineFilters()` (see above).
+A full list of deprecated methods can be found in [#28](https://github.com/mringler/perpel/pull/28). Notable mentions are `Criteria::addCond()` and `Criteria::combine()`, which are replaced by `Criteria::combineFilters()` (see above), and `Criteria::addSelectQuery()`, which is replaced by the aptly-named `Criteria::addSubquery()`.
 
-## Outlook
+# Outlook
 
 Some things I would like to do when I find the time:
 - Delay resolving of column names until query is created.
 - Automatically build subclasses of ObjectCollection for each model class, which provide typed entries to `ObjectCollection::populateRelation()` for model relations (i.e. `AuthorQuery::create()->findObjects()->populateBooks()`).
 - Get prepared statement parameters without building filters for QueryCache behavior.
 
-## Disclaimer
+# Disclaimer
 
 Built with care, tested, but not yet proven over time. Provided as is. Test before deployment. Let me know how it goes!
 
 Feedback and PRs are welcome.
 
-## License
+Thanks to Propel2!
+
+# License
 
 MIT. See the `LICENSE` file for details.
