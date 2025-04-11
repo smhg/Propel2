@@ -1,7 +1,7 @@
 {
-    "name": "perpelorm/perpel",
+    "name": "perplorm/perpl",
     "type": "library",
-    "description": "Perpel is an improved and still maintained fork of Propel2, an open-source Object-Relational Mapping (ORM) for PHP.",
+    "description": "Perpl is an improved and still maintained fork of Propel2, an open-source Object-Relational Mapping (ORM) for PHP.",
     "keywords": [
         "ORM",
         "persistence",

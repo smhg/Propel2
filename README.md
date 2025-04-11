@@ -1,6 +1,6 @@
-# Perpel
+# Perpl ORM
 
-Perpel is a fork of the unmaintained [Propel2](https://github.com/propelorm/Propel2), an open-source Object-Relational Mapping (ORM) for PHP. It adds several improvements and fixes, including proper versioning.
+Perpl is a fork of the unmaintained [Propel2](https://github.com/propelorm/Propel2), an open-source Object-Relational Mapping (ORM) for PHP. It adds several improvements and fixes, including proper versioning.
 
 [![Github actions Status](https://github.com/propelorm/Propel2/workflows/CI/badge.svg?branch=master)](https://github.com/propelorm/Propel2/actions?query=workflow%3ACI+branch%3Amaster)
 [![codecov](https://codecov.io/gh/propelorm/Propel2/branch/master/graph/badge.svg?token=L1thFB9nOG)](https://codecov.io/gh/propelorm/Propel2)
@@ -13,10 +13,10 @@ Perpel is a fork of the unmaintained [Propel2](https://github.com/propelorm/Prop
 
 # Installation
 
-- Replace the `require` declaration for Propel with Perpel:
+- Replace the `require` declaration for Propel with Perpl:
 ```diff
   "require": {
-+    "perpelorm/perpel": ">=2.0",
++    "perplorm/perpl": ">=2.0",
 -    "propel/propel": "dev-main as 2.0.x-dev",
   },
 ```
@@ -43,7 +43,7 @@ $ vendor/bin/propel --config-dir <path/to/config> model:build
 
 # Features
 
-Motivation for Perpel was to make features available around code-style, typing, performance and usability.
+Motivation for Perpl was to make features available around code-style, typing, performance and usability.
 
 ## Type-preserving queries
 
@@ -80,7 +80,7 @@ This cannot be added automatically for existing classes. While IDEs seem to figu
 These changes mostly improve internal readability/soundness of core Propel code. They mostly allow for easier and safe maintenance, but occasionally lead to performance improvements, for example when repetitive operations on strings are replaced by proper data structures.
 
 Some notable changes:
-- columns in queries are turned to objects, which leads to more readable code and makes tons of string operations obsolete (~30-50% faster query build time, see [#24](https://github.com/mringler/perpel/pull/24))
+- columns in queries are turned to objects, which leads to more readable code and makes tons of string operations obsolete (~30-50% faster query build time, see [#24](https://github.com/mringler/perpl/pull/24))
 - fixes some confusing names (Criteria vs Criterion)
 -  spreads out some "one size fits none" overloads, i.e. `Criteria::map` becomes `Criteria::columnFilters` and `Criteria::updateValues`
 
@@ -104,11 +104,11 @@ Previously, this required to register the individual parts under an arbitrary na
 
 ## Read multiple behaviors from same repository
 
-Propel restricts reading behaviors from repositories to one per repo. This allows to read multiple behaviors (see [#25](https://github.com/mringler/perpel/pull/25) for details).
+Propel restricts reading behaviors from repositories to one per repo. This allows to read multiple behaviors (see [#25](https://github.com/mringler/perpl/pull/25) for details).
 
 # Breaking Changes
 
-Perpel is fully backwards compatible with Propel2, with few exceptions. They mostly affect the low-level Criteria interface. Impact for regular users should be slim to none.
+Perpl is fully backwards compatible with Propel2, with few exceptions. They mostly affect the low-level Criteria interface. Impact for regular users should be slim to none.
 
 ## Set update value and add filter use dedicated methods
 
@@ -186,7 +186,7 @@ Obscure names, replaced functionality, unclear use-case - removing those methods
 
 The methods are still available, but only through magic `__call()`. They do not appear on the query object interface and thus are not suggested by autocomplete. Using them will trigger a deprecation warning. The method docs in `src/Propel/Runtime/ActiveQuery/DeprecatedCriteriaMethods.php` describe how to replace them.
 
-A full list of deprecated methods can be found in [#28](https://github.com/mringler/perpel/pull/28). Notable mentions are `Criteria::addCond()` and `Criteria::combine()`, which are replaced by `Criteria::combineFilters()` (see above), and `Criteria::addSelectQuery()`, which is replaced by the aptly-named `Criteria::addSubquery()`.
+A full list of deprecated methods can be found in [#28](https://github.com/mringler/perpl/pull/28). Notable mentions are `Criteria::addCond()` and `Criteria::combine()`, which are replaced by `Criteria::combineFilters()` (see above), and `Criteria::addSelectQuery()`, which is replaced by the aptly-named `Criteria::addSubquery()`.
 
 # Outlook
 
