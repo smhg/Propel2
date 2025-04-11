@@ -318,15 +318,9 @@ class BookstoreTest extends BookstoreEmptyTestBase
         $this->assertNotNull($hp, 'Could find just-created book');
 
         // Attempting to delete [multi-table] by found pk
-        $c = new Criteria();
-        $c->add(BookTableMap::COL_ID, $hp->getId());
-        // The only way for cascading to work currently
-        // is to specify the author_id and publisher_id (i.e. the fkeys
-        // have to be in the criteria).
-        $c->add(AuthorTableMap::COL_ID, $hp->getAuthor()->getId());
-        $c->add(PublisherTableMap::COL_ID, $hp->getPublisher()->getId());
-        $c->setSingleRecord(true);
-        BookTableMap::doDelete($c);
+        $hp->delete();
+        $hp->getAuthor()->delete();
+        $hp->getPublisher()->delete();
 
         // Checking to make sure correct records were removed.
         $this->assertEquals(3, AuthorQuery::create()->count(), 'Correct records were removed from author table');
@@ -354,10 +348,6 @@ class BookstoreTest extends BookstoreEmptyTestBase
         PublisherTableMap::doDelete($penguin_id);
         $vintage->delete();
 
-        // These have to be deleted manually also since we have onDelete
-        // set to SETNULL in the foreign keys in book. Is this correct?
-        $rowling->delete();
-        $scholastic->delete();
         $blc1->delete();
         $blc2->delete();
 
@@ -667,15 +657,9 @@ class BookstoreTest extends BookstoreEmptyTestBase
         $this->assertNotNull($hp, 'Could find just-created book');
 
         // Attempting to delete [multi-table] by found pk
-        $c = new Criteria();
-        $c->add(BookTableMap::COL_ID, $hp->getId());
-        // The only way for cascading to work currently
-        // is to specify the author_id and publisher_id (i.e. the fkeys
-        // have to be in the criteria).
-        $c->add(AuthorTableMap::COL_ID, $hp->getAuthor()->getId());
-        $c->add(PublisherTableMap::COL_ID, $hp->getPublisher()->getId());
-        $c->setSingleRecord(true);
-        BookTableMap::doDelete($c);
+        $hp->delete();
+        $hp->getAuthor()->delete();
+        $hp->getPublisher()->delete();
 
         // Checking to make sure correct records were removed.
         $this->assertEquals(3, AuthorQuery::create()->count(), 'Correct records were removed from author table');
@@ -702,10 +686,6 @@ class BookstoreTest extends BookstoreEmptyTestBase
         PublisherQuery::create()->filterById($penguin_id)->delete();
         $vintage->delete();
 
-        // These have to be deleted manually also since we have onDelete
-        // set to SETNULL in the foreign keys in book. Is this correct?
-        $rowling->delete();
-        $scholastic->delete();
         $blc1->delete();
         $blc2->delete();
 

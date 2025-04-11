@@ -62,6 +62,8 @@ abstract class BookstoreTestBase extends TestCaseFixturesDatabase
         if ($this->con !== null) {
             if ($this->con->isCommitable()) {
                 $this->con->commit();
+            } else {
+               $this->con->rollback();
             }
             $this->con = null;
         }

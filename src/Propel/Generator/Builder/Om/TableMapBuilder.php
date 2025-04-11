@@ -1433,6 +1433,8 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
         $table = $this->getTable();
         $script .= "
     /**
+     * @deprecated Delete via model or {$this->getQueryClassName()}.
+     *
      * Performs a DELETE on the database, given a " . $this->getObjectClassName() . " or Criteria object OR a primary key value.
      *
      * @param mixed \$values Criteria or " . $this->getObjectClassName() . " object or primary key or array of primary keys
@@ -1445,6 +1447,8 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      */
      public static function doDelete(\$values, ?ConnectionInterface \$con = null): int
      {
+        trigger_deprecation('Propel', '2.0', 'TableMap::doDelete() should not be used anymore, delete via model or {$this->getQueryClassName()}');
+
         if (null === \$con) {
             \$con = Propel::getServiceContainer()->getWriteConnection(" . $this->getTableMapClass() . "::DATABASE_NAME);
         }

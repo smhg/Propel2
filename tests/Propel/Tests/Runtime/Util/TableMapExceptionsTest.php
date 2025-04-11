@@ -69,9 +69,6 @@ class TableMapExceptionsTest extends BookstoreTestBase
      */
     public function testDoInsertExceptionsAreHandledCorrectly()
     {
-        if ($this->runningOnSQLite()) {
-            $this->markTestIncomplete('Can cause `General error: 5 database is locked` when DataFetcherInterface in formatter is not properly closed');
-        }
         $c = new Criteria();
         $c->setPrimaryTableName(BookTableMap::TABLE_NAME);
         $c->setUpdateValue(BookTableMap::COL_ID, 'lkhlkhj');
