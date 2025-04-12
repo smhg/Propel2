@@ -885,12 +885,15 @@ abstract class AbstractOMBuilder extends DataModelBuilder
 
     /**
      * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
+     * @param bool $uppercaseFirstChar
      *
      * @return string
      */
-    protected function getCrossFKsVarName(CrossForeignKeys $crossFKs): string
+    protected function buildLocalColumnNameForCrossRef(CrossForeignKeys $crossFKs, bool $uppercaseFirstChar): string
     {
-        return 'coll' . $this->getCrossFKsPhpNameAffix($crossFKs);
+        $columnName = 'coll' . $this->getCrossFKsPhpNameAffix($crossFKs);
+
+        return $uppercaseFirstChar ? ucfirst($columnName) : $columnName;
     }
 
     /**

@@ -8,6 +8,8 @@
 
 namespace Propel\Generator\Model;
 
+use Propel\Runtime\Exception\LogicException;
+
 /**
  * A class for information about table cross foreign keys which are used in many-to-many relations.
  *
@@ -42,14 +44,14 @@ namespace Propel\Generator\Model;
 class CrossForeignKeys
 {
     /**
-     * The middle-table.
+     * The source table.
      *
      * @var \Propel\Generator\Model\Table
      */
     protected $table;
 
     /**
-     * The target table (which has crossRef=true).
+     * The cross-ref table (which has crossRef=true).
      *
      * @var \Propel\Generator\Model\Table
      */
@@ -134,25 +136,20 @@ class CrossForeignKeys
     {
         $primaryKeys = $fk->getLocalColumnObjects();
         foreach ($primaryKeys as $primaryKey) {
-            $covered = false;
             foreach ($this->getCrossForeignKeys() as $crossFK) {
                 if ($crossFK->hasLocalColumn($primaryKey)) {
-                    $covered = true;
-
-                    break;
+                    continue 2; // found match, continue outer loop
                 }
             }
-            //at least one is not covered, so return true
-            if (!$covered) {
-                return true;
-            }
+
+            return true;
         }
 
         return false;
     }
 
     /**
-     * Returns all primary keys of middle-table which are not already covered by at least on of our cross foreignKey collection.
+     * Returns all primary keys of middle-table which are not already covered by at least one of our cross foreignKey collection.
      *
      * @return list<\Propel\Generator\Model\Column>
      */
@@ -160,23 +157,15 @@ class CrossForeignKeys
     {
         $pks = [];
         foreach ($this->getMiddleTable()->getPrimaryKey() as $pk) {
-            //required
-            $unclassified = true;
             if ($this->getIncomingForeignKey()->hasLocalColumn($pk)) {
-                $unclassified = false;
+                continue;
             }
-            if ($unclassified) {
-                foreach ($this->getCrossForeignKeys() as $crossFK) {
-                    if ($crossFK->hasLocalColumn($pk)) {
-                        $unclassified = false;
-
-                        break;
-                    }
+            foreach ($this->getCrossForeignKeys() as $crossFK) {
+                if ($crossFK->hasLocalColumn($pk)) {
+                    continue 2; // continue outer loop
                 }
             }
-            if ($unclassified) {
-                $pks[] = $pk;
-            }
+            $pks[] = $pk;
         }
 
         return $pks;
@@ -258,5 +247,27 @@ class CrossForeignKeys
     public function getTable(): Table
     {
         return $this->table;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCombinedKey(): bool
+    {
+        return count($this->crossForeignKeys) > 1 || (bool)$this->getUnclassifiedPrimaryKeys();
+    }
+
+    /**
+     * @throws \Propel\Runtime\Exception\LogicException
+     *
+     * @return \Propel\Generator\Model\Table
+     */
+    public function getTargetTable(): Table
+    {
+        if (!$this->crossForeignKeys) {
+            throw new LogicException('Accessed cross FK on empty CrossForeignKey');
+        }
+
+        return $this->crossForeignKeys[0]->getForeignTableOrFail();
     }
 }

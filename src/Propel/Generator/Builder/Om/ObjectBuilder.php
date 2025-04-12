@@ -3624,7 +3624,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
 
         foreach ($table->getCrossFks() as $crossFKs) {
             $script .= "
-            \$this->" . $this->getCrossFKsVarName($crossFKs) . ' = null;';
+            \$this->" . $this->buildLocalColumnNameForCrossRef($crossFKs, false) . ' = null;';
         }
 
         $script .= "
@@ -4877,18 +4877,19 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
      */
     protected function addCrossFKAttributes(string &$script, CrossForeignKeys $crossFKs): void
     {
-        if (1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys()) {
+        $localColumnName = $this->buildLocalColumnNameForCrossRef($crossFKs, true);
+        if ($crossFKs->hasCombinedKey()) {
             [$names] = $this->getCrossFKInformation($crossFKs);
             $script .= "
     /**
      * @var ObjectCombinationCollection Cross CombinationCollection to store aggregation of $names combinations.
      */
-    protected \$combination" . ucfirst($this->getCrossFKsVarName($crossFKs)) . ";
+    protected \$combination{$localColumnName};
 
     /**
      * @var bool
      */
-    protected \$combination" . ucfirst($this->getCrossFKsVarName($crossFKs)) . "Partial;
+    protected \$combination{$localColumnName}Partial;
 ";
         }
 
@@ -4919,7 +4920,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
     protected function addCrossScheduledForDeletionAttribute(string &$script, CrossForeignKeys $crossFKs): void
     {
         $name = $this->getCrossScheduledForDeletionVarName($crossFKs);
-        if (1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys()) {
+        if ($crossFKs->hasCombinedKey()) {
             [$names] = $this->getCrossFKInformation($crossFKs);
             $script .= "
     /**
@@ -4951,8 +4952,8 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
      */
     protected function getCrossScheduledForDeletionVarName(CrossForeignKeys $crossFKs): string
     {
-        if (1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys()) {
-            return 'combination' . ucfirst($this->getCrossFKsVarName($crossFKs)) . 'ScheduledForDeletion';
+        if ($crossFKs->hasCombinedKey()) {
+            return 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true) . 'ScheduledForDeletion';
         } else {
             $fkName = lcfirst($this->getFKPhpNameAffix($crossFKs->getCrossForeignKeys()[0], true));
 
@@ -5010,7 +5011,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
      */
     protected function addCrossFkScheduledForDeletion(string &$script, CrossForeignKeys $crossFKs): void
     {
-        $multipleFks = 1 < count($crossFKs->getCrossForeignKeys()) || (bool)$crossFKs->getUnclassifiedPrimaryKeys();
+        $multipleFks = $crossFKs->hasCombinedKey();
         $scheduledForDeletionVarName = $this->getCrossScheduledForDeletionVarName($crossFKs);
         $queryClassName = $this->getNewStubQueryBuilder($crossFKs->getMiddleTable())->getClassname();
 
@@ -5111,7 +5112,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
 ";
 
         if ($multipleFks) {
-            $combineVarName = 'combination' . ucfirst($this->getCrossFKsVarName($crossFKs));
+            $combineVarName = 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true);
             $script .= "
             if (\$this->$combineVarName !== null) {
                 foreach (\$this->$combineVarName as \$combination) {
@@ -5235,7 +5236,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
     protected function addCrossFKClear(string &$script, CrossForeignKeys $crossFKs): void
     {
         $relCol = $this->getCrossFKsPhpNameAffix($crossFKs);
-        $collName = $this->getCrossFKsVarName($crossFKs);
+        $collName = $this->buildLocalColumnNameForCrossRef($crossFKs, false);
 
         $script .= "
     /**
@@ -5292,10 +5293,10 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
     {
         $inits = [];
 
-        if (1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys()) {
+        if ($crossFKs->hasCombinedKey()) {
             $inits[] = [
                 'relCol' => $this->getCrossFKsPhpNameAffix($crossFKs, true),
-                'collName' => 'combination' . ucfirst($this->getCrossFKsVarName($crossFKs)),
+                'collName' => 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true),
                 'collectionClass' => 'ObjectCombinationCollection',
                 'relatedObjectClassName' => false,
                 'foreignTableMapName' => false,
@@ -5374,10 +5375,10 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
     {
         $inits = [];
 
-        if (1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys()) {
+        if ($crossFKs->hasCombinedKey()) {
             $inits[] = [
                 'relCol' => $this->getCrossFKsPhpNameAffix($crossFKs, true),
-                'collName' => 'combination' . ucfirst($this->getCrossFKsVarName($crossFKs)),
+                'collName' => 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true),
             ];
         } else {
             foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
@@ -5417,6 +5418,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
      */
     protected function addCrossFKCreateQuery(string &$script, CrossForeignKeys $crossFKs): void
     {
+        // think this should be !$crossFKs->hasCombinedKey(), but negation is wrong (<= should be >=)
         if (1 <= count($crossFKs->getCrossForeignKeys()) && !$crossFKs->getUnclassifiedPrimaryKeys()) {
             return;
         }
@@ -5501,9 +5503,9 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
         $selfRelationName = $this->getFKPhpNameAffix($refFK, false);
         $crossRefTableName = $crossFKs->getMiddleTable()->getName();
 
-        if (1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys()) {
+        if ($crossFKs->hasCombinedKey()) {
             $relatedName = $this->getCrossFKsPhpNameAffix($crossFKs, true);
-            $collVarName = 'combination' . ucfirst($this->getCrossFKsVarName($crossFKs));
+            $collVarName = 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true);
 
             $classNames = [];
             foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
@@ -5702,7 +5704,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
     {
         $scheduledForDeletionVarName = $this->getCrossScheduledForDeletionVarName($crossFKs);
 
-        $multi = 1 < count($crossFKs->getCrossForeignKeys()) || (bool)$crossFKs->getUnclassifiedPrimaryKeys();
+        $multi = $crossFKs->hasCombinedKey();
 
         $relatedNamePlural = $this->getCrossFKsPhpNameAffix($crossFKs, true);
         $relatedName = $this->getCrossFKsPhpNameAffix($crossFKs, false);
@@ -5712,7 +5714,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
 
         if ($multi) {
             [$relatedObjectClassName] = $this->getCrossFKInformation($crossFKs);
-            $collName = 'combination' . ucfirst($this->getCrossFKsVarName($crossFKs));
+            $collName = 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true);
         } else {
             $crossFK = $crossFKs->getCrossForeignKeys()[0];
             $relatedObjectClassName = $this->getNewStubObjectBuilder($crossFK->getForeignTable())->getUnqualifiedClassName();
@@ -5782,14 +5784,14 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
         $refFK = $crossFKs->getIncomingForeignKey();
         $selfRelationName = $this->getFKPhpNameAffix($refFK, false);
 
-        $multi = 1 < count($crossFKs->getCrossForeignKeys()) || (bool)$crossFKs->getUnclassifiedPrimaryKeys();
+        $multi = $crossFKs->hasCombinedKey();
 
         $relatedName = $this->getCrossFKsPhpNameAffix($crossFKs, true);
         $crossRefTableName = $crossFKs->getMiddleTable()->getName();
 
         if ($multi) {
             [$relatedObjectClassName] = $this->getCrossFKInformation($crossFKs);
-            $collName = 'combination' . ucfirst($this->getCrossFKsVarName($crossFKs));
+            $collName = 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true);
             $relatedQueryClassName = $this->getClassNameFromBuilder($this->getNewStubQueryBuilder($crossFKs->getMiddleTable()));
         } else {
             $crossFK = $crossFKs->getCrossForeignKeys()[0];
@@ -5884,17 +5886,16 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
         $refFK = $crossFKs->getIncomingForeignKey();
 
         foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
-            $relSingleNamePlural = $this->getFKPhpNameAffix($crossFK, true);
-            $relSingleName = $this->getFKPhpNameAffix($crossFK, false);
-            $collSingleName = $this->getCrossFKVarName($crossFK);
 
-            $relCombineNamePlural = $this->getCrossFKsPhpNameAffix($crossFKs, true);
-            $relCombineName = $this->getCrossFKsPhpNameAffix($crossFKs, false);
-            $collCombinationVarName = 'combination' . ucfirst($this->getCrossFKsVarName($crossFKs));
-
-            $collName = 1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys() ? $collCombinationVarName : $collSingleName;
-            $relNamePlural = ucfirst(1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys() ? $relCombineNamePlural : $relSingleNamePlural);
-            $relName = ucfirst(1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys() ? $relCombineName : $relSingleName);
+            if ($crossFKs->hasCombinedKey()) {
+                $collName = 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true); // local column
+                $relNamePlural = ucfirst($this->getCrossFKsPhpNameAffix($crossFKs, true)); // relation combine name plural
+                $relName = ucfirst($this->getCrossFKsPhpNameAffix($crossFKs, false)); // relation combine name
+            } else {
+                $collName =  $this->getCrossFKVarName($crossFK); // column single name i.e. 'collTeams'
+                $relNamePlural = ucfirst($this->getFKPhpNameAffix($crossFK, true)); // relation single name plural (?!?) i.e. 'Teams'
+                $relName = ucfirst($this->getFKPhpNameAffix($crossFK, false)); // relation single name i.e. 'Teams'
+            }
 
             $tblFK = $refFK->getTable();
             $relatedObjectClassName = $this->getFKPhpNameAffix($crossFK, false);
@@ -5973,7 +5974,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
     {
         {$foreignObjectName} = new {$className}();";
 
-        if (count($crossFKs->getCrossForeignKeys()) > 1 || $crossFKs->getUnclassifiedPrimaryKeys()) {
+        if ($crossFKs->hasCombinedKey()) {
             foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
                 $relatedObjectClassName = $this->getFKPhpNameAffix($crossFK, false);
                 $lowerRelatedObjectClassName = lcfirst($relatedObjectClassName);
@@ -6001,7 +6002,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
 
         \$this->add{$refKObjectClassName}({$foreignObjectName});\n";
 
-        if (1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys()) {
+        if ($crossFKs->hasCombinedKey()) {
             foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
                 $relatedObjectClassName = $this->getFKPhpNameAffix($crossFK, false);
                 $lowerRelatedObjectClassName = lcfirst($relatedObjectClassName);
@@ -6079,11 +6080,9 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
     protected function addCrossFKRemove(string &$script, CrossForeignKeys $crossFKs): void
     {
         $relCol = $this->getCrossFKsPhpNameAffix($crossFKs, true);
-        if (1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys()) {
-            $collName = 'combination' . ucfirst($this->getCrossFKsVarName($crossFKs));
-        } else {
-            $collName = $this->getCrossFKsVarName($crossFKs);
-        }
+        $collName = $crossFKs->hasCombinedKey()
+            ? 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true)
+            : $this->buildLocalColumnNameForCrossRef($crossFKs, false);
 
         $tblFK = $crossFKs->getIncomingForeignKey()->getTable();
 
@@ -7153,8 +7152,8 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
             $vars[] = $varName;
         }
         foreach ($this->getTable()->getCrossFks() as $crossFKs) {
-            $varName = $this->getCrossFKsVarName($crossFKs);
-            if (1 < count($crossFKs->getCrossForeignKeys()) || $crossFKs->getUnclassifiedPrimaryKeys()) {
+            $varName = $this->buildLocalColumnNameForCrossRef($crossFKs, false);
+            if ($crossFKs->hasCombinedKey()) {
                 $varName = 'combination' . ucfirst($varName);
             }
             $script .= "
