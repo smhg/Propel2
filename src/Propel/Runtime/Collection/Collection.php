@@ -71,6 +71,8 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
     protected $data = [];
 
     /**
+     * @deprecated should not have a pluralzier.
+     *
      * @var \Propel\Common\Pluralizer\PluralizerInterface|null
      */
     private $pluralizer;
@@ -682,6 +684,8 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
     }
 
     /**
+     * @deprecated should not have a pluralzier.
+     *
      * @return \Propel\Common\Pluralizer\PluralizerInterface
      */
     protected function getPluralizer(): PluralizerInterface
@@ -694,6 +698,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
     }
 
     /**
+     * @deprecated should not have a pluralzier.
      * Overwrite this method if you want to use a custom pluralizer
      *
      * @return \Propel\Common\Pluralizer\PluralizerInterface
@@ -704,6 +709,8 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
     }
 
     /**
+     * @deprecated should not have a pluralzier.
+     *
      * @return string
      */
     protected function getPluralModelName(): string

@@ -12,9 +12,7 @@ use Propel\Common\Util\PathTrait;
 use Propel\Generator\Builder\DataModelBuilder;
 use Propel\Generator\Builder\Util\PropelTemplate;
 use Propel\Generator\Exception\InvalidArgumentException;
-use Propel\Generator\Exception\LogicException;
 use Propel\Generator\Model\Column;
-use Propel\Generator\Model\CrossForeignKeys;
 use Propel\Generator\Model\ForeignKey;
 use Propel\Generator\Model\Table;
 use Propel\Generator\Model\VendorInfo;
@@ -33,26 +31,12 @@ abstract class AbstractOMBuilder extends DataModelBuilder
     use PathTrait;
 
     /**
-     * Declared fully qualified classnames, to build the 'namespace' statements
-     * according to this table's namespace.
-     *
-     * @var array<string, array<string, string>>
+     * @param \Propel\Generator\Model\Table $table
      */
-    protected $declaredClasses = [];
-
-    /**
-     * Mapping between fully qualified classnames and their short classname or alias
-     *
-     * @var array<string, string>
-     */
-    protected $declaredShortClassesOrAlias = [];
-
-    /**
-     * List of classes that can be use without alias when model don't have namespace
-     *
-     * @var array<string>
-     */
-    protected $whiteListOfDeclaredClasses = ['PDO', 'Exception', 'DateTime'];
+    public function __construct(Table $table)
+    {
+        parent::__construct($table, $this);
+    }
 
     /**
      * Builds the PHP source for current class and returns it as a string.
@@ -263,243 +247,6 @@ abstract class AbstractOMBuilder extends DataModelBuilder
     }
 
     /**
-     * This declares the class use and returns the correct name to use (short classname, Alias, or FQCN)
-     *
-     * @param self $builder
-     * @param bool $fqcn true to return the $fqcn classname
-     *
-     * @return string ClassName, Alias or FQCN
-     */
-    public function getClassNameFromBuilder(self $builder, bool $fqcn = false): string
-    {
-        if ($fqcn) {
-            return $builder->getFullyQualifiedClassName();
-        }
-
-        $namespace = (string)$builder->getNamespace();
-        $class = $builder->getUnqualifiedClassName();
-
-        if (
-            isset($this->declaredClasses[$namespace])
-            && isset($this->declaredClasses[$namespace][$class])
-        ) {
-            return $this->declaredClasses[$namespace][$class];
-        }
-
-        return $this->declareClassNamespace($class, $namespace, true);
-    }
-
-    /**
-     * This declares the class use and returns the correct name to use
-     *
-     * @param \Propel\Generator\Model\Table $table
-     *
-     * @return string
-     */
-    public function getClassNameFromTable(Table $table): string
-    {
-        $namespace = (string)$table->getNamespace();
-        $class = $table->getPhpName();
-
-        return $this->declareClassNamespace($class, $namespace, true);
-    }
-
-    /**
-     * Declare a class to be use and return its name or its alias
-     *
-     * @param string $class the class name
-     * @param string $namespace the namespace
-     * @param string|bool|null $alias the alias wanted, if set to True, it automatically adds an alias when needed
-     *
-     * @throws \Propel\Generator\Exception\LogicException
-     *
-     * @return string The class name or its alias
-     */
-    public function declareClassNamespace(string $class, string $namespace = '', $alias = false): string
-    {
-        $namespace = trim($namespace, '\\');
-
-        // check if the class is already declared
-        if (isset($this->declaredClasses[$namespace][$class])) {
-            return $this->declaredClasses[$namespace][$class];
-        }
-
-        $forcedAlias = $this->needAliasForClassName($class, $namespace);
-
-        if ($alias === false || $alias === true || $alias === null) {
-            $aliasWanted = $class;
-            $alias = $alias || $forcedAlias;
-        } else {
-            $aliasWanted = $alias;
-            $forcedAlias = false;
-        }
-
-        if (!$forcedAlias && !isset($this->declaredShortClassesOrAlias[$aliasWanted])) {
-            $this->declaredClasses[$namespace][$class] = $aliasWanted;
-            $this->declaredShortClassesOrAlias[$aliasWanted] = $namespace . '\\' . $class;
-
-            return $aliasWanted;
-        }
-
-        // we have a duplicate class and asked for an automatic Alias
-        if ($alias !== false) {
-            if (substr($namespace, -5) === '\\Base' || $namespace === 'Base') {
-                return $this->declareClassNamespace($class, $namespace, 'Base' . $class);
-            }
-
-            if (substr((string)$alias, 0, 5) === 'Child') {
-                //we already requested Child.$class and its in use too,
-                //so use the fqcn
-                return ($namespace ? '\\' . $namespace : '') . '\\' . $class;
-            } else {
-                $autoAliasName = 'Child' . $class;
-            }
-
-            return $this->declareClassNamespace($class, $namespace, $autoAliasName);
-        }
-
-        throw new LogicException(sprintf(
-            'The class %s duplicates the class %s and can\'t be used without alias',
-            $namespace . '\\' . $class,
-            $this->declaredShortClassesOrAlias[$aliasWanted],
-        ));
-    }
-
-    /**
-     * check if the current $class need an alias or if the class could be used with a shortname without conflict
-     *
-     * @param string $class
-     * @param string $classNamespace
-     *
-     * @return bool
-     */
-    protected function needAliasForClassName(string $class, string $classNamespace): bool
-    {
-        // Should remove this check by not allowing nullable return values in getNamespace
-        if ($this->getNamespace() === null) {
-            return false;
-        }
-
-        $builderNamespace = trim($this->getNamespace(), '\\');
-
-        if ($classNamespace == $builderNamespace) {
-            return false;
-        }
-
-        if (str_replace('\\Base', '', $classNamespace) == str_replace('\\Base', '', $builderNamespace)) {
-            return true;
-        }
-
-        if (!$classNamespace && $builderNamespace === 'Base') {
-            if (str_replace(['Query'], '', $class) == str_replace(['Query'], '', $this->getUnqualifiedClassName())) {
-                return true;
-            }
-
-            if ((strpos($class, 'Query') !== false)) {
-                return true;
-            }
-
-            // force alias for model without namespace
-            if (!in_array($class, $this->whiteListOfDeclaredClasses, true)) {
-                return true;
-            }
-        }
-
-        if ($classNamespace === 'Base' && $builderNamespace === '') {
-            // force alias for model without namespace
-            if (!in_array($class, $this->whiteListOfDeclaredClasses, true)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Declare a use statement for a $class with a $namespace and an $aliasPrefix
-     * This return the short ClassName or an alias
-     *
-     * @param string $class the class
-     * @param string $namespace the namespace
-     * @param mixed $aliasPrefix optionally an alias or True to force an automatic alias prefix (Base or Child)
-     *
-     * @return string the short ClassName or an alias
-     */
-    public function declareClassNamespacePrefix(string $class, string $namespace = '', $aliasPrefix = false): string
-    {
-        if ($aliasPrefix !== false && $aliasPrefix !== true) {
-            $alias = $aliasPrefix . $class;
-        } else {
-            $alias = $aliasPrefix;
-        }
-
-        return $this->declareClassNamespace($class, $namespace, $alias);
-    }
-
-    /**
-     * Declare a Fully qualified classname with an $aliasPrefix
-     * This return the short ClassName to use or an alias
-     *
-     * @param string $fullyQualifiedClassName the fully qualified classname
-     * @param mixed $aliasPrefix optionally an alias or True to force an automatic alias prefix (Base or Child)
-     *
-     * @return string the short ClassName or an alias
-     */
-    public function declareClass(string $fullyQualifiedClassName, $aliasPrefix = false): string
-    {
-        $fullyQualifiedClassName = trim($fullyQualifiedClassName, '\\');
-        $pos = strrpos($fullyQualifiedClassName, '\\');
-        if ($pos !== false) {
-            return $this->declareClassNamespacePrefix(substr($fullyQualifiedClassName, $pos + 1), substr($fullyQualifiedClassName, 0, $pos), $aliasPrefix);
-        }
-
-        // root namespace
-        return $this->declareClassNamespacePrefix($fullyQualifiedClassName, '', $aliasPrefix);
-    }
-
-    /**
-     * @param self $builder
-     * @param string|bool $aliasPrefix the prefix for the Alias or True for auto generation of the Alias
-     *
-     * @return string
-     */
-    public function declareClassFromBuilder(self $builder, $aliasPrefix = false): string
-    {
-        return $this->declareClassNamespacePrefix(
-            $builder->getUnqualifiedClassName(),
-            (string)$builder->getNamespace(),
-            $aliasPrefix,
-        );
-    }
-
-    /**
-     * @return void
-     */
-    public function declareClasses(): void
-    {
-        $args = func_get_args();
-        foreach ($args as $class) {
-            $this->declareClass($class);
-        }
-    }
-
-    /**
-     * Get the list of declared classes for a given $namespace or all declared classes
-     *
-     * @param string|null $namespace the namespace or null
-     *
-     * @return array list of declared classes
-     */
-    public function getDeclaredClasses(?string $namespace = null): array
-    {
-        if ($namespace !== null && isset($this->declaredClasses[$namespace])) {
-            return $this->declaredClasses[$namespace];
-        }
-
-        return $this->declaredClasses;
-    }
-
-    /**
      * return the string for the class namespace
      *
      * @return string|null
@@ -526,7 +273,7 @@ abstract class AbstractOMBuilder extends DataModelBuilder
     public function getUseStatements(?string $ignoredNamespace = null): string
     {
         $script = '';
-        $declaredClasses = $this->declaredClasses;
+        $declaredClasses = $this->referencedClasses->getDeclaredClasses();
         unset($declaredClasses[$ignoredNamespace]);
         ksort($declaredClasses);
         foreach ($declaredClasses as $namespace => $classes) {
@@ -536,70 +283,13 @@ abstract class AbstractOMBuilder extends DataModelBuilder
                 if ($class == $this->getUnqualifiedClassName() && $namespace == $this->getNamespace()) {
                     continue;
                 }
-                if ($class == $alias) {
-                    $script .= sprintf("use %s\\%s;
-", $namespace, $class);
-                } else {
-                    $script .= sprintf("use %s\\%s as %s;
-", $namespace, $class, $alias);
-                }
+                $script .= ($class === $alias)
+                    ? sprintf("use %s\\%s;\n", $namespace, $class)
+                    : sprintf("use %s\\%s as %s;\n", $namespace, $class, $alias);
             }
         }
 
         return $script;
-    }
-
-    /**
-     * Shortcut method to return the [stub] query classname for current table.
-     * This is the classname that is used whenever object or tablemap classes want
-     * to invoke methods of the query classes.
-     *
-     * @param bool $fqcn
-     *
-     * @return string (e.g. 'Myquery')
-     */
-    public function getQueryClassName(bool $fqcn = false): string
-    {
-        return $this->getClassNameFromBuilder($this->getStubQueryBuilder(), $fqcn);
-    }
-
-    /**
-     * Returns the object classname for current table.
-     * This is the classname that is used whenever object or tablemap classes want
-     * to invoke methods of the object classes.
-     *
-     * @param bool $fqcn
-     *
-     * @return string (e.g. 'MyTable' or 'ChildMyTable')
-     */
-    public function getObjectClassName(bool $fqcn = false): string
-    {
-        return $this->getClassNameFromBuilder($this->getStubObjectBuilder(), $fqcn);
-    }
-
-    /**
-     * Returns always the final unqualified object class name. This is only useful for documentation/phpdoc,
-     * not in the actual code.
-     *
-     * @return string
-     */
-    public function getObjectName(): string
-    {
-        return $this->getStubObjectBuilder()->getUnqualifiedClassName();
-    }
-
-    /**
-     * Returns the tableMap classname for current table.
-     * This is the classname that is used whenever object or tablemap classes want
-     * to invoke methods of the object classes.
-     *
-     * @param bool $fqcn
-     *
-     * @return string (e.g. 'My')
-     */
-    public function getTableMapClassName(bool $fqcn = false): string
-    {
-        return $this->getClassNameFromBuilder($this->getTableMapBuilder(), $fqcn);
     }
 
     /**
@@ -662,248 +352,7 @@ abstract class AbstractOMBuilder extends DataModelBuilder
      */
     public function getFKPhpNameAffix(ForeignKey $fk, bool $plural = false): string
     {
-        if ($fk->getPhpName() !== null) {
-            if ($plural) {
-                return $this->getPluralizer()->getPluralForm($fk->getPhpName());
-            }
-
-            return $fk->getPhpName();
-        }
-
-        $className = $fk->getForeignTableOrFail()->getPhpName();
-        if ($plural) {
-            $className = $this->getPluralizer()->getPluralForm($className);
-        }
-
-        return $className . $this->getRelatedBySuffix($fk);
-    }
-
-    /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     * @param bool $plural
-     *
-     * @return string
-     */
-    protected function getCrossFKsPhpNameAffix(CrossForeignKeys $crossFKs, bool $plural = true): string
-    {
-        $baseName = $this->buildCombineCrossFKsPhpNameAffix($crossFKs, false);
-
-        $existingTable = $this->getDatabase()->getTableByPhpName($baseName);
-        $isNameCollision = $existingTable && $this->getTable()->isConnectedWithTable($existingTable);
-
-        return ($plural || $isNameCollision) ? $this->buildCombineCrossFKsPhpNameAffix($crossFKs, $plural, $isNameCollision) : $baseName;
-    }
-
-    /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     * @param bool $plural
-     * @param bool $withPrefix
-     *
-     * @return string
-     */
-    protected function buildCombineCrossFKsPhpNameAffix(CrossForeignKeys $crossFKs, bool $plural = true, bool $withPrefix = false): string
-    {
-        $names = [];
-        if ($withPrefix) {
-            $names[] = 'Cross';
-        }
-        $fks = $crossFKs->getCrossForeignKeys();
-        $lastCrossFk = array_pop($fks);
-        $unclassifiedPrimaryKeys = $crossFKs->getUnclassifiedPrimaryKeys();
-        $lastIsPlural = $plural && !$unclassifiedPrimaryKeys;
-
-        foreach ($fks as $fk) {
-            $names[] = $this->getFKPhpNameAffix($fk, false);
-        }
-        $names[] = $this->getFKPhpNameAffix($lastCrossFk, $lastIsPlural);
-
-        if (!$unclassifiedPrimaryKeys) {
-            return implode('', $names);
-        }
-
-        foreach ($unclassifiedPrimaryKeys as $pk) {
-            $names[] = $pk->getPhpName();
-        }
-
-        $name = implode('', $names);
-
-        return ($plural === true ? $this->getPluralizer()->getPluralForm($name) : $name);
-    }
-
-    /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     * @param \Propel\Generator\Model\ForeignKey $excludeFK
-     *
-     * @return string
-     */
-    protected function getCrossRefFKGetterName(CrossForeignKeys $crossFKs, ForeignKey $excludeFK): string
-    {
-        $names = [];
-
-        $fks = $crossFKs->getCrossForeignKeys();
-
-        foreach ($crossFKs->getMiddleTable()->getForeignKeys() as $fk) {
-            if ($fk !== $excludeFK && ($fk === $crossFKs->getIncomingForeignKey() || in_array($fk, $fks))) {
-                $names[] = $this->getFKPhpNameAffix($fk, false);
-            }
-        }
-
-        foreach ($crossFKs->getUnclassifiedPrimaryKeys() as $pk) {
-            $names[] = $pk->getPhpName();
-        }
-
-        $name = implode('', $names);
-
-        return $this->getPluralizer()->getPluralForm($name);
-    }
-
-    /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     *
-     * @return array
-     */
-    protected function getCrossFKInformation(CrossForeignKeys $crossFKs): array
-    {
-        $names = [];
-        $signatures = [];
-        $shortSignature = [];
-        $phpDoc = [];
-
-        foreach ($crossFKs->getCrossForeignKeys() as $fk) {
-            $crossObjectName = '$' . lcfirst($this->getFKPhpNameAffix($fk));
-            $crossObjectClassName = $this->getNewObjectBuilder($fk->getForeignTableOrFail())->getObjectClassName();
-
-            $names[] = $crossObjectClassName;
-            $signatures[] = "$crossObjectClassName $crossObjectName" . ($fk->isAtLeastOneLocalColumnRequired() ? '' : ' = null');
-            $shortSignature[] = $crossObjectName;
-            $phpDoc[] = "
-     * @param $crossObjectClassName $crossObjectName The object to relate";
-        }
-
-        $names = implode(', ', $names) . (1 < count($names) ? ' combination' : '');
-        $phpDoc = implode('', $phpDoc);
-        $signatures = implode(', ', $signatures);
-        $shortSignature = implode(', ', $shortSignature);
-
-        return [
-            $names,
-            $phpDoc,
-            $signatures,
-            $shortSignature,
-        ];
-    }
-
-    /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     * @param \Propel\Generator\Model\ForeignKey|array|null $crossFK will be the first variable defined
-     *
-     * @return array<string>
-     */
-    protected function getCrossFKAddMethodInformation(CrossForeignKeys $crossFKs, $crossFK = null): array
-    {
-        $signature = $shortSignature = $normalizedShortSignature = $phpDoc = [];
-        if ($crossFK instanceof ForeignKey) {
-            $crossObjectName = '$' . lcfirst($this->getFKPhpNameAffix($crossFK));
-            $crossObjectClassName = $this->getClassNameFromTable($crossFK->getForeignTableOrFail());
-            if ($crossFK->isAtLeastOneLocalColumnRequired()) {
-                $signature[] = "$crossObjectClassName $crossObjectName";
-            } else {
-                $signature[] = "?$crossObjectClassName $crossObjectName = null";
-            }
-            $shortSignature[] = $crossObjectName;
-            $normalizedShortSignature[] = $crossObjectName;
-            $phpDoc[] = "
-     * @param $crossObjectClassName $crossObjectName";
-        } elseif ($crossFK == null) {
-            $crossFK = [];
-        }
-
-        $this->extractCrossInformation($crossFKs, $crossFK, $signature, $shortSignature, $normalizedShortSignature, $phpDoc);
-
-        $signature = implode(', ', $signature);
-        $shortSignature = implode(', ', $shortSignature);
-        $normalizedShortSignature = implode(', ', $normalizedShortSignature);
-        $phpDoc = implode(', ', $phpDoc);
-
-        return [$signature, $shortSignature, $normalizedShortSignature, $phpDoc];
-    }
-
-    /**
-     * Extracts some useful information from a CrossForeignKeys object.
-     *
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     * @param \Propel\Generator\Model\ForeignKey|array $crossFKToIgnore
-     * @param array $signature
-     * @param array $shortSignature
-     * @param array $normalizedShortSignature
-     * @param array $phpDoc
-     *
-     * @return void
-     */
-    protected function extractCrossInformation(
-        CrossForeignKeys $crossFKs,
-        $crossFKToIgnore,
-        array &$signature,
-        array &$shortSignature,
-        array &$normalizedShortSignature,
-        array &$phpDoc
-    ): void {
-        foreach ($crossFKs->getCrossForeignKeys() as $fk) {
-            if (is_array($crossFKToIgnore) && in_array($fk, $crossFKToIgnore)) {
-                continue;
-            } elseif ($fk === $crossFKToIgnore) {
-                continue;
-            }
-
-            $phpType = $typeHint = $this->getClassNameFromTable($fk->getForeignTableOrFail());
-            $name = '$' . lcfirst($this->getFKPhpNameAffix($fk));
-
-            $normalizedShortSignature[] = $name;
-
-            $signature[] = ($typeHint ? "$typeHint " : '') . $name;
-            $shortSignature[] = $name;
-            $phpDoc[] = "
-     * @param $phpType $name";
-        }
-
-        foreach ($crossFKs->getUnclassifiedPrimaryKeys() as $primaryKey) {
-            //we need to add all those $primaryKey s as additional parameter as they are needed
-            //to create the entry in the middle-table.
-            $defaultValue = $primaryKey->getDefaultValueString();
-
-            $phpType = $primaryKey->getPhpType();
-            $typeHint = $primaryKey->isPhpArrayType() ? 'array' : '';
-            $name = '$' . lcfirst($primaryKey->getPhpName());
-
-            $normalizedShortSignature[] = $name;
-            $signature[] = ($typeHint ? "$typeHint " : '') . $name . ($defaultValue !== 'null' ? " = $defaultValue" : '');
-            $shortSignature[] = $name;
-            $phpDoc[] = "
-     * @param $phpType $name";
-        }
-    }
-
-    /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     * @param bool $uppercaseFirstChar
-     *
-     * @return string
-     */
-    protected function buildLocalColumnNameForCrossRef(CrossForeignKeys $crossFKs, bool $uppercaseFirstChar): string
-    {
-        $columnName = 'coll' . $this->getCrossFKsPhpNameAffix($crossFKs);
-
-        return $uppercaseFirstChar ? ucfirst($columnName) : $columnName;
-    }
-
-    /**
-     * @param \Propel\Generator\Model\ForeignKey $crossFK
-     *
-     * @return string
-     */
-    protected function getCrossFKVarName(ForeignKey $crossFK): string
-    {
-        return 'coll' . $this->getFKPhpNameAffix($crossFK, true);
+        return $this->nameProducer->resolveRelationForwardName($fk, $plural);
     }
 
     /**
@@ -919,29 +368,7 @@ abstract class AbstractOMBuilder extends DataModelBuilder
      */
     protected static function getRelatedBySuffix(ForeignKey $fk): string
     {
-        $relCol = '';
-
-        foreach ($fk->getMapping() as $mapping) {
-            [$localColumn, $foreignValueOrColumn] = $mapping;
-            $localTable = $fk->getTable();
-
-            $tableName = $fk->getTableName();
-            $foreignTableName = (string)$fk->getForeignTableName();
-            if (
-                count($localTable->getForeignKeysReferencingTable($foreignTableName)) > 1
-                || count($fk->getForeignTableOrFail()->getForeignKeysReferencingTable($tableName)) > 0
-                || $foreignTableName === $tableName
-            ) {
-                // self referential foreign key, or several foreign keys to the same table, or cross-reference fkey
-                $relCol .= $localColumn->getPhpName();
-            }
-        }
-
-        if ($relCol) {
-            $relCol = 'RelatedBy' . $relCol;
-        }
-
-        return $relCol;
+        return NameProducer::buildForeignKeyRelatedByNameSuffix($fk);
     }
 
     /**
@@ -957,17 +384,7 @@ abstract class AbstractOMBuilder extends DataModelBuilder
      */
     public function getRefFKPhpNameAffix(ForeignKey $fk, bool $plural = false): ?string
     {
-        $pluralizer = $this->getPluralizer();
-        if ($fk->getRefPhpName()) {
-            return $plural ? $pluralizer->getPluralForm($fk->getRefPhpName()) : $fk->getRefPhpName();
-        }
-
-        $className = $fk->getTable()->getPhpName();
-        if ($plural) {
-            $className = $pluralizer->getPluralForm($className);
-        }
-
-        return $className . $this->getRefRelatedBySuffix($fk);
+        return $this->nameProducer->buildForeignKeyBackReferenceNameAffix($fk, $plural);
     }
 
     /**
@@ -977,33 +394,7 @@ abstract class AbstractOMBuilder extends DataModelBuilder
      */
     protected static function getRefRelatedBySuffix(ForeignKey $fk): string
     {
-        $relCol = '';
-        foreach ($fk->getMapping() as $mapping) {
-            [$localColumn, $foreignValueOrColumn] = $mapping;
-            $localTable = $fk->getTable();
-
-            $tableName = $fk->getTableName();
-            $foreignTableName = (string)$fk->getForeignTableName();
-            $foreignKeysToForeignTable = $localTable->getForeignKeysReferencingTable($foreignTableName);
-            if ($foreignValueOrColumn instanceof Column && $foreignTableName === $tableName) {
-                $foreignColumnName = $foreignValueOrColumn->getPhpName();
-                // self referential foreign key
-                $relCol .= $foreignColumnName;
-                if (count($foreignKeysToForeignTable) > 1) {
-                    // several self-referential foreign keys
-                    $relCol .= array_search($fk, $foreignKeysToForeignTable);
-                }
-            } elseif (count($foreignKeysToForeignTable) > 1 || count($fk->getForeignTableOrFail()->getForeignKeysReferencingTable($tableName)) > 0) {
-                // several foreign keys to the same table, or symmetrical foreign key in foreign table
-                $relCol .= $localColumn->getPhpName();
-            }
-        }
-
-        if ($relCol) {
-            $relCol = 'RelatedBy' . $relCol;
-        }
-
-        return $relCol;
+        return NameProducer::buildForeignKeyBackReferenceRelatedBySuffix($fk);
     }
 
     /**

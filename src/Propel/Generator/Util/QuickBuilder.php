@@ -242,6 +242,22 @@ class QuickBuilder
     }
 
     /**
+     * Create Database object from schema.
+     * Does not create classes or DB tables.
+     *
+     * @param string $schema
+     *
+     * @return \Propel\Generator\Model\Database
+     */
+    public static function parseSchema(string $schema): Database
+    {
+        $builder = new self();
+        $builder->setSchema($schema);
+
+        return $builder->getDatabase();
+    }
+
+    /**
      * @param string|null $dsn
      * @param string|null $user
      * @param string|null $pass
@@ -358,7 +374,7 @@ class QuickBuilder
                     $this->database,
                     $database,
                     $diff,
-                ), null, $e);
+                ), $e->getCode(), $e);
             }
         }
 

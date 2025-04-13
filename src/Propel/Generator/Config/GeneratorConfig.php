@@ -34,6 +34,41 @@ class GeneratorConfig extends ConfigurationManager implements GeneratorConfigInt
     protected const PLURALIZER = PluralizerInterface::class;
 
     /**
+     * Config key for name of object class (base class).
+     *
+     * @var string
+     */
+    public const KEY_OBJECT_BASE = 'object';
+
+    /**
+     * Config key for name of object stub class (model class).
+     *
+     * @var string
+     */
+    public const KEY_OBJECT_STUB = 'objectstub';
+
+    /**
+     * Config key for name of query class (base class).
+     *
+     * @var string
+     */
+    public const KEY_QUERY_BASE = 'query';
+
+    /**
+     * Config key for name of query stub.
+     *
+     * @var string
+     */
+    public const KEY_QUERY_STUB = 'querystub';
+
+    /**
+     * Config key for name of table mapclass.
+     *
+     * @var string
+     */
+    public const KEY_TABLEMAP = 'tablemap';
+
+    /**
      * @var \Propel\Generator\Util\BehaviorLocator
      */
     protected $behaviorLocator;
