@@ -37,16 +37,15 @@ use Propel\Runtime\Exception\PropelException;
 class ObjectBuilder extends AbstractObjectBuilder
 {
     /**
-     * @var \Propel\Generator\Builder\Om\ObjectBuilder\CrossFkCodeProducer
+     * @var array<\Propel\Generator\Builder\Om\ObjectBuilder\CrossFkCodeProducer>
      */
-    protected $crossFkCodeProducer;
+    protected $crossFkCodeProducers = [];
 
     /**
      * @param \Propel\Generator\Model\Table $table
      */
     public function __construct(Table $table)
     {
-        $this->crossFkCodeProducer = new CrossFkCodeProducer($table, $this);
         parent::__construct($table);
     }
     
@@ -59,7 +58,13 @@ class ObjectBuilder extends AbstractObjectBuilder
     protected function init(Table $table, ?GeneratorConfigInterface $generatorConfig)
     {
         parent::init($table, $generatorConfig);
-        $this->crossFkCodeProducer->init($table, $generatorConfig);
+        $this->crossFkCodeProducers = [];
+        if (!$generatorConfig) {
+            return;
+        }
+        foreach($table->getCrossFks() as $crossFk) {
+            $this->crossFkCodeProducers[] = new CrossFkCodeProducer($crossFk, $this);
+        }
     }
 
     /**
@@ -361,10 +366,8 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
             $this->addAttributes($script);
         }
 
-        if ($table->hasCrossForeignKeys()) {
-            foreach ($table->getCrossFks() as $crossFKs) {
-                $this->crossFkCodeProducer->addCrossScheduledForDeletionAttribute($script, $crossFKs);
-            }
+        foreach ($this->crossFkCodeProducers as $producer) {
+            $producer->addCrossScheduledForDeletionAttribute($script);
         }
 
         foreach ($table->getReferrers() as $refFK) {
@@ -416,7 +419,11 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
 
         $this->addFKMethods($script);
         $this->addRefFKMethods($script);
-        $this->crossFkCodeProducer->addCrossFKMethods($script);
+
+        foreach ($this->crossFkCodeProducers as $producer) {
+            $producer->addCrossFKMethods($script);
+        }
+
         $this->addClear($script);
         $this->addClearAllReferences($script);
 
@@ -495,8 +502,8 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
         }
 
         // many-to-many relationships
-        foreach ($table->getCrossFks() as $crossFKs) {
-            $this->crossFkCodeProducer->addCrossFKAttributes($script, $crossFKs);
+        foreach ($this->crossFkCodeProducers as $producer) {
+            $producer->addAttributes($script);
         }
 
         $this->addAlreadyInSaveAttribute($script);
@@ -3645,9 +3652,10 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
             }
         }
 
-        foreach ($table->getCrossFks() as $crossFKs) {
+        foreach ($this->crossFkCodeProducers as $producer) {
+            $columnName = $producer->buildLocalColumnNameForCrossRef(false);
             $script .= "
-            \$this->" . $this->crossFkCodeProducer->buildLocalColumnNameForCrossRef($crossFKs, false) . ' = null;';
+            \$this->$columnName = null;";
         }
 
         $script .= "
@@ -5082,10 +5090,8 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
             }
 ";
 
-        if ($table->hasCrossForeignKeys()) {
-            foreach ($table->getCrossFks() as $crossFKs) {
-                $this->crossFkCodeProducer->addCrossFkScheduledForDeletion($script, $crossFKs);
-            }
+        foreach ($this->crossFkCodeProducers as $producer) {
+            $producer->addCrossFkScheduledForDeletion($script);
         }
 
         foreach ($table->getReferrers() as $refFK) {
@@ -5969,9 +5975,11 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
             }
             $vars[] = $varName;
         }
-        foreach ($this->getTable()->getCrossFks() as $crossFKs) {
-            $varName = $this->crossFkCodeProducer->buildLocalColumnNameForCrossRef($crossFKs, false);
-            if ($crossFKs->hasCombinedKey()) {
+
+        foreach ($this->crossFkCodeProducers as $producer) {
+            $varName = $producer->buildLocalColumnNameForCrossRef( false);
+
+            if ($producer->getCrossRelation()->hasCombinedKey()) {
                 $varName = 'combination' . ucfirst($varName); // TODO move to buildLocalColumnNameForCrossRef
             }
             $script .= "

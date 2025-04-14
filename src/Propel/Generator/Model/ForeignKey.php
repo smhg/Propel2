@@ -1121,4 +1121,19 @@ class ForeignKey extends MappingModel
 
         return count($cols) !== 0;
     }
+
+    public function __toString(): string
+    {
+        $localTableName = $this->parentTable->getName();
+        $targetTableName = $this->getForeignTableName();
+
+        $connections = [];
+        foreach($this->localColumns as $index => $columnName){
+            $connections[] = "$localTableName.$columnName -> $targetTableName.{$this->foreignColumns[$index]}";
+        }
+        $glue = "\n - ";
+        $columns =implode($glue, $connections) . "\n";
+
+        return "Foreign key from $localTableName to $targetTableName: $glue$columns" ;
+    }
 }

@@ -270,4 +270,20 @@ class CrossForeignKeys
 
         return $this->crossForeignKeys[0]->getForeignTableOrFail();
     }
+
+    public function __tostring(): string
+    {
+        if (!$this->crossForeignKeys) {
+            return 'Incomplete many-to-many relation';
+        }
+        $sourceTableName = $this->getTable()->getName();
+        $middleTableName = $this->getMiddleTable()->getName();
+        $targetTableName = $this->getTargetTable()->getName();
+        $fks = array_map(fn($fk) => $fk->__toString(),$this->getCrossForeignKeys());
+
+        return "Many-to-many relation from $sourceTableName to $targetTableName via middle table $middleTableName"
+        . " \n Middle to source key ('incoming key'):\n" . $this->incomingForeignKey->__toString()
+        . " \n Middle to target keys ('crossForeignKeys'):\n" . implode("\n", $fks)
+        ;
+    }
 }

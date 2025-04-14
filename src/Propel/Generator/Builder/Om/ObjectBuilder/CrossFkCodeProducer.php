@@ -8,7 +8,9 @@
 
 namespace Propel\Generator\Builder\Om\ObjectBuilder;
 
+use LogicException;
 use Propel\Generator\Builder\DataModelBuilder;
+use Propel\Generator\Builder\Om\ObjectBuilder;
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\CrossForeignKeys;
 use Propel\Generator\Model\ForeignKey;
@@ -18,6 +20,33 @@ use Propel\Generator\Model\ForeignKey;
  */
 class CrossFkCodeProducer extends DataModelBuilder
 {
+    /**
+     * @var CrossForeignKeys
+     */
+    protected $crossRelation;
+
+    /**
+     * @param \Propel\Generator\Model\Table $table
+     * @param \Propel\Generator\Builder\Om\AbstractOMBuilder $builder
+     */
+    public function __construct(CrossForeignKeys $crossRelation, ObjectBuilder $builder)
+    {
+        parent::__construct($crossRelation->getTable(), $builder);
+        $this->crossRelation = $crossRelation;
+        if (!$builder->getGeneratorConfig()) {
+            throw new LogicException('CrossFkCodeProducer should not be created before GeneratorConfig is available.');
+        }
+        $this->init($this->getTable(), $builder->getGeneratorConfig());
+    }
+
+    /**
+     * @return CrossForeignKeys
+     */
+    public function getCrossRelation(): CrossForeignKeys
+    {
+        return $this->crossRelation;
+    }
+
     /**
      * @param \Propel\Generator\Model\ForeignKey $fk
      *
@@ -39,20 +68,6 @@ class CrossFkCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @return void
-     */
-    public function registerTargetClasses(): void
-    {
-        foreach ($this->getTable()->getCrossFks() as $crossFKs) {
-            foreach ($crossFKs->getCrossForeignKeys() as $fk) {
-                $table = $fk->getForeignTable();
-                $this->referencedClasses->registerBuilderResultClass($this->getNewStubObjectBuilder($table), 'Child');
-                $this->referencedClasses->registerBuilderResultClass($this->getNewStubQueryBuilder($table));
-            }
-        }
-    }
-
-    /**
      * @param string $script
      *
      * @return void
@@ -61,18 +76,28 @@ class CrossFkCodeProducer extends DataModelBuilder
     {
         $this->registerTargetClasses();
 
-        foreach ($this->getTable()->getCrossFks() as $crossFKs) {
-            $this->addCrossFKClear($script, $crossFKs);
-            $this->addCrossFKInit($script, $crossFKs);
-            $this->addCrossFKisLoaded($script, $crossFKs);
-            $this->addCrossFKCreateQuery($script, $crossFKs);
-            $this->addCrossFKGet($script, $crossFKs);
-            $this->addCrossFKSet($script, $crossFKs);
-            $this->addCrossFKCount($script, $crossFKs);
-            $this->addCrossFKAdd($script, $crossFKs);
-            $this->buildDoAdd($script, $crossFKs);
-            $this->addCrossFKRemove($script, $crossFKs);
-            //$this->addCrossFKRemoves($script, $crossFKs);
+            $this->addCrossFKClear($script);
+            $this->addCrossFKInit($script);
+            $this->addCrossFKisLoaded($script);
+            $this->addCrossFKCreateQuery($script);
+            $this->addCrossFKGet($script);
+            $this->addCrossFKSet($script);
+            $this->addCrossFKCount($script);
+            $this->addCrossFKAdd($script);
+            $this->buildDoAdd($script);
+            $this->addCrossFKRemove($script);
+            //$this->addCrossFKRemoves($script);
+    }
+
+    /**
+     * @return void
+     */
+    public function registerTargetClasses(): void
+    {
+        foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
+            $table = $fk->getForeignTable();
+            $this->referencedClasses->registerBuilderResultClass($this->getNewStubObjectBuilder($table), 'Child');
+            $this->referencedClasses->registerBuilderResultClass($this->getNewStubQueryBuilder($table));
         }
     }
 
@@ -80,47 +105,43 @@ class CrossFkCodeProducer extends DataModelBuilder
      * Resolve name of cross relation from perspective of current table (in contrast to back-relation
      * from target table or regular fk-relation on middle table).
      * 
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      * @param bool $plural
      * @param bool $lowercased
      *
      * @return string
      */
-    protected function resolveRelationForwardName(CrossForeignKeys $crossFKs, bool $plural = true, bool $lowercased = false): string
+    protected function resolveRelationForwardName(bool $plural = true, bool $lowercased = false): string
     {
-        $relationName = $this->buildCombineCrossFKsPhpNameAffix($crossFKs, false);
+        $relationName = $this->buildCombineCrossFKsPhpNameAffix(false);
 
         $existingTable = $this->getDatabase()->getTableByPhpName($relationName);
         $isNameCollision = $existingTable && $this->getTable()->isConnectedWithTable($existingTable);
         if ($plural || $isNameCollision) {
-            $relationName = $this->buildCombineCrossFKsPhpNameAffix($crossFKs, $plural, $isNameCollision);
+            $relationName = $this->buildCombineCrossFKsPhpNameAffix($plural, $isNameCollision);
         }
 
         return $lowercased ? lcfirst($relationName) : $relationName;
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     * @param \Propel\Generator\Model\ForeignKey|array|null $crossFK will be the first variable defined
-     *
      * @return array<string>
      */
-    protected function getCrossFKAddMethodInformation(CrossForeignKeys $crossFKs, $crossFK = null): array
+    protected function getCrossFKAddMethodInformation(?ForeignKey $k = null): array
     {
         $signature = $shortSignature = $normalizedShortSignature = $phpDoc = [];
-        if ($crossFK instanceof ForeignKey) {
-            $crossObjectName = '$' . $this->nameProducer->resolveRelationForwardName($crossFK, false, true);
-            $crossObjectClassName = $this->resolveTargetTableClassName($crossFK);
-            $signature[] = "$crossObjectClassName $crossObjectName" . ($crossFK->isAtLeastOneLocalColumnRequired() ? '' : ' = null');
+        if ($k instanceof ForeignKey) {
+            $crossObjectName = '$' . $this->nameProducer->resolveRelationForwardName($k, false, true);
+            $crossObjectClassName = $this->resolveTargetTableClassName($k);
+            $signature[] = "$crossObjectClassName $crossObjectName" . ($k->isAtLeastOneLocalColumnRequired() ? '' : ' = null');
             $shortSignature[] = $crossObjectName;
             $normalizedShortSignature[] = $crossObjectName;
             $phpDoc[] = "
      * @param $crossObjectClassName $crossObjectName";
-        } elseif ($crossFK == null) {
-            $crossFK = [];
+        } elseif ($k == null) {
+            $k = [];
         }
 
-        $this->extractCrossInformation($crossFKs, $crossFK, $signature, $shortSignature, $normalizedShortSignature, $phpDoc);
+        $this->extractCrossInformation($k, $signature, $shortSignature, $normalizedShortSignature, $phpDoc);
 
         $signature = implode(', ', $signature);
         $shortSignature = implode(', ', $shortSignature);
@@ -133,7 +154,6 @@ class CrossFkCodeProducer extends DataModelBuilder
     /**
      * Extracts some useful information from a CrossForeignKeys object.
      *
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      * @param \Propel\Generator\Model\ForeignKey|array $crossFKToIgnore
      * @param array $signature
      * @param array $shortSignature
@@ -143,14 +163,13 @@ class CrossFkCodeProducer extends DataModelBuilder
      * @return void
      */
     protected function extractCrossInformation(
-        CrossForeignKeys $crossFKs,
         $crossFKToIgnore,
         array &$signature,
         array &$shortSignature,
         array &$normalizedShortSignature,
         array &$phpDoc
     ): void {
-        foreach ($crossFKs->getCrossForeignKeys() as $fk) {
+        foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
             if (is_array($crossFKToIgnore) && in_array($fk, $crossFKToIgnore)) {
                 continue;
             } elseif ($fk === $crossFKToIgnore) {
@@ -168,7 +187,7 @@ class CrossFkCodeProducer extends DataModelBuilder
      * @param $phpType $name";
         }
 
-        foreach ($crossFKs->getUnclassifiedPrimaryKeys() as $primaryKey) {
+        foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $primaryKey) {
             //we need to add all those $primaryKey s as additional parameter as they are needed
             //to create the entry in the middle-table.
             $defaultValue = $primaryKey->getDefaultValueString();
@@ -186,21 +205,20 @@ class CrossFkCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      * @param bool $plural
      * @param bool $withPrefix
      *
      * @return string
      */
-    protected function buildCombineCrossFKsPhpNameAffix(CrossForeignKeys $crossFKs, bool $plural = true, bool $withPrefix = false): string
+    protected function buildCombineCrossFKsPhpNameAffix(bool $plural = true, bool $withPrefix = false): string
     {
         $names = [];
         if ($withPrefix) {
             $names[] = 'Cross';
         }
-        $fks = $crossFKs->getCrossForeignKeys();
+        $fks = $this->crossRelation->getCrossForeignKeys();
         $lastCrossFk = array_pop($fks);
-        $unclassifiedPrimaryKeys = $crossFKs->getUnclassifiedPrimaryKeys();
+        $unclassifiedPrimaryKeys = $this->crossRelation->getUnclassifiedPrimaryKeys();
         $lastIsPlural = $plural && !$unclassifiedPrimaryKeys;
 
         foreach ($fks as $fk) {
@@ -222,24 +240,23 @@ class CrossFkCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      * @param \Propel\Generator\Model\ForeignKey $excludeFK
      *
      * @return string
      */
-    protected function getCrossRefFKGetterName(CrossForeignKeys $crossFKs, ForeignKey $excludeFK): string
+    protected function getCrossRefFKGetterName(ForeignKey $excludeFK): string
     {
         $names = [];
 
-        $fks = $crossFKs->getCrossForeignKeys();
+        $fks = $this->crossRelation->getCrossForeignKeys();
 
-        foreach ($crossFKs->getMiddleTable()->getForeignKeys() as $fk) {
-            if ($fk !== $excludeFK && ($fk === $crossFKs->getIncomingForeignKey() || in_array($fk, $fks))) {
+        foreach ($this->crossRelation->getMiddleTable()->getForeignKeys() as $fk) {
+            if ($fk !== $excludeFK && ($fk === $this->crossRelation->getIncomingForeignKey() || in_array($fk, $fks))) {
                 $names[] = $this->nameProducer->resolveRelationForwardName($fk, false);
             }
         }
 
-        foreach ($crossFKs->getUnclassifiedPrimaryKeys() as $pk) {
+        foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $pk) {
             $names[] = $pk->getPhpName();
         }
 
@@ -249,18 +266,16 @@ class CrossFkCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     *
      * @return array
      */
-    protected function getCrossFKInformation(CrossForeignKeys $crossFKs): array
+    protected function getCrossFKInformation(): array
     {
         $names = [];
         $signatures = [];
         $shortSignature = [];
         $phpDoc = [];
 
-        foreach ($crossFKs->getCrossForeignKeys() as $fk) {
+        foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
             $crossObjectName = '$' . $this->nameProducer->resolveRelationForwardName($fk, false, true);
             $crossObjectClassName = $this->builderFactory->createObjectBuilder($fk->getForeignTableOrFail())->resolveInternalNameOfStubObject();
 
@@ -288,14 +303,13 @@ class CrossFkCodeProducer extends DataModelBuilder
      * Adds the method that clears the referrer fkey collection.
      *
      * @param string $script The script will be modified in this method.
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    protected function addCrossFKClear(string &$script, CrossForeignKeys $crossFKs): void
+    protected function addCrossFKClear(string &$script): void
     {
-        $relCol = $this->resolveRelationForwardName($crossFKs);
-        $collName = $this->buildLocalColumnNameForCrossRef($crossFKs, false);
+        $relCol = $this->resolveRelationForwardName();
+        $collName = $this->buildLocalColumnNameForCrossRef(false);
 
         $script .= "
     /**
@@ -316,29 +330,27 @@ class CrossFkCodeProducer extends DataModelBuilder
 
     /**
      * @param string $script
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    public function addCrossScheduledForDeletionAttribute(string &$script, CrossForeignKeys $crossFKs): void
+    public function addCrossScheduledForDeletionAttribute(string &$script): void
     {
-        $script .= $crossFKs->hasCombinedKey() 
-            ? $this->buildScheduledForDeletionAttributeWithCombinedKey($crossFKs)
-            : $this->buildScheduledForDeletionAttributeWithSimpleKey($crossFKs);
+        $script .= $this->crossRelation->hasCombinedKey() 
+            ? $this->buildScheduledForDeletionAttributeWithCombinedKey()
+            : $this->buildScheduledForDeletionAttributeWithSimpleKey();
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      * @return string
      */
-    protected function buildScheduledForDeletionAttributeWithSimpleKey(CrossForeignKeys $crossFKs): string
+    protected function buildScheduledForDeletionAttributeWithSimpleKey(): string
     {
-        $refFK = $crossFKs->getIncomingForeignKey();
+        $refFK = $this->crossRelation->getIncomingForeignKey();
         if ($refFK->isLocalPrimaryKey()) {
             return '';
         }
-        $name = $this->getCrossScheduledForDeletionVarName($crossFKs);
-        $className = $this->resolveTargetTableClassName($crossFKs->getCrossForeignKeys()[0]);
+        $name = $this->getCrossScheduledForDeletionVarName();
+        $className = $this->resolveTargetTableClassName($this->crossRelation->getCrossForeignKeys()[0]);
 
         return "
     /**
@@ -350,13 +362,12 @@ class CrossFkCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      * @return string
      */
-    protected function buildScheduledForDeletionAttributeWithCombinedKey(CrossForeignKeys $crossFKs): string
+    protected function buildScheduledForDeletionAttributeWithCombinedKey(): string
     {
-        $name = $this->getCrossScheduledForDeletionVarName($crossFKs);
-        [$names] = $this->getCrossFKInformation($crossFKs);
+        $name = $this->getCrossScheduledForDeletionVarName();
+        [$names] = $this->getCrossFKInformation();
 
         return "
     /**
@@ -376,14 +387,13 @@ class CrossFkCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      * @param bool $uppercaseFirstChar
      *
      * @return string
      */
-    public function buildLocalColumnNameForCrossRef(CrossForeignKeys $crossFKs, bool $uppercaseFirstChar): string
+    public function buildLocalColumnNameForCrossRef(bool $uppercaseFirstChar): string
     {
-        $columnName = 'coll' . $this->resolveRelationForwardName($crossFKs);
+        $columnName = 'coll' . $this->resolveRelationForwardName();
 
         return $uppercaseFirstChar ? ucfirst($columnName) : $columnName;
     }
@@ -392,21 +402,20 @@ class CrossFkCodeProducer extends DataModelBuilder
      * Adds the method that initializes the referrer fkey collection.
      *
      * @param string $script The script will be modified in this method.
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    protected function addCrossFKInit(string &$script, CrossForeignKeys $crossFKs): void
+    protected function addCrossFKInit(string &$script): void
     {
-        if ($crossFKs->hasCombinedKey()) {
+        if ($this->crossRelation->hasCombinedKey()) {
 
-            $columnName = 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true);
-            $relationName = $this->resolveRelationForwardName($crossFKs, true);
+            $columnName = 'combination' . $this->buildLocalColumnNameForCrossRef( true);
+            $relationName = $this->resolveRelationForwardName(true);
             $collectionClassName = 'ObjectCombinationCollection';
 
             $this->buildInitCode($script, $columnName, $relationName, $collectionClassName, null, null);
         } else {
-            foreach ($crossFKs->getCrossForeignKeys() as $fk) {
+            foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
                 $relationName = $this->nameProducer->resolveRelationForwardName($fk, true);
                 $columnName = $this->getCrossFKVarName($fk);
                 $relatedObjectClassName = $this->referencedClasses->getInternalNameOfBuilderResultClass(
@@ -466,21 +475,20 @@ class CrossFkCodeProducer extends DataModelBuilder
      * Adds the method that check if the referrer fkey collection is initialized.
      *
      * @param string $script The script will be modified in this method.
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    protected function addCrossFKIsLoaded(string &$script, CrossForeignKeys $crossFKs): void
+    protected function addCrossFKIsLoaded(string &$script): void
     {
         $inits = [];
 
-        if ($crossFKs->hasCombinedKey()) {
+        if ($this->crossRelation->hasCombinedKey()) {
             $inits[] = [
-                'relCol' => $this->resolveRelationForwardName($crossFKs, true),
-                'collName' => 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true),
+                'relCol' => $this->resolveRelationForwardName( true),
+                'collName' => 'combination' . $this->buildLocalColumnNameForCrossRef(true),
             ];
         } else {
-            foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
+            foreach ($this->crossRelation->getCrossForeignKeys() as $crossFK) {
                 $relCol = $this->nameProducer->resolveRelationForwardName($crossFK, true);
                 $collName = $this->getCrossFKVarName($crossFK);
 
@@ -511,24 +519,23 @@ class CrossFkCodeProducer extends DataModelBuilder
 
     /**
      * @param string $script
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    protected function addCrossFKCreateQuery(string &$script, CrossForeignKeys $crossFKs): void
+    protected function addCrossFKCreateQuery(string &$script): void
     {
-        if (!$crossFKs->hasCombinedKey()) {
+        if (!$this->crossRelation->hasCombinedKey()) {
             return;
         }
 
-        $refFK = $crossFKs->getIncomingForeignKey();
+        $refFK = $this->crossRelation->getIncomingForeignKey();
         $selfRelationName = $this->nameProducer->resolveRelationForwardName($refFK, false);
-        $firstFK = $crossFKs->getCrossForeignKeys()[0];
+        $firstFK = $this->crossRelation->getCrossForeignKeys()[0];
         $firstFkName = $this->nameProducer->resolveRelationForwardName($firstFK, true);
 
         $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $firstFK->getForeignTable());
         $signature = $shortSignature = $normalizedShortSignature = $phpDoc = [];
-        $this->extractCrossInformation($crossFKs, [$firstFK], $signature, $shortSignature, $normalizedShortSignature, $phpDoc);
+        $this->extractCrossInformation([$firstFK], $signature, $shortSignature, $normalizedShortSignature, $phpDoc);
 
         $signature = array_map(function ($item) {
             return $item . ' = null';
@@ -536,7 +543,7 @@ class CrossFkCodeProducer extends DataModelBuilder
         $signature = implode(', ', $signature);
         $phpDoc = implode(', ', $phpDoc);
 
-        $relatedUseQueryClassName = $this->getNewStubQueryBuilder($crossFKs->getMiddleTable())->getUnqualifiedClassName();
+        $relatedUseQueryClassName = $this->getNewStubQueryBuilder($this->crossRelation->getMiddleTable())->getUnqualifiedClassName();
         $relatedUseQueryGetter = 'use' . ucfirst($relatedUseQueryClassName);
         $relatedUseQueryVariableName = lcfirst($relatedUseQueryClassName);
 
@@ -556,8 +563,8 @@ class CrossFkCodeProducer extends DataModelBuilder
         \$$relatedUseQueryVariableName = \$criteria->{$relatedUseQueryGetter}();
 ";
 
-        foreach ($crossFKs->getCrossForeignKeys() as $fk) {
-            if ($crossFKs->getIncomingForeignKey() === $fk || $firstFK === $fk) {
+        foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
+            if ($this->crossRelation->getIncomingForeignKey() === $fk || $firstFK === $fk) {
                 continue;
             }
 
@@ -570,7 +577,7 @@ class CrossFkCodeProducer extends DataModelBuilder
         }
             ";
         }
-        foreach ($crossFKs->getUnclassifiedPrimaryKeys() as $pk) {
+        foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $pk) {
             $filterName = $pk->getPhpName();
             $name = lcfirst($pk->getPhpName());
 
@@ -591,26 +598,25 @@ class CrossFkCodeProducer extends DataModelBuilder
 
     /**
      * @param string $script
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    protected function addCrossFKGet(string &$script, CrossForeignKeys $crossFKs): void
+    protected function addCrossFKGet(string &$script): void
     {
-        $refFK = $crossFKs->getIncomingForeignKey();
+        $refFK = $this->crossRelation->getIncomingForeignKey();
         $selfRelationName = $this->nameProducer->resolveRelationForwardName($refFK, false);
-        $crossRefTableName = $crossFKs->getMiddleTable()->getName();
+        $crossRefTableName = $this->crossRelation->getMiddleTable()->getName();
 
-        if ($crossFKs->hasCombinedKey()) {
-            $relatedName = $this->resolveRelationForwardName($crossFKs, true);
-            $collVarName = 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true);
+        if ($this->crossRelation->hasCombinedKey()) {
+            $relatedName = $this->resolveRelationForwardName(true);
+            $collVarName = 'combination' . $this->buildLocalColumnNameForCrossRef(true);
 
             $classNames = [];
-            foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
+            foreach ($this->crossRelation->getCrossForeignKeys() as $crossFK) {
                 $classNames[] = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $crossFK->getForeignTable());
             }
             $classNames = implode(', ', $classNames);
-            $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $crossFKs->getMiddleTable());
+            $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $this->crossRelation->getMiddleTable());
 
             $script .= "
     /**
@@ -641,7 +647,7 @@ class CrossFkCodeProducer extends DataModelBuilder
 
                 \$query = $relatedQueryClassName::create(null, \$criteria)
                     ->filterBy{$selfRelationName}(\$this)";
-            foreach ($crossFKs->getCrossForeignKeys() as $fk) {
+            foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
                 $varName = $this->nameProducer->resolveRelationForwardName($fk, false);
                 $script .= "
                     ->join{$varName}()";
@@ -656,13 +662,13 @@ class CrossFkCodeProducer extends DataModelBuilder
                     \$combination = [];
 ";
 
-            foreach ($crossFKs->getCrossForeignKeys() as $fk) {
+            foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
                 $varName = $this->nameProducer->resolveRelationForwardName($fk, false);
                 $script .= "
                     \$combination[] = \$item->get{$varName}();";
             }
 
-            foreach ($crossFKs->getUnclassifiedPrimaryKeys() as $pk) {
+            foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $pk) {
                 $varName = $pk->getPhpName();
                 $script .= "
                     \$combination[] = \$item->get{$varName}();";
@@ -694,13 +700,13 @@ class CrossFkCodeProducer extends DataModelBuilder
     }
 ";
 
-            $relatedName = $this->resolveRelationForwardName($crossFKs, true);
-            $firstFK = $crossFKs->getCrossForeignKeys()[0];
+            $relatedName = $this->resolveRelationForwardName(true);
+            $firstFK = $this->crossRelation->getCrossForeignKeys()[0];
             $firstFkName = $this->nameProducer->resolveRelationForwardName($firstFK, true);
 
             $relatedObjectClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $firstFK->getForeignTable());
             $signature = $shortSignature = $normalizedShortSignature = $phpDoc = [];
-            $this->extractCrossInformation($crossFKs, [$firstFK], $signature, $shortSignature, $normalizedShortSignature, $phpDoc);
+            $this->extractCrossInformation([$firstFK], $signature, $shortSignature, $normalizedShortSignature, $phpDoc);
 
             $signature = array_map(function ($item) {
                 return $item . ' = null';
@@ -730,7 +736,7 @@ class CrossFkCodeProducer extends DataModelBuilder
             return;
         }
 
-        foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
+        foreach ($this->crossRelation->getCrossForeignKeys() as $crossFK) {
             $relatedName = $this->nameProducer->resolveRelationForwardName($crossFK, true);
             $relatedObjectClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $crossFK->getForeignTable());
             $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $crossFK->getForeignTable());
@@ -794,27 +800,26 @@ class CrossFkCodeProducer extends DataModelBuilder
 
     /**
      * @param string $script
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    protected function addCrossFKSet(string &$script, CrossForeignKeys $crossFKs): void
+    protected function addCrossFKSet(string &$script): void
     {
-        $scheduledForDeletionVarName = $this->getCrossScheduledForDeletionVarName($crossFKs);
+        $scheduledForDeletionVarName = $this->getCrossScheduledForDeletionVarName();
 
-        $multi = $crossFKs->hasCombinedKey();
+        $multi = $this->crossRelation->hasCombinedKey();
 
-        $relatedNamePlural = $this->resolveRelationForwardName($crossFKs, true);
-        $relatedName = $this->resolveRelationForwardName($crossFKs, false);
+        $relatedNamePlural = $this->resolveRelationForwardName(true);
+        $relatedName = $this->resolveRelationForwardName(false);
         $inputCollection = lcfirst($relatedNamePlural);
         $foreachItem = lcfirst($relatedName);
-        $crossRefTableName = $crossFKs->getMiddleTable()->getName();
+        $crossRefTableName = $this->crossRelation->getMiddleTable()->getName();
 
         if ($multi) {
-            [$relatedObjectClassName] = $this->getCrossFKInformation($crossFKs);
-            $collName = 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true);
+            [$relatedObjectClassName] = $this->getCrossFKInformation();
+            $collName = 'combination' . $this->buildLocalColumnNameForCrossRef(true);
         } else {
-            $crossFK = $crossFKs->getCrossForeignKeys()[0];
+            $crossFK = $this->crossRelation->getCrossForeignKeys()[0];
             $relatedObjectClassName = $this->getNewStubObjectBuilder($crossFK->getForeignTable())->getUnqualifiedClassName();
             $collName = $this->getCrossFKVarName($crossFK);
         }
@@ -873,15 +878,14 @@ class CrossFkCodeProducer extends DataModelBuilder
 
     /**
      * @param string $script
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    public function addCrossFKAttributes(string &$script, CrossForeignKeys $crossFKs): void
+    public function addAttributes(string &$script): void
     {
-        if ($crossFKs->hasCombinedKey()) {
-            $localColumnName = $this->buildLocalColumnNameForCrossRef($crossFKs, true);
-            [$names] = $this->getCrossFKInformation($crossFKs);
+        if ($this->crossRelation->hasCombinedKey()) {
+            $localColumnName = $this->buildLocalColumnNameForCrossRef(true);
+            [$names] = $this->getCrossFKInformation();
             $script .= "
     /**
      * @var ObjectCombinationCollection Cross CombinationCollection to store aggregation of $names combinations.
@@ -895,9 +899,9 @@ class CrossFkCodeProducer extends DataModelBuilder
 ";
         }
 
-        foreach ($crossFKs->getCrossForeignKeys() as $fk) {
+        foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
             $className = $this->resolveTargetTableClassName($fk);
-            $localColumnName = '$' . $this->buildLocalColumnNameForCrossRef($crossFKs, false);
+            $localColumnName = '$' . $this->buildLocalColumnNameForCrossRef(false);
 
             $script .= "
     /**
@@ -915,18 +919,16 @@ class CrossFkCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     *
      * @return string
      */
-    protected function getCrossScheduledForDeletionVarName(CrossForeignKeys $crossFKs): string
+    protected function getCrossScheduledForDeletionVarName(): string
     {
-        if ($crossFKs->hasCombinedKey()) {
-            $relationName = $this->buildLocalColumnNameForCrossRef($crossFKs, true);
+        if ($this->crossRelation->hasCombinedKey()) {
+            $relationName = $this->buildLocalColumnNameForCrossRef(true);
 
             return "combination{$relationName}ScheduledForDeletion";
         } else {
-            $relationName = $this->resolveRelationForwardName($crossFKs, true, true);
+            $relationName = $this->resolveRelationForwardName(true, true);
 
             return "{$relationName}ScheduledForDeletion";
         }
@@ -934,17 +936,16 @@ class CrossFkCodeProducer extends DataModelBuilder
 
     /**
      * @param string $script
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    public function addCrossFkScheduledForDeletion(string &$script, CrossForeignKeys $crossFKs): void
+    public function addCrossFkScheduledForDeletion(string &$script): void
     {
-        $multipleFks = $crossFKs->hasCombinedKey();
-        $scheduledForDeletionVarName = $this->getCrossScheduledForDeletionVarName($crossFKs);
-        $queryClassName = $this->getNewStubQueryBuilder($crossFKs->getMiddleTable())->getClassname();
+        $multipleFks = $this->crossRelation->hasCombinedKey();
+        $scheduledForDeletionVarName = $this->getCrossScheduledForDeletionVarName();
+        $queryClassName = $this->getNewStubQueryBuilder($this->crossRelation->getMiddleTable())->getClassname();
 
-        $crossPks = $crossFKs->getMiddleTable()->getPrimaryKey();
+        $crossPks = $this->crossRelation->getMiddleTable()->getPrimaryKey();
 
         $script .= "
             if (\$this->$scheduledForDeletionVarName !== null) {
@@ -955,7 +956,7 @@ class CrossFkCodeProducer extends DataModelBuilder
                     foreach (\$this->{$scheduledForDeletionVarName} as \$combination) {
                         \$entryPk = [];
 ";
-            foreach ($crossFKs->getIncomingForeignKey()->getColumnObjectsMapping() as $reference) {
+            foreach ($this->crossRelation->getIncomingForeignKey()->getColumnObjectsMapping() as $reference) {
                 $local = $reference['local'];
                 $foreign = $reference['foreign'];
 
@@ -965,7 +966,7 @@ class CrossFkCodeProducer extends DataModelBuilder
             }
 
             $combinationIdx = 0;
-            foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
+            foreach ($this->crossRelation->getCrossForeignKeys() as $crossFK) {
                 foreach ($crossFK->getColumnObjectsMapping() as $reference) {
                     $local = $reference['local'];
                     $foreign = $reference['foreign'];
@@ -977,7 +978,7 @@ class CrossFkCodeProducer extends DataModelBuilder
                 $combinationIdx++;
             }
 
-            foreach ($crossFKs->getUnclassifiedPrimaryKeys() as $pk) {
+            foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $pk) {
                 $idx = array_search($pk, $crossPks, true);
                 $script .= "
                         //\$combination[$combinationIdx] = {$pk->getPhpName()};
@@ -1002,7 +1003,7 @@ class CrossFkCodeProducer extends DataModelBuilder
                         \$entryPk = [];
 ";
 
-            foreach ($crossFKs->getIncomingForeignKey()->getColumnObjectsMapping() as $reference) {
+            foreach ($this->crossRelation->getIncomingForeignKey()->getColumnObjectsMapping() as $reference) {
                 $local = $reference['local'];
                 $foreign = $reference['foreign'];
 
@@ -1011,7 +1012,7 @@ class CrossFkCodeProducer extends DataModelBuilder
                         \$entryPk[$idx] = \$this->get{$foreign->getPhpName()}();";
             }
 
-            $crossFK = $crossFKs->getCrossForeignKeys()[0];
+            $crossFK = $this->crossRelation->getCrossForeignKeys()[0];
             foreach ($crossFK->getColumnObjectsMapping() as $reference) {
                 $local = $reference['local'];
                 $foreign = $reference['foreign'];
@@ -1041,14 +1042,14 @@ class CrossFkCodeProducer extends DataModelBuilder
 ";
 
         if ($multipleFks) {
-            $combineVarName = 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true);
+            $combineVarName = 'combination' . $this->buildLocalColumnNameForCrossRef(true);
             $script .= "
             if (\$this->$combineVarName !== null) {
                 foreach (\$this->$combineVarName as \$combination) {
 ";
 
             $combinationIdx = 0;
-            foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
+            foreach ($this->crossRelation->getCrossForeignKeys() as $crossFK) {
                 $script .= "
                     //\$combination[$combinationIdx] = {$crossFK->getForeignTable()->getPhpName()} ({$crossFK->getName()})
                     if (!\$combination[$combinationIdx]->isDeleted() && (\$combination[$combinationIdx]->isNew() || \$combination[$combinationIdx]->isModified())) {
@@ -1059,7 +1060,7 @@ class CrossFkCodeProducer extends DataModelBuilder
                 $combinationIdx++;
             }
 
-            foreach ($crossFKs->getUnclassifiedPrimaryKeys() as $pk) {
+            foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $pk) {
                 $script .= "
                     //\$combination[$combinationIdx] = {$pk->getPhpName()}; Nothing to save.";
                 $combinationIdx++;
@@ -1070,7 +1071,7 @@ class CrossFkCodeProducer extends DataModelBuilder
             }
 ";
         } else {
-            foreach ($crossFKs->getCrossForeignKeys() as $fk) {
+            foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
                 $relatedName = $this->nameProducer->resolveRelationForwardName($fk, true);
                 $lowerSingleRelatedName = $this->nameProducer->resolveRelationForwardName($fk, false, true);
 
@@ -1092,26 +1093,25 @@ class CrossFkCodeProducer extends DataModelBuilder
 
     /**
      * @param string $script
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    protected function addCrossFKCount(string &$script, CrossForeignKeys $crossFKs): void
+    protected function addCrossFKCount(string &$script): void
     {
-        $refFK = $crossFKs->getIncomingForeignKey();
+        $refFK = $this->crossRelation->getIncomingForeignKey();
         $selfRelationName = $this->nameProducer->resolveRelationForwardName($refFK, false);
 
-        $multi = $crossFKs->hasCombinedKey();
+        $multi = $this->crossRelation->hasCombinedKey();
 
-        $relatedName = $this->resolveRelationForwardName($crossFKs, true);
-        $crossRefTableName = $crossFKs->getMiddleTable()->getName();
+        $relatedName = $this->resolveRelationForwardName(true);
+        $crossRefTableName = $this->crossRelation->getMiddleTable()->getName();
 
         if ($multi) {
-            [$relatedObjectClassName] = $this->getCrossFKInformation($crossFKs);
-            $collName = 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true);
-            $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $crossFKs->getMiddleTable());
+            [$relatedObjectClassName] = $this->getCrossFKInformation();
+            $collName = 'combination' . $this->buildLocalColumnNameForCrossRef(true);
+            $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $this->crossRelation->getMiddleTable());
         } else {
-            $crossFK = $crossFKs->getCrossForeignKeys()[0];
+            $crossFK = $this->crossRelation->getCrossForeignKeys()[0];
             $relatedObjectClassName = $this->getNewStubObjectBuilder($crossFK->getForeignTable())->getUnqualifiedClassName();
             $collName = $this->getCrossFKVarName($crossFK);
             $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $crossFK->getForeignTable());
@@ -1156,13 +1156,13 @@ class CrossFkCodeProducer extends DataModelBuilder
 ";
 
         if ($multi) {
-            $relatedName = $this->resolveRelationForwardName($crossFKs, true);
-            $firstFK = $crossFKs->getCrossForeignKeys()[0];
+            $relatedName = $this->resolveRelationForwardName(true);
+            $firstFK = $this->crossRelation->getCrossForeignKeys()[0];
             $firstFkName = $this->nameProducer->resolveRelationForwardName($firstFK, true);
 
             $relatedObjectClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $firstFK->getForeignTable());
             $signature = $shortSignature = $normalizedShortSignature = $phpDoc = [];
-            $this->extractCrossInformation($crossFKs, [$firstFK], $signature, $shortSignature, $normalizedShortSignature, $phpDoc);
+            $this->extractCrossInformation([$firstFK], $signature, $shortSignature, $normalizedShortSignature, $phpDoc);
 
             $signature = array_map(function ($item) {
                 return $item . ' = null';
@@ -1195,29 +1195,28 @@ class CrossFkCodeProducer extends DataModelBuilder
      * Adds the method that adds an object into the referrer fkey collection.
      *
      * @param string $script The script will be modified in this method.
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    protected function addCrossFKAdd(string &$script, CrossForeignKeys $crossFKs): void
+    protected function addCrossFKAdd(string &$script): void
     {
-        $refFK = $crossFKs->getIncomingForeignKey();
+        $refFK = $this->crossRelation->getIncomingForeignKey();
 
-        foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
-            if ($crossFKs->hasCombinedKey()) {
-                $collName = 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true); // local column
-                $relNamePlural = ucfirst($this->resolveRelationForwardName($crossFKs, true)); // relation combine name plural
-                $relName = ucfirst($this->resolveRelationForwardName($crossFKs, false)); // relation combine name
+        foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
+            if ($this->crossRelation->hasCombinedKey()) {
+                $collName = 'combination' . $this->buildLocalColumnNameForCrossRef(true); // local column
+                $relNamePlural = ucfirst($this->resolveRelationForwardName(true)); // relation combine name plural
+                $relName = ucfirst($this->resolveRelationForwardName(false)); // relation combine name
             } else {
-                $collName = $this->getCrossFKVarName($crossFK); // column single name i.e. 'collTeams'
-                $relNamePlural = $this->nameProducer->resolveRelationForwardName($crossFK, true); // relation single name plural (?!?) i.e. 'Teams'
-                $relName = $this->nameProducer->resolveRelationForwardName($crossFK, false); // relation single name i.e. 'Teams'
+                $collName = $this->getCrossFKVarName($fk); // column single name i.e. 'collTeams'
+                $relNamePlural = $this->nameProducer->resolveRelationForwardName($fk, true); // relation single name plural (?!?) i.e. 'Teams'
+                $relName = $this->nameProducer->resolveRelationForwardName($fk, false); // relation single name i.e. 'Teams'
             }
 
             $tblFK = $refFK->getTable();
-            $relatedObjectClassName = $this->resolveRelationForwardName($crossFKs, false);
-            $crossObjectClassName = $this->resolveTargetTableClassName($crossFK);
-            [$signature, $shortSignature, $normalizedShortSignature, $phpDoc] = $this->getCrossFKAddMethodInformation($crossFKs, $crossFK);
+            $relatedObjectClassName = $this->resolveRelationForwardName(false);
+            $crossObjectClassName = $this->resolveTargetTableClassName($fk);
+            [$signature, $shortSignature, $normalizedShortSignature, $phpDoc] = $this->getCrossFKAddMethodInformation($fk);
 
             $script .= "
     /**
@@ -1247,14 +1246,13 @@ class CrossFkCodeProducer extends DataModelBuilder
     /**
      * Returns a function signature comma separated.
      *
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      * @param string $excludeSignatureItem Which variable to exclude.
      *
      * @return string
      */
-    protected function getCrossFKGetterSignature(CrossForeignKeys $crossFKs, string $excludeSignatureItem): string
+    protected function getCrossFKGetterSignature(string $excludeSignatureItem): string
     {
-        [, $getSignature] = $this->getCrossFKAddMethodInformation($crossFKs);
+        [, $getSignature] = $this->getCrossFKAddMethodInformation();
         $getSignature = explode(', ', $getSignature);
 
         $pos = array_search($excludeSignatureItem, $getSignature);
@@ -1267,36 +1265,33 @@ class CrossFkCodeProducer extends DataModelBuilder
 
     /**
      * @param string $script The script will be modified in this method.
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    protected function buildDoAdd(string &$script, CrossForeignKeys $crossFKs): void
+    protected function buildDoAdd(string &$script): void
     {
-        $script .= $crossFKs->hasCombinedKey() ? $this->buildDoAddWithMultiKey($crossFKs) : $this->buildDoAddWithSingleKey($crossFKs);
+        $script .= $this->crossRelation->hasCombinedKey() ? $this->buildDoAddWithMultiKey() : $this->buildDoAddWithSingleKey();
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     *
      * @return string
      */
-    protected function buildDoAddWithSingleKey(CrossForeignKeys $crossFKs): string
+    protected function buildDoAddWithSingleKey(): string
     {
-        $relationKeys = $this->nameProducer->resolveRelationForwardName($crossFKs->getIncomingForeignKey(), true);
-        $relatedObjectClassName = $this->resolveRelationForwardName($crossFKs, false);
-        $targetClassName = $this->resolveSourceTableClassName($crossFKs->getIncomingForeignKey());
+        $relationKeys = $this->nameProducer->resolveRelationForwardName($this->crossRelation->getIncomingForeignKey(), true);
+        $relatedObjectClassName = $this->resolveRelationForwardName(false);
+        $targetClassName = $this->resolveSourceTableClassName($this->crossRelation->getIncomingForeignKey());
 
-        $refKObjectClassName = $this->nameProducer->buildForeignKeyBackReferenceNameAffix($crossFKs->getIncomingForeignKey(), false);
-        $tblFK = $crossFKs->getIncomingForeignKey()->getTable();
+        $refKObjectClassName = $this->nameProducer->buildForeignKeyBackReferenceNameAffix($this->crossRelation->getIncomingForeignKey(), false);
+        $tblFK = $this->crossRelation->getIncomingForeignKey()->getTable();
         $foreignObjectName = '$' . $tblFK->getCamelCaseName();
 
-        [$signature, $shortSignature, $normalizedShortSignature, $phpDoc] = $this->getCrossFKAddMethodInformation($crossFKs);
-        $fk = $crossFKs->getCrossForeignKeys()[0];
-        $refFK = $crossFKs->getIncomingForeignKey();
+        [$signature, $shortSignature, $normalizedShortSignature, $phpDoc] = $this->getCrossFKAddMethodInformation();
+        $fk = $this->crossRelation->getCrossForeignKeys()[0];
+        $refFK = $this->crossRelation->getIncomingForeignKey();
         
         $relatedObject = '$' . $this->nameProducer->resolveRelationForwardName($fk, false, true);
-        $getterArgs = $this->getCrossFKGetterSignature($crossFKs, $relatedObject);
+        $getterArgs = $this->getCrossFKGetterSignature($relatedObject);
         $relationNameOnOtherSide = $this->nameProducer->resolveRelationForwardName($refFK, false);
 
         $script = "
@@ -1326,20 +1321,18 @@ class CrossFkCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
-     *
      * @return string
      */
-    protected function buildDoAddWithMultiKey(CrossForeignKeys $crossFKs): string
+    protected function buildDoAddWithMultiKey(): string
     {
-        $relatedObjectClassName = $this->resolveRelationForwardName($crossFKs, false);
-        $className = $this->resolveSourceTableClassName($crossFKs->getIncomingForeignKey());
+        $relatedObjectClassName = $this->resolveRelationForwardName(false);
+        $className = $this->resolveSourceTableClassName($this->crossRelation->getIncomingForeignKey());
 
-        $refKObjectClassName = $this->nameProducer->buildForeignKeyBackReferenceNameAffix($crossFKs->getIncomingForeignKey(), false);
-        $tblFK = $crossFKs->getIncomingForeignKey()->getTable();
+        $refKObjectClassName = $this->nameProducer->buildForeignKeyBackReferenceNameAffix($this->crossRelation->getIncomingForeignKey(), false);
+        $tblFK = $this->crossRelation->getIncomingForeignKey()->getTable();
         $foreignObjectName = '$' . $tblFK->getCamelCaseName();
 
-        [$signature, $shortSignature, $normalizedShortSignature, $phpDoc] = $this->getCrossFKAddMethodInformation($crossFKs);
+        [$signature, $shortSignature, $normalizedShortSignature, $phpDoc] = $this->getCrossFKAddMethodInformation();
 
         $script = "
     /**
@@ -1349,30 +1342,30 @@ class CrossFkCodeProducer extends DataModelBuilder
     {
         {$foreignObjectName} = new {$className}();";
 
-            foreach ($crossFKs->getCrossForeignKeys() as $fK) {
+            foreach ($this->crossRelation->getCrossForeignKeys() as $fK) {
                 $targetKey = $this->nameProducer->resolveRelationForwardName($fK, false, true);
                 $script .= "
         {$foreignObjectName}->set{$relatedObjectClassName}(\${$targetKey});";
             }
 
-            foreach ($crossFKs->getUnclassifiedPrimaryKeys() as $primaryKey) {
+            foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $primaryKey) {
                 $paramName = lcfirst($primaryKey->getPhpName());
                 $script .= "
         {$foreignObjectName}->set{$primaryKey->getPhpName()}(\$$paramName);\n";
             }
 
-        $targetKeyOnOtherSide = $this->nameProducer->resolveRelationForwardName($crossFKs->getIncomingForeignKey(), false);
+        $targetKeyOnOtherSide = $this->nameProducer->resolveRelationForwardName($this->crossRelation->getIncomingForeignKey(), false);
 
         $script .= "
         {$foreignObjectName}->set{$targetKeyOnOtherSide}(\$this);
 
         \$this->add{$refKObjectClassName}({$foreignObjectName});\n";
 
-            foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
+            foreach ($this->crossRelation->getCrossForeignKeys() as $crossFK) {
                 $lowerRelatedObjectClassName = $this->nameProducer->resolveRelationForwardName($crossFK, false, true);
 
-                $getterName = $this->getCrossRefFKGetterName($crossFKs, $crossFK);
-                $getterRemoveObjectName = $this->getCrossRefFKRemoveObjectNames($crossFKs, $crossFK);
+                $getterName = $this->getCrossRefFKGetterName($crossFK);
+                $getterRemoveObjectName = $this->getCrossRefFKRemoveObjectNames($crossFK);
 
                 $script .= "
         // set the back reference to this object directly as using provided method either results
@@ -1393,20 +1386,19 @@ class CrossFkCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      * @param \Propel\Generator\Model\ForeignKey $excludeFK
      *
      * @return string
      */
-    protected function getCrossRefFKRemoveObjectNames(CrossForeignKeys $crossFKs, ForeignKey $excludeFK): string
+    protected function getCrossRefFKRemoveObjectNames(ForeignKey $excludeFK): string
     {
         $names = [];
 
-        $fks = $crossFKs->getCrossForeignKeys();
+        $fks = $this->crossRelation->getCrossForeignKeys();
 
-        foreach ($crossFKs->getMiddleTable()->getForeignKeys() as $fk) {
-            if ($fk !== $excludeFK && ($fk === $crossFKs->getIncomingForeignKey() || in_array($fk, $fks))) {
-                if ($fk === $crossFKs->getIncomingForeignKey()) {
+        foreach ($this->crossRelation->getMiddleTable()->getForeignKeys() as $fk) {
+            if ($fk !== $excludeFK && ($fk === $this->crossRelation->getIncomingForeignKey() || in_array($fk, $fks))) {
+                if ($fk === $this->crossRelation->getIncomingForeignKey()) {
                     $names[] = '$this';
                 } else {
                     $names[] = '$' . $this->nameProducer->resolveRelationForwardName($fk, false, true);
@@ -1414,7 +1406,7 @@ class CrossFkCodeProducer extends DataModelBuilder
             }
         }
 
-        foreach ($crossFKs->getUnclassifiedPrimaryKeys() as $pk) {
+        foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $pk) {
             $names[] = '$' . lcfirst($pk->getPhpName());
         }
 
@@ -1425,27 +1417,26 @@ class CrossFkCodeProducer extends DataModelBuilder
      * Adds the method that remove an object from the referrer fkey collection.
      *
      * @param string $script The script will be modified in this method.
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
      *
      * @return void
      */
-    protected function addCrossFKRemove(string &$script, CrossForeignKeys $crossFKs): void
+    protected function addCrossFKRemove(string &$script): void
     {
-        $relCol = $this->resolveRelationForwardName($crossFKs, true);
-        $collName = $crossFKs->hasCombinedKey()
-            ? 'combination' . $this->buildLocalColumnNameForCrossRef($crossFKs, true)
-            : $this->buildLocalColumnNameForCrossRef($crossFKs, false);
+        $relCol = $this->resolveRelationForwardName(true);
+        $collName = $this->crossRelation->hasCombinedKey()
+            ? 'combination' . $this->buildLocalColumnNameForCrossRef(true)
+            : $this->buildLocalColumnNameForCrossRef(false);
 
-        $tblFK = $crossFKs->getIncomingForeignKey()->getTable();
+        $tblFK = $this->crossRelation->getIncomingForeignKey()->getTable();
 
-        $M2MScheduledForDeletion = $this->getCrossScheduledForDeletionVarName($crossFKs);
-        $relatedObjectClassName = $this->resolveRelationForwardName($crossFKs, false);
+        $M2MScheduledForDeletion = $this->getCrossScheduledForDeletionVarName();
+        $relatedObjectClassName = $this->resolveRelationForwardName(false);
 
-        [$signature, $shortSignature, $normalizedShortSignature, $phpDoc] = $this->getCrossFKAddMethodInformation($crossFKs);
+        [$signature, $shortSignature, $normalizedShortSignature, $phpDoc] = $this->getCrossFKAddMethodInformation();
         $names = str_replace('$', '', $normalizedShortSignature);
 
-        $className = $this->resolveSourceTableClassName($crossFKs->getIncomingForeignKey());
-        $refKObjectClassName = $this->nameProducer->buildForeignKeyBackReferenceNameAffix($crossFKs->getIncomingForeignKey(), false);
+        $className = $this->resolveSourceTableClassName($this->crossRelation->getIncomingForeignKey());
+        $refKObjectClassName = $this->nameProducer->buildForeignKeyBackReferenceNameAffix($this->crossRelation->getIncomingForeignKey(), false);
         $foreignObjectName = '$' . $tblFK->getCamelCaseName();
 
         $script .= "
@@ -1459,7 +1450,7 @@ class CrossFkCodeProducer extends DataModelBuilder
     {
         if (\$this->get{$relCol}()->contains({$shortSignature})) {
             {$foreignObjectName} = new {$className}();";
-        foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
+        foreach ($this->crossRelation->getCrossForeignKeys() as $crossFK) {
             $relatedObjectClassName = $this->nameProducer->resolveRelationForwardName($crossFK, false);
             $lowerRelatedObjectClassName = lcfirst($relatedObjectClassName);
 
@@ -1469,8 +1460,8 @@ class CrossFkCodeProducer extends DataModelBuilder
 
             $lowerRelatedObjectClassName = lcfirst($relatedObjectClassName);
 
-            $getterName = $this->getCrossRefFKGetterName($crossFKs, $crossFK);
-            $getterRemoveObjectName = $this->getCrossRefFKRemoveObjectNames($crossFKs, $crossFK);
+            $getterName = $this->getCrossRefFKGetterName($crossFK);
+            $getterRemoveObjectName = $this->getCrossRefFKRemoveObjectNames($crossFK);
 
             $script .= "
             if (\${$lowerRelatedObjectClassName}->is{$getterName}Loaded()) {
@@ -1479,13 +1470,13 @@ class CrossFkCodeProducer extends DataModelBuilder
             }\n";
         }
 
-        foreach ($crossFKs->getUnclassifiedPrimaryKeys() as $primaryKey) {
+        foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $primaryKey) {
             $paramName = lcfirst($primaryKey->getPhpName());
             $script .= "
             {$foreignObjectName}->set{$primaryKey->getPhpName()}(\$$paramName);";
         }
         $script .= "
-            {$foreignObjectName}->set{$this->nameProducer->resolveRelationForwardName($crossFKs->getIncomingForeignKey())}(\$this);";
+            {$foreignObjectName}->set{$this->nameProducer->resolveRelationForwardName($this->crossRelation->getIncomingForeignKey())}(\$this);";
 
         $script .= "
             \$this->remove{$refKObjectClassName}(clone {$foreignObjectName});
