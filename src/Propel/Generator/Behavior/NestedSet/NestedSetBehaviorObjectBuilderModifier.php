@@ -643,7 +643,7 @@ public function hasParent(): bool
  * @param $objectClassName \$parent
  * @return \$this
  */
-public function setParent($objectClassName \$parent = null)
+public function setParent(?$objectClassName \$parent = null)
 {
     \$this->aNestedSetParent = \$parent;
 

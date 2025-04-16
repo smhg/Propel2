@@ -1712,7 +1712,7 @@ class QueryBuilder extends AbstractOMBuilder
      */
     public function with{$relationName}Query(
         callable \$callable,
-        string \$relationAlias = null,
+        ?string \$relationAlias = null,
         ?string \$joinType = {$joinType}
     ) {
         \$relatedQuery = \$this->use{$relationName}Query(
@@ -1754,7 +1754,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @return \$this
      */
-    public function filterBy{$relName}($objectName, string \$comparison = null)
+    public function filterBy{$relName}($objectName, ?string \$comparison = null)
     {
         \$this
             ->use{$relationName}Query()
