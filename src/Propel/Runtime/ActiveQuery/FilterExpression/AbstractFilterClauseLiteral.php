@@ -67,7 +67,7 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
      *
      * @return string
      */
-    public function getLocalColumnName(bool $useQuoteIfEnable = false): string
+    public function getLocalColumnName(bool $useQuoteIfEnable): string
     {
         return $this->resolvedColumns ? $this->resolvedColumns[0]->getColumnExpressionInQuery($useQuoteIfEnable) : '';
     }

@@ -131,7 +131,7 @@ class FilterCollector
      */
     public function getColumnExpressionsInQuery(): array
     {
-        return array_map(fn ($c) => $c->getLocalColumnName(), $this->columnFilters);
+        return array_map(fn ($c) => $c->getLocalColumnName(false), $this->columnFilters);
     }
 
     /**
@@ -141,7 +141,7 @@ class FilterCollector
     {
         $map = [];
         foreach ($this->columnFilters as $filter) {
-            $map[$filter->getLocalColumnName()] = $filter;
+            $map[$filter->getLocalColumnName(false)] = $filter;
         }
 
         return $map;

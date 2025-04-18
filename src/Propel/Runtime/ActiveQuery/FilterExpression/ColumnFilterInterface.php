@@ -41,7 +41,7 @@ interface ColumnFilterInterface
      *
      * @return string
      */
-    public function getLocalColumnName(bool $useQuoteIfEnable = false): string;
+    public function getLocalColumnName(bool $useQuoteIfEnable): string;
 
     /**
      * Column name without table prefix.
