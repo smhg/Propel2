@@ -9,6 +9,7 @@
 namespace Propel\Generator\Builder\Om\ObjectBuilder;
 
 use Propel\Generator\Config\GeneratorConfig;
+use Propel\Generator\Model\ForeignKey;
 use Propel\Runtime\Collection\ObjectCombinationCollection;
 
 /**
@@ -50,15 +51,25 @@ class CrossRelationMultiModelCodeProducer extends AbstractCrossRelationCodeProdu
      */
     protected function addCreateQuery(string &$script): void
     {
+        foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
+            $this->buildCreateQueryForRelation($script, $fk);
+        }
+    }
+
+    /**
+     * @param string $script
+     * @param \Propel\Generator\Model\ForeignKey $relationFk
+     *
+     * @return void
+     */
+    protected function buildCreateQueryForRelation(string &$script, ForeignKey $relationFk): void
+    {
         $sourceIdentifierSingular = $this->names->getSourceIdentifier(false);
-        $firstFK = $this->crossRelation->getCrossForeignKeys()[0];
-        $firstFkName = $this->nameProducer->resolveRelationIdentifier($firstFK, true);
+        $relationIdentifier = $this->nameProducer->resolveRelationIdentifier($relationFk, true);
 
-        $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $firstFK->getForeignTable());
+        $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $relationFk->getForeignTable());
 
-        $collector = $this->collectSignature($firstFK, null, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL);
-        $signature = $collector->buildParameterDeclaration();
-        $phpDoc = $collector->buildPhpDocParamDeclaration();
+        [$signature, $_, $phpDoc] = $this->collectSignature($relationFk, null, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
 
         $relatedUseQueryClassName = $this->getNewStubQueryBuilder($this->crossRelation->getMiddleTable())->getUnqualifiedClassName();
         $relatedUseQueryGetter = 'use' . ucfirst($relatedUseQueryClassName);
@@ -72,7 +83,7 @@ class CrossRelationMultiModelCodeProducer extends AbstractCrossRelationCodeProdu
      *
      * @return $relatedQueryClassName
      */
-    public function create{$firstFkName}Query($signature, ?Criteria \$criteria = null): $relatedQueryClassName
+    public function create{$relationIdentifier}Query($signature, ?Criteria \$criteria = null): $relatedQueryClassName
     {
         \$query = $relatedQueryClassName::create(\$criteria)
             ->filterBy{$sourceIdentifierSingular}(\$this);
@@ -80,7 +91,7 @@ class CrossRelationMultiModelCodeProducer extends AbstractCrossRelationCodeProdu
         \$$relatedUseQueryVariableName = \$query->{$relatedUseQueryGetter}();\n";
 
         foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
-            if ($this->crossRelation->getIncomingForeignKey() === $fk || $firstFK === $fk) {
+            if ($this->crossRelation->getIncomingForeignKey() === $fk || $relationFk === $fk) {
                 continue;
             }
 
@@ -106,8 +117,7 @@ class CrossRelationMultiModelCodeProducer extends AbstractCrossRelationCodeProdu
         \${$relatedUseQueryVariableName}->endUse();
 
         return \$query;
-    }
-";
+    }\n";
     }
 
     /**
@@ -139,11 +149,9 @@ class CrossRelationMultiModelCodeProducer extends AbstractCrossRelationCodeProdu
     public function reserveNamesForGetters(): array
     {
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
+        $additionalGetterNames = array_map(fn (ForeignKey $fk) => $fk->getIdentifier(), $this->crossRelation->getCrossForeignKeys());
 
-        $firstFK = $this->crossRelation->getCrossForeignKeys()[0];
-        $additionalGetterName = $this->nameProducer->resolveRelationIdentifier($firstFK);
-
-        return [$targetIdentifierSingular, $additionalGetterName];
+        return [$targetIdentifierSingular, ...$additionalGetterNames];
     }
 
     /**
@@ -214,8 +222,7 @@ class CrossRelationMultiModelCodeProducer extends AbstractCrossRelationCodeProdu
         \$items = \$query->find(\$con);
         \$$attributeName = new ObjectCombinationCollection();
         foreach (\$items as \$item) {
-            \$combination = [];
-";
+            \$combination = [];\n";
 
         foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
             $concreteTargetIdentifierSingular = $this->nameProducer->resolveRelationIdentifier($fk, false);
@@ -254,12 +261,25 @@ class CrossRelationMultiModelCodeProducer extends AbstractCrossRelationCodeProdu
     }
 ";
 
-        $firstFK = $this->crossRelation->getCrossForeignKeys()[0];
-        $firstFkName = $this->nameProducer->resolveRelationIdentifier($firstFK, true);
+        foreach ($this->getCrossRelation()->getCrossForeignKeys() as $fk) {
+            $this->buildGetFromQueryMethods($script, $fk);
+        }
+    }
 
-        $relatedObjectClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $firstFK->getForeignTable());
+    /**
+     * @param string $script
+     * @param \Propel\Generator\Model\ForeignKey $relationFk
+     *
+     * @return void
+     */
+    protected function buildGetFromQueryMethods(string &$script, ForeignKey $relationFk): void
+    {
+        $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
+        $relationIdentifier = $this->nameProducer->resolveRelationIdentifier($relationFk, true);
 
-        [$argumentDeclaration, $functionParameters, $phpDoc] = $this->collectSignature($firstFK, null, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
+        $relatedObjectClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $relationFk->getForeignTable());
+
+        [$argumentDeclaration, $functionParameters, $phpDoc] = $this->collectSignature($relationFk, null, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
 
         $script .= "
     /**
@@ -272,9 +292,9 @@ class CrossRelationMultiModelCodeProducer extends AbstractCrossRelationCodeProdu
      *
      * @return \Propel\Runtime\Collection\ObjectCollection<$relatedObjectClassName>
      */
-    public function get{$firstFkName}($argumentDeclaration, ?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
+    public function get{$relationIdentifier}($argumentDeclaration, ?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
     {
-        return \$this->create{$firstFkName}Query($functionParameters, \$criteria)->find(\$con);
+        return \$this->create{$relationIdentifier}Query($functionParameters, \$criteria)->find(\$con);
     }
 ";
     }
@@ -384,13 +404,24 @@ class CrossRelationMultiModelCodeProducer extends AbstractCrossRelationCodeProdu
      */
     protected function buildAdditionalCountMethods(): string
     {
+        $methods = array_map([$this, 'buildCountRelationMethod'], $this->crossRelation->getCrossForeignKeys());
+
+        return implode('', $methods);
+    }
+
+    /**
+     * @param \Propel\Generator\Model\ForeignKey $fk
+     *
+     * @return string
+     */
+    protected function buildCountRelationMethod(ForeignKey $fk): string
+    {
         $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
-        $firstFK = $this->crossRelation->getCrossForeignKeys()[0];
-        $firstFkName = $this->nameProducer->resolveRelationIdentifier($firstFK, true);
+        $relationIdentifier = $this->nameProducer->resolveRelationIdentifier($fk, true);
 
-        $argsCsv = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $firstFK->getForeignTable());
+        $argsCsv = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $fk->getForeignTable());
 
-        [$argumentDeclarations, $functionParameters, $phpDoc] = $this->collectSignature($firstFK, null, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
+        [$argumentDeclarations, $functionParameters, $phpDoc] = $this->collectSignature($fk, null, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
 
         return "
     /**
@@ -403,9 +434,9 @@ class CrossRelationMultiModelCodeProducer extends AbstractCrossRelationCodeProdu
      *
      * @return int
      */
-    public function count{$firstFkName}($argumentDeclarations, ?Criteria \$criteria = null, ?ConnectionInterface \$con = null): int
+    public function count{$relationIdentifier}($argumentDeclarations, ?Criteria \$criteria = null, ?ConnectionInterface \$con = null): int
     {
-        return \$this->create{$firstFkName}Query($functionParameters, \$criteria)->count(\$con);
+        return \$this->create{$relationIdentifier}Query($functionParameters, \$criteria)->count(\$con);
     }
 ";
     }

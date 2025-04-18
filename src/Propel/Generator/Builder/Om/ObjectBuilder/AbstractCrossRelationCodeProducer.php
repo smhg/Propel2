@@ -620,9 +620,12 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
         $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
 
+        $adderArgs = $this->collectSignature()->buildFunctionParameterVariables();
+        $collectionArg = ($this->setterItemIsArray()) ? "[$adderArgs]" : $adderArgs;
+
         foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
             $targetRelationIdentifier = $this->nameProducer->resolveRelationIdentifier($fk);
-            [$signature, $shortSignature, $phpDoc] = $this->collectSignatureWithFirstArgument($fk)->buildFullSignature();
+            [$methodSignature, $_, $phpDoc] = $this->collectSignatureWithFirstArgument($fk)->buildFullSignature();
 
             $script .= "
     /**
@@ -631,16 +634,16 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
      *
      * @return static
      */
-    public function add{$targetRelationIdentifier}($signature): static
+    public function add{$targetRelationIdentifier}($methodSignature): static
     {
         if (\$this->$attributeName === null) {
             \$this->init{$targetIdentifierPlural}();
         }
 
-        if (!\$this->get{$targetIdentifierPlural}()->contains($shortSignature)) {
+        if (!\$this->get{$targetIdentifierPlural}()->contains($collectionArg)) {
             // only add it if the **same** object is not already associated
-            \$this->{$attributeName}->push($shortSignature);
-            \$this->doAdd{$targetIdentifierSingular}($shortSignature);
+            \$this->{$attributeName}->push($collectionArg);
+            \$this->doAdd{$targetIdentifierSingular}($adderArgs);
         }
 
         return \$this;
@@ -664,15 +667,18 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
         $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
 
+        [$signature, $inputArgs, $paramDoc] = $this->collectSignature()->buildFullSignature();
+        $names = str_replace('$', '', $inputArgs);
+
         $middleTableName = $this->crossRelation->getMiddleTable();
         $middleModelClassName = $this->names->getMiddleModelClassName();
-
-        [$signature, $shortSignature, $paramDoc] = $this->collectSignature()->buildFullSignature();
-        $names = str_replace('$', '', $shortSignature);
-
         $middleTableIdentifierSingular = $this->names->getMiddleTableIdentifier(false);
         $middleModelName = '$' . $middleTableName->getCamelCaseName();
         $sourceIdentifierSingular = $this->names->getSourceIdentifier(false);
+
+        if ($this->setterItemIsArray()) {
+            $inputArgs = "[$inputArgs]";
+        }
 
         $script .= "
     /**
@@ -683,7 +689,7 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
      */
     public function remove{$targetIdentifierSingular}($signature): static
     {
-        if (!\$this->get{$targetIdentifierPlural}()->contains({$shortSignature})) {
+        if (!\$this->get{$targetIdentifierPlural}()->contains({$inputArgs})) {
             return \$this;
         }
 
@@ -694,6 +700,9 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
             $targetVar = lcfirst($concreteTargetIdentifierSingular);
             $getterName = $this->concatRelationTargetNames($fk);
             $middleTableArgsCsv = $this->buildMiddleTableArgumentCsv($fk);
+            if ($this->setterItemIsArray()) {
+                $middleTableArgsCsv = "[$middleTableArgsCsv]";
+            }
 
             $script .= "
         {$middleModelName}->set{$concreteTargetIdentifierSingular}(\${$targetVar});
@@ -714,14 +723,14 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
         \$this->remove{$middleTableIdentifierSingular}(clone {$middleModelName});
         {$middleModelName}->clear();
 
-        \$this->{$localAttributeName}->remove(\$this->{$localAttributeName}->search({$shortSignature}));
+        \$this->{$localAttributeName}->remove(\$this->{$localAttributeName}->search({$inputArgs}));
 
         if (\$this->{$deletionScheduledAttributeName} === null) {
             \$this->{$deletionScheduledAttributeName} = clone \$this->{$localAttributeName};
             \$this->{$deletionScheduledAttributeName}->clear();
         }
 
-        \$this->{$deletionScheduledAttributeName}->push({$shortSignature});
+        \$this->{$deletionScheduledAttributeName}->push({$inputArgs});
 
         return \$this;
     }
