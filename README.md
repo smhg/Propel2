@@ -106,11 +106,16 @@ Previously, this required to register the individual parts under an arbitrary na
 
 Propel restricts reading behaviors from repositories to one per repo. This allows to read multiple behaviors (see [#25](https://github.com/mringler/perpl/pull/25) for details).
 
+## Fixed cross-relations
+
+Creates methods for all elements of ternary relation (Propel only uses first foreign key).
+Fixes naming issues and detects duplicates in model method names. 
+
 # Breaking Changes
 
 Perpl is fully backwards compatible with Propel2, with few exceptions. They mostly affect the low-level Criteria interface. Impact for regular users should be slim to none.
 
-## Set update value and add filter use dedicated methods
+## Setting update values and adding filters uses dedicated methods
 
 *Affects manual use of Criteria::update() -  does not affect updates through Propel*
 
@@ -187,6 +192,13 @@ Obscure names, replaced functionality, unclear use-case - removing those methods
 The methods are still available, but only through magic `__call()`. They do not appear on the query object interface and thus are not suggested by autocomplete. Using them will trigger a deprecation warning. The method docs in `src/Propel/Runtime/ActiveQuery/DeprecatedCriteriaMethods.php` describe how to replace them.
 
 A full list of deprecated methods can be found in [#28](https://github.com/mringler/perpl/pull/28). Notable mentions are `Criteria::addCond()` and `Criteria::combine()`, which are replaced by `Criteria::combineFilters()` (see above), and `Criteria::addSelectQuery()`, which is replaced by the aptly-named `Criteria::addSubquery()`.
+
+## Changing method names of cross-relations
+*Affects cross-relations with parallel regular FK between target tables*
+
+Fixed naming might lead to exceptions during `model:build`, requesting to change relation names that cause duplicate names. 
+
+Cross-relations that were previously prefixed with "Cross" are now named correctly, meaning model methods like `addCrossBook()` are now replaced with the correctly named `addBook()`. 
 
 # Outlook
 
