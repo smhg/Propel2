@@ -192,7 +192,7 @@ class DeprecatedCriteriaMethods extends Criteria
         $tables = [];
         foreach ($this->criteria->filterCollector->getColumnFilters() as $filter) {
             $tableName = $filter->getTableAlias();
-            $tables[$tableName][] = $filter->getLocalColumnName();
+            $tables[$tableName][] = $filter->getLocalColumnName(false);
         }
         foreach ($this->criteria->updateValues->getColumnExpressionsInQuery() as $columnExpression) {
             $tableName = substr($columnExpression, 0, strrpos($columnExpression, '.') ?: null);

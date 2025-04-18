@@ -96,7 +96,7 @@ class CriteriaTest extends BookstoreTestBase
 
         $this->assertCount(1, $columnFilters);
         $this->assertEquals($value, reset($columnFilters)->getValue());
-        $this->assertEquals($columnIdentifier, reset($columnFilters)->getLocalColumnName());
+        $this->assertEquals($columnIdentifier, reset($columnFilters)->getLocalColumnName(false));
     }
 
     /**
@@ -966,7 +966,7 @@ class CriteriaTest extends BookstoreTestBase
         $c->addAsColumn('column_alias', 'tbl.COL1');
         $crit = $c->getNewCriterion('column_alias', 'FOO');
         $this->assertNull($crit->getTableAlias());
-        $this->assertEquals('column_alias', $crit->getLocalColumnName());
+        $this->assertEquals('column_alias', $crit->getLocalColumnName(false));
     }
 
     /**

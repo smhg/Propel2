@@ -70,7 +70,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
      *
      * @return string
      */
-    public function getLocalColumnName(bool $useQuoteIfEnable = true): string
+    public function getLocalColumnName(bool $useQuoteIfEnable): string
     {
         return $this->queryColumn ? $this->queryColumn->getColumnExpressionInQuery($useQuoteIfEnable) : '';
     }

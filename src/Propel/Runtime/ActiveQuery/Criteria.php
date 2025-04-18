@@ -2149,7 +2149,7 @@ class Criteria
     public function turnFiltersToUpdateValues()
     {
         foreach ($this->filterCollector->getColumnFilters() as $filter) {
-            $columnIdentifier = $filter->getLocalColumnName();
+            $columnIdentifier = $filter->getLocalColumnName(false);
             $value = $filter->getValue();
             $this->setUpdateValue($columnIdentifier, $value);
         }

@@ -31,7 +31,7 @@ class InColumnFilter extends AbstractColumnFilter
             $param = $this->buildParameterWithValue($value);
             $bindParams[] = $this->addParameter($paramCollector, $param);
         }
-        $field = $this->getLocalColumnName();
+        $field = $this->getLocalColumnName(true);
         $paramList = implode(',', $bindParams);
 
         return "$field{$this->operator}($paramList)";

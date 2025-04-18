@@ -46,11 +46,11 @@ abstract class AbstractColumnFilter extends AbstractFilter
     }
 
     /**
-     * @param bool $useQuoteIfEnable = true
+     * @param bool $useQuoteIfEnable
      *
      * @return string
      */
-    public function getLocalColumnName(bool $useQuoteIfEnable = true): string
+    public function getLocalColumnName(bool $useQuoteIfEnable): string
     {
         return $this->queryColumn->getColumnExpressionInQuery($useQuoteIfEnable);
     }
