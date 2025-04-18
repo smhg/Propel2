@@ -13,10 +13,12 @@ use Propel\Generator\Model\ForeignKey;
 use Propel\Runtime\Collection\ObjectCombinationCollection;
 
 /**
- * Produces code for cross/many-to-many relations where the middle table has multiple
- * models or is a ternary relation.
+ * Produces code for cross/many-to-many relations where the middle table is a 
+ * ternary relation or its primary key contains additional non-null columns, so
+ * additional data is required along with the element of the opposite table to
+ * produce entries in the middle table.
  */
-class CrossRelationMultiModelCodeProducer extends AbstractCrossRelationCodeProducer
+class CrossRelationPartial extends AbstractCrossRelationCodeProducer
 {
     /**
      * @var string

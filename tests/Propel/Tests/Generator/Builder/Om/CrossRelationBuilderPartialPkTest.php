@@ -8,18 +8,18 @@
 
 namespace Propel\Tests\Generator\Builder\Om;
 
-use Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationMultiModelCodeProducer;
+use Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationPartial;
 
 /**
  */
-class CrossRelationBuilderWithAdditionalMiddlePksTest extends AbstractCrossRelationBuilderTest
+class CrossRelationBuilderPartialPkTest extends AbstractCrossRelationBuilderTest
 {
     /**
      * @return void
      */
     public function testType(): void
     {
-        $this->assertInstanceOf(CrossRelationMultiModelCodeProducer::class, $this->getCodeProducer());
+        $this->assertInstanceOf(CrossRelationPartial::class, $this->getCodeProducer());
     }
 
     /**
@@ -462,9 +462,9 @@ class CrossRelationBuilderWithAdditionalMiddlePksTest extends AbstractCrossRelat
             $this->initTeamDayTypes();
         }
 
-        if (!$this->getTeamDayTypes()->contains($team, $day, $type)) {
+        if (!$this->getTeamDayTypes()->contains([$team, $day, $type])) {
             // only add it if the **same** object is not already associated
-            $this->combinationTeamDayTypes->push($team, $day, $type);
+            $this->combinationTeamDayTypes->push([$team, $day, $type]);
             $this->doAddTeamDayType($team, $day, $type);
         }
 
@@ -528,7 +528,7 @@ class CrossRelationBuilderWithAdditionalMiddlePksTest extends AbstractCrossRelat
      */
     public function removeTeamDayType(ChildTeam $team, string $day, int $type): static
     {
-        if (!$this->getTeamDayTypes()->contains($team, $day, $type)) {
+        if (!$this->getTeamDayTypes()->contains([$team, $day, $type])) {
             return $this;
         }
 
@@ -536,7 +536,7 @@ class CrossRelationBuilderWithAdditionalMiddlePksTest extends AbstractCrossRelat
         $teamUser->setTeam($team);
         if ($team->isUserDayTypesLoaded()) {
             //remove the back reference if available
-            $team->getUserDayTypes()->removeObject($this, $day, $type);
+            $team->getUserDayTypes()->removeObject([$this, $day, $type]);
         }
 
         $teamUser->setDay($day);
@@ -545,14 +545,14 @@ class CrossRelationBuilderWithAdditionalMiddlePksTest extends AbstractCrossRelat
         $this->removeTeamUser(clone $teamUser);
         $teamUser->clear();
 
-        $this->combinationTeamDayTypes->remove($this->combinationTeamDayTypes->search($team, $day, $type));
+        $this->combinationTeamDayTypes->remove($this->combinationTeamDayTypes->search([$team, $day, $type]));
 
         if ($this->teamDayTypesScheduledForDeletion === null) {
             $this->teamDayTypesScheduledForDeletion = clone $this->combinationTeamDayTypes;
             $this->teamDayTypesScheduledForDeletion->clear();
         }
 
-        $this->teamDayTypesScheduledForDeletion->push($team, $day, $type);
+        $this->teamDayTypesScheduledForDeletion->push([$team, $day, $type]);
 
         return $this;
     }

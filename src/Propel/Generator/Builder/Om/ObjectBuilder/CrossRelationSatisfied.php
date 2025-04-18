@@ -12,11 +12,12 @@ use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\ForeignKey;
 
 /**
- * Produces code for cross/many-to-many relations that work with a single, fixed
- * target object (in contrast to cross relations where the middle table has multiple
- * models or is a ternary relation).
+ * Produces code for cross/many-to-many relations that requires only an element
+ * of the opposite table to produce entries in the middle table (in contrast to
+ * cross relations where the middle table is a ternary relation or its primary
+ * key contains additional non-null columns).
  */
-class CrossRelationFixedShapeCodeProducer extends AbstractCrossRelationCodeProducer
+class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
 {
     /**
      * @return \Propel\Generator\Model\ForeignKey

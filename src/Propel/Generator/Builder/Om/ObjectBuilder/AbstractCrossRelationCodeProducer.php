@@ -77,13 +77,13 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
      * @param \Propel\Generator\Model\CrossRelation $crossRelation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $builder
      *
-     * @return \Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationFixedShapeCodeProducer|\Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationMultiModelCodeProducer
+     * @return \Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationSatisfied|\Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationPartial
      */
     public static function create(CrossRelation $crossRelation, ObjectBuilder $builder): self
     {
         return $crossRelation->isMultiModel()
-            ? new CrossRelationMultiModelCodeProducer($crossRelation, $builder)
-            : new CrossRelationFixedShapeCodeProducer($crossRelation, $builder);
+            ? new CrossRelationPartial($crossRelation, $builder)
+            : new CrossRelationSatisfied($crossRelation, $builder);
     }
 
     /**

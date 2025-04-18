@@ -8,18 +8,18 @@
 
 namespace Propel\Tests\Generator\Builder\Om;
 
-use Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationFixedShapeCodeProducer;
+use Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationSatisfied;
 
 /**
  */
-class CrossRelationBuilderSingleRelationTest extends AbstractCrossRelationBuilderTest
+class CrossRelationBuilderSatisfiedTest extends AbstractCrossRelationBuilderTest
 {
     /**
      * @return void
      */
     public function testType(): void
     {
-        $this->assertInstanceOf(CrossRelationFixedShapeCodeProducer::class, $this->getCodeProducer());
+        $this->assertInstanceOf(CrossRelationSatisfied::class, $this->getCodeProducer());
     }
 
     /**
