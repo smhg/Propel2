@@ -890,7 +890,7 @@ class Table extends ScopedMappingModel implements IdMethod
     /**
      * Returns the list of cross foreign keys.
      *
-     * @return array<\Propel\Generator\Model\CrossForeignKeys>
+     * @return array<\Propel\Generator\Model\CrossRelation>
      */
     public function getCrossFks(): array
     {
@@ -902,7 +902,7 @@ class Table extends ScopedMappingModel implements IdMethod
             $middleTable = $relationToThis->getTable();
             $middleTableRelations = $middleTable->getForeignKeys();
 
-            $crossFK = new CrossForeignKeys($relationToThis, $this);
+            $crossFK = new CrossRelation($relationToThis, $this);
 
             foreach ($middleTableRelations as $relation) {
                 if ($relation === $relationToThis) {

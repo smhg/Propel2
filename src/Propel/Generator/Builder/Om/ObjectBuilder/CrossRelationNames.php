@@ -10,12 +10,12 @@ namespace Propel\Generator\Builder\Om\ObjectBuilder;
 
 use Propel\Generator\Builder\Om\NameProducer;
 use Propel\Generator\Builder\Om\ReferencedClasses;
-use Propel\Generator\Model\CrossForeignKeys;
+use Propel\Generator\Model\CrossRelation;
 
 class CrossRelationNames
 {
     /**
-     * @var \Propel\Generator\Model\CrossForeignKeys
+     * @var \Propel\Generator\Model\CrossRelation
      */
     protected $crossRelation;
 
@@ -50,13 +50,13 @@ class CrossRelationNames
     protected $attributeScheduledForDeletionName;
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossRelation
+     * @param \Propel\Generator\Model\CrossRelation $crossRelation
      * @param string $attributePrefix
      * @param \Propel\Generator\Builder\Om\NameProducer $nameProducer
      * @param \Propel\Generator\Builder\Om\ReferencedClasses $referencedClasses
      */
     public function __construct(
-        CrossForeignKeys $crossRelation,
+        CrossRelation $crossRelation,
         string $attributePrefix,
         NameProducer $nameProducer,
         ReferencedClasses $referencedClasses

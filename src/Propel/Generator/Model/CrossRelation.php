@@ -41,7 +41,7 @@ use Propel\Runtime\Exception\LogicException;
  *         getIncomingForeignKey() -> FK2
  *         getUnclassifiedPrimaryKeys() -> [PK3]
  */
-class CrossForeignKeys
+class CrossRelation
 {
     /**
      * The source table.

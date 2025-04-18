@@ -11,7 +11,7 @@ namespace Propel\Tests\Generator\Builder\Om;
 use Propel\Generator\Builder\Om\ObjectBuilder;
 use Propel\Generator\Builder\Om\ObjectBuilder\AbstractCrossRelationCodeProducer;
 use Propel\Generator\Config\GeneratorConfig;
-use Propel\Generator\Model\CrossForeignKeys;
+use Propel\Generator\Model\CrossRelation;
 use Propel\Generator\Model\Database;
 use Propel\Generator\Model\Table;
 use Propel\Generator\Util\QuickBuilder;
@@ -32,7 +32,7 @@ abstract class AbstractCrossRelationBuilderTest extends TestCase
     protected $crossFkCodeProducer;
 
     /**
-     * @var \Propel\Generator\Model\CrossForeignKeys
+     * @var \Propel\Generator\Model\CrossRelation
      */
     protected $crossFk;
 
@@ -65,7 +65,7 @@ abstract class AbstractCrossRelationBuilderTest extends TestCase
     }
 
 
-    protected function getCrossFk(): CrossForeignKeys
+    protected function getCrossFk(): CrossRelation
     {
         if (!$this->crossFk) {
             $this->init();

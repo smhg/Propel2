@@ -13,7 +13,7 @@ use Propel\Generator\Builder\DataModelBuilder;
 use Propel\Generator\Builder\Om\ObjectBuilder;
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Config\GeneratorConfigInterface;
-use Propel\Generator\Model\CrossForeignKeys;
+use Propel\Generator\Model\CrossRelation;
 use Propel\Generator\Model\ForeignKey;
 use Propel\Generator\Model\Table;
 
@@ -28,7 +28,7 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
     protected const ATTRIBUTE_PREFIX = 'coll'; // abbrev for 'collection' TODO: fix
 
     /**
-     * @var \Propel\Generator\Model\CrossForeignKeys
+     * @var \Propel\Generator\Model\CrossRelation
      */
     protected $crossRelation;
 
@@ -38,12 +38,12 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
     protected $names;
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossRelation
+     * @param \Propel\Generator\Model\CrossRelation $crossRelation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $parentBuilder
      *
      * @throws \LogicException
      */
-    protected function __construct(CrossForeignKeys $crossRelation, ObjectBuilder $parentBuilder)
+    protected function __construct(CrossRelation $crossRelation, ObjectBuilder $parentBuilder)
     {
         parent::__construct($crossRelation->getTable(), $parentBuilder->referencedClasses);
         $this->crossRelation = $crossRelation;
@@ -74,12 +74,12 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossRelation
+     * @param \Propel\Generator\Model\CrossRelation $crossRelation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $builder
      *
      * @return \Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationFixedShapeCodeProducer|\Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationMultiModelCodeProducer
      */
-    public static function create(CrossForeignKeys $crossRelation, ObjectBuilder $builder): self
+    public static function create(CrossRelation $crossRelation, ObjectBuilder $builder): self
     {
         return $crossRelation->isMultiModel()
             ? new CrossRelationMultiModelCodeProducer($crossRelation, $builder)
@@ -87,9 +87,9 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @return \Propel\Generator\Model\CrossForeignKeys
+     * @return \Propel\Generator\Model\CrossRelation
      */
-    public function getCrossRelation(): CrossForeignKeys
+    public function getCrossRelation(): CrossRelation
     {
         return $this->crossRelation;
     }

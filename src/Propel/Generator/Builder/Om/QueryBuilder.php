@@ -10,7 +10,7 @@ namespace Propel\Generator\Builder\Om;
 
 use Propel\Generator\Builder\Util\PropelTemplate;
 use Propel\Generator\Model\Column;
-use Propel\Generator\Model\CrossForeignKeys;
+use Propel\Generator\Model\CrossRelation;
 use Propel\Generator\Model\ForeignKey;
 use Propel\Generator\Model\PropelTypes;
 use Propel\Generator\Model\Table;
@@ -1726,11 +1726,11 @@ class QueryBuilder extends AbstractOMBuilder
 
     /**
      * @param string $script
-     * @param \Propel\Generator\Model\CrossForeignKeys $crossFKs
+     * @param \Propel\Generator\Model\CrossRelation $crossFKs
      *
      * @return void
      */
-    protected function addFilterByCrossFK(string &$script, CrossForeignKeys $crossFKs): void
+    protected function addFilterByCrossFK(string &$script, CrossRelation $crossFKs): void
     {
         $relationName = $this->getRefFKPhpNameAffix($crossFKs->getIncomingForeignKey(), false);
 
