@@ -25,11 +25,6 @@
       <code><![CDATA[$syncedTable->isVersionTable]]></code>
     </UndefinedPropertyAssignment>
   </file>
-  <file src="src/Propel/Generator/Builder/DataModelBuilder.php">
-    <InvalidArgument>
-      <code><![CDATA[$this]]></code>
-    </InvalidArgument>
-  </file>
   <file src="src/Propel/Generator/Builder/Om/AbstractObjectBuilder.php">
     <UndefinedMethod>
       <code><![CDATA[addAddArrayElement]]></code>
@@ -59,6 +54,11 @@
       <code><![CDATA[addTemporalMutator]]></code>
     </UndefinedMethod>
   </file>
+  <file src="src/Propel/Generator/Builder/Om/ObjectBuilder/CrossRelationPartial.php">
+    <DuplicateArrayKey>
+      <code><![CDATA[$additionalGetterNames]]></code>
+    </DuplicateArrayKey>
+  </file>
   <file src="src/Propel/Generator/Builder/Util/SchemaReader.php">
     <UnsupportedPropertyReferenceUsage>
       <code><![CDATA[$items = &$this->currParameterListCollector['value']]]></code>
@@ -80,11 +80,6 @@
     <InvalidPropertyAssignmentValue>
       <code><![CDATA[$this->columnObjects]]></code>
     </InvalidPropertyAssignmentValue>
-  </file>
-  <file src="src/Propel/Generator/Util/QuickBuilder.php">
-    <NullArgument>
-      <code><![CDATA[null]]></code>
-    </NullArgument>
   </file>
   <file src="src/Propel/Runtime/ActiveQuery/Criteria.php">
     <UndefinedFunction>

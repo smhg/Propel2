@@ -890,25 +890,33 @@ class Table extends ScopedMappingModel implements IdMethod
     /**
      * Returns the list of cross foreign keys.
      *
-     * @return array<\Propel\Generator\Model\CrossForeignKeys>
+     * @return array<\Propel\Generator\Model\CrossRelation>
      */
     public function getCrossFks(): array
     {
         $crossFks = [];
-        foreach ($this->referrers as $refFK) {
-            if ($refFK->getTable()->isCrossRef()) {
-                $crossFK = new CrossForeignKeys($refFK, $this);
-                foreach ($refFK->getOtherFks() as $fk) {
-                    if (
-                        $fk->isAtLeastOneLocalPrimaryKeyIsRequired() &&
-                        $crossFK->isAtLeastOneLocalPrimaryKeyNotCovered($fk)
-                    ) {
-                        $crossFK->addCrossForeignKey($fk);
-                    }
+        foreach ($this->referrers as $relationToThis) {
+            if (!$relationToThis->getTable()->isCrossRef()) {
+                continue;
+            }
+            $middleTable = $relationToThis->getTable();
+            $middleTableRelations = $middleTable->getForeignKeys();
+
+            $crossFK = new CrossRelation($relationToThis, $this);
+
+            foreach ($middleTableRelations as $relation) {
+                if ($relation === $relationToThis) {
+                    continue;
                 }
-                if ($crossFK->hasCrossForeignKeys()) {
-                    $crossFks[] = $crossFK;
+                if (
+                    $relation->hasColumnWithRequiredValue() &&
+                    $crossFK->isAtLeastOneLocalPrimaryKeyNotCovered($relation)
+                ) {
+                    $crossFK->addCrossForeignKey($relation);
                 }
+            }
+            if ($crossFK->hasCrossForeignKeys()) {
+                $crossFks[] = $crossFK;
             }
         }
 

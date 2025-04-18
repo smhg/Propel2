@@ -25,6 +25,7 @@
     <testsuite name="propel2">
       <directory>Propel/Tests/Common</directory>
       <directory>Propel/Tests/Helpers</directory>
+      <directory>Propel/Tests/Generator</directory>
       <directory>Propel/Tests/Runtime</directory>
       <directory>Propel/Tests/Bookstore</directory>
       <directory>Propel/Tests/</directory>

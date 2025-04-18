@@ -38,4 +38,12 @@ interface ActiveRecordInterface
      * @return $this The current object, for fluid interface
      */
     public function setVirtualColumn(string $name, $value);
+
+    /**
+     * If the primary key is not null, return the hashcode of the
+     * primary key. Otherwise, return the hash code of the object.
+     *
+     * @return string|int
+     */
+    public function hashCode();
 }

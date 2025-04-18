@@ -52,7 +52,7 @@ class Issue941Test extends TestCase
                         <reference local="nature_id" foreign="id"/>
                     </foreign-key>
 
-                    <foreign-key foreignTable="category">
+                    <foreign-key foreignTable="category" refPhpName="RechercheNatureCrossRef">
                         <reference local="category_id" foreign="id"/>
                     </foreign-key>
 

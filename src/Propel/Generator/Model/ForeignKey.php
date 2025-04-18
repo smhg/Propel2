@@ -9,6 +9,7 @@
 namespace Propel\Generator\Model;
 
 use LogicException;
+use Propel\Common\Pluralizer\PluralizerInterface;
 use Propel\Generator\Platform\PlatformInterface;
 use Propel\Runtime\Exception\RuntimeException;
 
@@ -99,12 +100,12 @@ class ForeignKey extends MappingModel
     /**
      * @var \Propel\Generator\Model\Table
      */
-    private $parentTable;
+    private $sourceTable;
 
     /**
      * @var array<string>
      */
-    private $localColumns = [];
+    private $localColumnNames = [];
 
     /**
      * @var array<string|null>
@@ -151,7 +152,7 @@ class ForeignKey extends MappingModel
      */
     protected function setupObject(): void
     {
-        $this->foreignTableCommonName = $this->parentTable->getDatabase()->getTablePrefix() . $this->getAttribute('foreignTable');
+        $this->foreignTableCommonName = $this->sourceTable->getDatabase()->getTablePrefix() . $this->getAttribute('foreignTable');
         $this->foreignSchemaName = $this->getAttribute('foreignSchema');
 
         $this->name = $this->getAttribute('name');
@@ -174,13 +175,13 @@ class ForeignKey extends MappingModel
 
             $hash = [];
             $hash[] = $this->foreignSchemaName . '.' . $this->foreignTableCommonName;
-            $hash[] = implode(',', $this->localColumns);
+            $hash[] = implode(',', $this->localColumnNames);
             $hash[] = implode(',', $this->foreignColumns);
 
             $newName .= substr(md5(strtolower(implode(':', $hash))), 0, 6);
 
-            if ($this->parentTable !== null) {
-                $newName = $this->parentTable->getCommonName() . '_' . $newName;
+            if ($this->sourceTable !== null) {
+                $newName = $this->sourceTable->getCommonName() . '_' . $newName;
             }
 
             $this->name = $newName;
@@ -439,7 +440,7 @@ class ForeignKey extends MappingModel
      */
     private function getPlatform(): ?PlatformInterface
     {
-        return $this->parentTable->getPlatform();
+        return $this->sourceTable->getPlatform();
     }
 
     /**
@@ -449,7 +450,7 @@ class ForeignKey extends MappingModel
      */
     public function getDatabase(): ?Database
     {
-        return $this->parentTable->getDatabase();
+        return $this->sourceTable->getDatabase();
     }
 
     /**
@@ -467,7 +468,7 @@ class ForeignKey extends MappingModel
         }
 
         $database = $this->getDatabase();
-        $schema = $this->parentTable->guessSchemaName();
+        $schema = $this->sourceTable->guessSchemaName();
         if ($database && $schema && $platform && $platform->supportsSchemas()) {
             return $schema
                 . $platform->getSchemaDelimiter()
@@ -506,7 +507,7 @@ class ForeignKey extends MappingModel
      */
     public function getForeignTable(): ?Table
     {
-        $database = $this->parentTable->getDatabase();
+        $database = $this->sourceTable->getDatabase();
         if ($database) {
             return $database->getTable($this->getForeignTableName());
         }
@@ -521,7 +522,7 @@ class ForeignKey extends MappingModel
      */
     public function getForeignTableOrFail(): Table
     {
-        $database = $this->parentTable->getDatabaseOrFail();
+        $database = $this->sourceTable->getDatabaseOrFail();
 
         return $database->getTable($this->getForeignTableName());
     }
@@ -557,7 +558,7 @@ class ForeignKey extends MappingModel
      */
     public function setTable(Table $parent): void
     {
-        $this->parentTable = $parent;
+        $this->sourceTable = $parent;
     }
 
     /**
@@ -567,7 +568,7 @@ class ForeignKey extends MappingModel
      */
     public function getTable(): Table
     {
-        return $this->parentTable;
+        return $this->sourceTable;
     }
 
     /**
@@ -577,7 +578,7 @@ class ForeignKey extends MappingModel
      */
     public function getTableName(): string
     {
-        return $this->parentTable->getName();
+        return $this->sourceTable->getName();
     }
 
     /**
@@ -587,7 +588,7 @@ class ForeignKey extends MappingModel
      */
     public function getSchemaName(): ?string
     {
-        return $this->parentTable->getSchema();
+        return $this->sourceTable->getSchema();
     }
 
     /**
@@ -601,7 +602,7 @@ class ForeignKey extends MappingModel
     public function addReference($ref1, $ref2 = null): void
     {
         if (is_array($ref1)) {
-            $this->localColumns[] = $ref1['local'] ?? null;
+            $this->localColumnNames[] = $ref1['local'] ?? null;
             $this->foreignColumns[] = $ref1['foreign'] ?? null;
             $this->localValues[] = $ref1['value'] ?? null;
 
@@ -609,7 +610,7 @@ class ForeignKey extends MappingModel
         }
 
         if (is_string($ref1)) {
-            $this->localColumns[] = $ref1;
+            $this->localColumnNames[] = $ref1;
             $this->foreignColumns[] = is_string($ref2) ? $ref2 : null;
             $this->localValues[] = null;
 
@@ -620,7 +621,7 @@ class ForeignKey extends MappingModel
         if ($ref1 instanceof Column) {
             /** @var string $local */
             $local = $ref1->getName();
-            $this->localColumns[] = $local;
+            $this->localColumnNames[] = $local;
         } else {
             $this->localValues[] = $local;
         }
@@ -642,7 +643,7 @@ class ForeignKey extends MappingModel
      */
     public function clearReferences(): void
     {
-        $this->localColumns = [];
+        $this->localColumnNames = [];
         $this->foreignColumns = [];
         $this->localValues = [];
     }
@@ -654,7 +655,7 @@ class ForeignKey extends MappingModel
      */
     public function getLocalColumns(): array
     {
-        return $this->localColumns;
+        return $this->localColumnNames;
     }
 
     /**
@@ -665,9 +666,9 @@ class ForeignKey extends MappingModel
     public function getLocalColumnObjects(): array
     {
         $columns = [];
-        foreach ($this->localColumns as $columnName) {
+        foreach ($this->localColumnNames as $columnName) {
             /** @var \Propel\Generator\Model\Column $column */
-            $column = $this->parentTable->getColumn($columnName);
+            $column = $this->sourceTable->getColumn($columnName);
             $columns[] = $column;
         }
 
@@ -683,7 +684,7 @@ class ForeignKey extends MappingModel
      */
     public function getLocalColumnName(int $index = 0): string
     {
-        return $this->localColumns[$index];
+        return $this->localColumnNames[$index];
     }
 
     /**
@@ -695,7 +696,7 @@ class ForeignKey extends MappingModel
      */
     public function getLocalColumn(int $index = 0): ?Column
     {
-        return $this->parentTable->getColumn($this->getLocalColumnName($index));
+        return $this->sourceTable->getColumn($this->getLocalColumnName($index));
     }
 
     /**
@@ -706,11 +707,11 @@ class ForeignKey extends MappingModel
     public function getMapping(): array
     {
         $mapping = [];
-        foreach ($this->localColumns as $i => $localColumnName) {
+        foreach ($this->localColumnNames as $i => $localColumnName) {
             $right = $this->foreignColumns[$i]
                 ? $this->getForeignTable()->getColumn($this->foreignColumns[$i])
                 : $this->localValues[$i];
-            $leftColumn = $this->parentTable->getColumn($localColumnName);
+            $leftColumn = $this->sourceTable->getColumn($localColumnName);
             if ($right === null || $leftColumn === null) {
                 throw new LogicException('ForeignKey mapping cannot contain null values.');
             }
@@ -739,10 +740,10 @@ class ForeignKey extends MappingModel
     {
         $mapping = [];
         $foreignTable = $this->getForeignTable();
-        $size = count($this->localColumns);
+        $size = count($this->localColumnNames);
         for ($i = 0; $i < $size; $i++) {
             $mapping[] = [
-                'local' => $this->parentTable->getColumn($this->localColumns[$i]),
+                'local' => $this->sourceTable->getColumn($this->localColumnNames[$i]),
                 'foreign' => $foreignTable->getColumn($this->foreignColumns[$i]),
                 'value' => $this->localValues[$i],
             ];
@@ -760,7 +761,7 @@ class ForeignKey extends MappingModel
      */
     public function getMappedForeignColumn(string $local): ?string
     {
-        $index = array_search($local, $this->localColumns);
+        $index = array_search($local, $this->localColumnNames);
 
         return $this->foreignColumns[$index];
     }
@@ -776,7 +777,7 @@ class ForeignKey extends MappingModel
     {
         $index = array_search($foreign, $this->foreignColumns);
 
-        return $this->localColumns[$index];
+        return $this->localColumnNames[$index];
     }
 
     /**
@@ -839,8 +840,8 @@ class ForeignKey extends MappingModel
      */
     public function isLocalColumnsRequired(): bool
     {
-        foreach ($this->localColumns as $columnName) {
-            if (!$this->parentTable->getColumn($columnName)->isNotNull()) {
+        foreach ($this->localColumnNames as $columnName) {
+            if (!$this->sourceTable->getColumn($columnName)->isNotNull()) {
                 return false;
             }
         }
@@ -853,10 +854,10 @@ class ForeignKey extends MappingModel
      *
      * @return bool
      */
-    public function isAtLeastOneLocalColumnRequired(): bool
+    public function usesNotNullSourceColumn(): bool
     {
-        foreach ($this->localColumns as $columnName) {
-            if ($this->parentTable->getColumn($columnName)->isNotNull()) {
+        foreach ($this->localColumnNames as $columnName) {
+            if ($this->sourceTable->getColumn($columnName)->isNotNull()) {
                 return true;
             }
         }
@@ -869,7 +870,7 @@ class ForeignKey extends MappingModel
      *
      * @return bool
      */
-    public function isAtLeastOneLocalPrimaryKeyIsRequired(): bool
+    public function hasColumnWithRequiredValue(): bool
     {
         foreach ($this->getLocalColumnObjects() as $pk) {
             if ($pk->isNotNull() && !$pk->hasDefaultValue()) {
@@ -896,7 +897,7 @@ class ForeignKey extends MappingModel
         }
 
         $foreignCols = [];
-        foreach ($this->localColumns as $idx => $colName) {
+        foreach ($this->localColumnNames as $idx => $colName) {
             if ($this->foreignColumns[$idx]) {
                 $foreignCols[] = $foreignTable->getColumn($this->foreignColumns[$idx])->getName();
             }
@@ -922,7 +923,7 @@ class ForeignKey extends MappingModel
         }
 
         $foreignCols = [];
-        foreach ($this->localColumns as $idx => $colName) {
+        foreach ($this->localColumnNames as $idx => $colName) {
             if ($this->foreignColumns[$idx]) {
                 $foreignCols[] = $foreignTable->getColumn($this->foreignColumns[$idx])->getName();
             }
@@ -939,7 +940,7 @@ class ForeignKey extends MappingModel
      */
     public function isComposite(): bool
     {
-        return count($this->localColumns) > 1;
+        return count($this->localColumnNames) > 1;
     }
 
     /**
@@ -983,7 +984,7 @@ class ForeignKey extends MappingModel
     {
         $map = [];
 
-        foreach ($this->localColumns as $idx => $columnName) {
+        foreach ($this->localColumnNames as $idx => $columnName) {
             if ($this->localValues[$idx]) {
                 $map[] = [$columnName, $this->localValues[$idx]];
             }
@@ -1001,11 +1002,11 @@ class ForeignKey extends MappingModel
     public function isLocalPrimaryKey(): bool
     {
         $localPKCols = [];
-        foreach ($this->parentTable->getPrimaryKey() as $lPKCol) {
+        foreach ($this->sourceTable->getPrimaryKey() as $lPKCol) {
             $localPKCols[] = $lPKCol->getName();
         }
 
-        return count($localPKCols) === count($this->localColumns) && !array_diff($localPKCols, $this->localColumns);
+        return count($localPKCols) === count($this->localColumnNames) && !array_diff($localPKCols, $this->localColumnNames);
     }
 
     /**
@@ -1049,6 +1050,8 @@ class ForeignKey extends MappingModel
     }
 
     /**
+     * Tries to find a foreign key on the target table that references this table using the same columns and values.
+     *
      * @throws \Propel\Runtime\Exception\RuntimeException
      *
      * @return \Propel\Generator\Model\ForeignKey|null
@@ -1071,24 +1074,6 @@ class ForeignKey extends MappingModel
         }
 
         return null;
-    }
-
-    /**
-     * Returns the list of other foreign keys starting on the same table.
-     * Used in many-to-many relationships.
-     *
-     * @return array<\Propel\Generator\Model\ForeignKey>
-     */
-    public function getOtherFks(): array
-    {
-        $fks = [];
-        foreach ($this->parentTable->getForeignKeys() as $fk) {
-            if ($fk !== $this) {
-                $fks[] = $fk;
-            }
-        }
-
-        return $fks;
     }
 
     /**
@@ -1120,5 +1105,165 @@ class ForeignKey extends MappingModel
         $cols = $this->getLocalPrimaryKeys();
 
         return count($cols) !== 0;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString(): string
+    {
+        $localTableName = $this->sourceTable->getName();
+        $targetTableName = $this->getForeignTableName();
+
+        $connections = [];
+        foreach ($this->localColumnNames as $index => $columnName) {
+            $connections[] = "$localTableName.$columnName -> $targetTableName.{$this->foreignColumns[$index]}";
+        }
+        $glue = "\n - ";
+        $columns = implode($glue, $connections) . "\n";
+
+        return "Foreign key from $localTableName to $targetTableName: $glue$columns";
+    }
+
+    /**
+     * Find other relations on source table to the same target table.
+     *
+     * @return array<\Propel\Generator\Model\ForeignKey>
+     */
+    public function findParallelRelations(): array
+    {
+        $fksOnSource = $this->sourceTable->getForeignKeys();
+        $filter = fn (ForeignKey $fk) => $fk->foreignTableCommonName === $this->foreignTableCommonName && $fk !== $this;
+
+        return array_filter($fksOnSource, $filter);
+    }
+
+    /**
+     * PascalCase identifier of this FK. Used in getters/setters on the source model object.
+     *
+     * @param \Propel\Common\Pluralizer\PluralizerInterface|null $usePluralizer
+     *
+     * @return string
+     */
+    public function getIdentifier(?PluralizerInterface $usePluralizer = null): string
+    {
+        return $this->buildIdentifier(
+            $usePluralizer,
+            $this->phpName,
+            $this->getForeignTableOrFail()->getPhpName(),
+            fn () => $this->buildIdentifierRelatedBySuffix(),
+        );
+    }
+
+    /**
+     * Gets the "RelatedBy*" suffix (if needed) that is attached to method and variable names.
+     *
+     * The related by suffix is based on the local columns of the foreign key. If there is more than
+     * one column in a table that points to the same foreign table, then a 'RelatedByLocalColName' suffix
+     * will be appended.
+     *
+     * @return string
+     */
+    public function buildIdentifierRelatedBySuffix(): string
+    {
+        $relatedByColumnNames = '';
+
+        $foreignTableName = (string)$this->getForeignTableName();
+        $tableName = $this->getTableName();
+
+        $isSelfJoin = $foreignTableName === $tableName;
+        $hasParallelRelations = count($this->findParallelRelations()) > 0
+            || count($this->getForeignTableOrFail()->getForeignKeysReferencingTable($tableName)) > 0;
+
+        if (!$isSelfJoin && !$hasParallelRelations) {
+            return '';
+        }
+
+        foreach ($this->localColumnNames as $localColumnName) {
+            $localColumn = $this->sourceTable->getColumn($localColumnName);
+            $relatedByColumnNames .= $localColumn->getPhpName();
+        }
+
+        return "RelatedBy$relatedByColumnNames";
+    }
+
+    /**
+     * PascalCase identifier of this FK's reversed relation. Used in getters/setters on the target model object.
+     *
+     * @param \Propel\Common\Pluralizer\PluralizerInterface|null $usePluralizer
+     *
+     * @return string
+     */
+    public function getIdentifierReversed(?PluralizerInterface $usePluralizer = null): string
+    {
+        return $this->buildIdentifier(
+            $usePluralizer,
+            $this->refPhpName,
+            $this->sourceTable->getPhpName(),
+            fn () => $this->buildIdentifierReversedRelatedBySuffix(),
+        );
+    }
+
+    /**
+     * Build relation identifier.
+     *
+     * @param \Propel\Common\Pluralizer\PluralizerInterface|null $usePluralizer
+     * @param string|null $phpName
+     * @param string $targetTableName
+     * @param callable $suffixBuilder
+     *
+     * @return string
+     */
+    protected function buildIdentifier(?PluralizerInterface $usePluralizer, ?string $phpName, string $targetTableName, callable $suffixBuilder): string
+    {
+        if ($phpName) {
+            return $usePluralizer ? $usePluralizer->getPluralForm($phpName) : $phpName;
+        }
+
+        if ($usePluralizer) {
+            $targetTableName = $usePluralizer->getPluralForm($targetTableName);
+        }
+
+        return $targetTableName . $suffixBuilder();
+    }
+
+    /**
+     * @return string
+     */
+    public function buildIdentifierReversedRelatedBySuffix(): string
+    {
+        $localTable = $this->getTable();
+        $tableName = $this->getTableName();
+        $foreignTableName = (string)$this->getForeignTableName();
+        $parallelRelations = $localTable->getForeignKeysReferencingTable($foreignTableName);
+
+        $isSelfJoin = $foreignTableName === $tableName;
+        $isParallelRelation = count($parallelRelations) > 1;
+        $hasBackRelation = count($this->getForeignTableOrFail()->getForeignKeysReferencingTable($tableName)) > 0;
+
+        if (!$isSelfJoin && !$isParallelRelation && !$hasBackRelation) {
+            return '';
+        }
+
+        $relationIndex = $isSelfJoin ? array_search($this, $parallelRelations) : '';
+
+        $relCol = '';
+        foreach ($this->getMapping() as $mapping) {
+            [$localColumn, $foreignValueOrColumn] = $mapping;
+
+            if ($foreignValueOrColumn instanceof Column && $isSelfJoin) {
+                $relCol .= $foreignValueOrColumn->getPhpName();
+
+                if ($isParallelRelation) {
+                    // several self-referential foreign keys
+                    $relCol .= $relationIndex;
+                }
+            } elseif ($isParallelRelation || $hasBackRelation) {
+                // several foreign keys to the same table, or symmetrical foreign key in foreign table
+                $relCol .= $localColumn->getPhpName();
+            }
+        }
+
+        return "RelatedBy$relCol";
     }
 }

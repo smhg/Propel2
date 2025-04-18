@@ -15,7 +15,7 @@ use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
  *
  * @author Francois Zaninotto
  *
- * @template RowFormat
+ * @template RowFormat of array
  * @extends \Propel\Runtime\Collection\ObjectCollection<RowFormat>
  */
 class ObjectCombinationCollection extends ObjectCollection
@@ -44,13 +44,17 @@ class ObjectCombinationCollection extends ObjectCollection
     }
 
     /**
-     * @inheritDoc
+     * @param RowFormat $value
+     *
+     * @return void
      */
     public function push($value): void
     {
-        /** @var RowFormat $args */
-        $args = func_get_args();
-        parent::push($args);
+        if (func_num_args() > 1) { // previous version used type-breaking variadic args
+           /** @var RowFormat $value */
+            $value = func_get_args();
+        }
+        parent::push($value);
     }
 
     /**
@@ -71,60 +75,69 @@ class ObjectCombinationCollection extends ObjectCollection
     }
 
     /**
-     * @inheritDoc
+     * @param RowFormat $element
+     *
+     * @return string|int|false
      */
     public function search($element)
     {
+        if (func_num_args() > 1) { // previous version used type-breaking variadic args
+            /** @var RowFormat $element */
+            $element = func_get_args();
+        }
         $hashes = [];
         $isActiveRecord = [];
-        foreach (func_get_args() as $pos => $obj) {
-            if ($obj instanceof ActiveRecordInterface) {
-                $hashes[$pos] = $obj->hashCode();
-                $isActiveRecord[$pos] = true;
-            } else {
-                $hashes[$pos] = $obj;
-                $isActiveRecord[$pos] = false;
-            }
+        foreach ($element as $pos => $referenceSubitem) {
+            $isRecord = $referenceSubitem instanceof ActiveRecordInterface;
+            $isActiveRecord[$pos] = $isRecord;
+            $hashes[$pos] = $isRecord ? $referenceSubitem->hashCode() : $referenceSubitem;
         }
         foreach ($this as $pos => $combination) {
-            $found = true;
-            foreach ($combination as $idx => $obj) {
-                if ($obj === null) {
-                    if ($obj !== $hashes[$idx]) {
-                        $found = false;
-
-                        break;
+            foreach ($combination as $idx => $storedSubitem) {
+                if ($storedSubitem === null) {
+                    if ($storedSubitem !== $hashes[$idx]) {
+                        continue 2;
                     }
-                } elseif ($isActiveRecord[$idx] ? $obj->hashCode() !== $hashes[$idx] : $obj !== $hashes[$idx]) {
-                    $found = false;
-
-                    break;
+                } elseif ($isActiveRecord[$idx] ? $storedSubitem->hashCode() !== $hashes[$idx] : $storedSubitem !== $hashes[$idx]) {
+                    continue 2;
                 }
             }
-            if ($found) {
-                return $pos;
-            }
+
+            return $pos;
         }
 
         return false;
     }
 
     /**
-     * @inheritDoc
+     * @param RowFormat $element
+     *
+     * @return void
      */
     public function removeObject($element): void
     {
-        $pos = $this->search(...func_get_args());
+        if (func_num_args() > 1) { // previous version used type-breaking variadic args
+            /** @var RowFormat $element */
+             $element = func_get_args();
+        }
+        $pos = $this->search($element);
         if ($pos !== false) {
             $this->remove($pos);
         }
     }
 
     /**
-     * @inheritDoc
+     * @param RowFormat $element
+     *
+     * @return bool
      */
     public function contains($element): bool
     {
-        return $this->search(...func_get_args()) !== false;
+        if (func_num_args() > 1) { // previous version used type-breaking variadic args
+            /** @var RowFormat $element */
+             $element = func_get_args();
+        }
+
+        return $this->search($element) !== false;
     }
 }
