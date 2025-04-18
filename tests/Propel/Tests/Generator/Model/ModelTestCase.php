@@ -90,7 +90,6 @@ abstract class ModelTestCase extends TestCase
         $defaults = [
             'foreign_table_name' => '',
             'table' => null,
-            'other_fks' => [],
             'local_columns' => [],
         ];
 
@@ -120,11 +119,6 @@ abstract class ModelTestCase extends TestCase
             ->expects($this->any())
             ->method('getLocalColumns')
             ->will($this->returnValue($options['local_columns']));
-
-        $fk
-            ->expects($this->any())
-            ->method('getOtherFks')
-            ->will($this->returnValue($options['other_fks']));
 
         return $fk;
     }

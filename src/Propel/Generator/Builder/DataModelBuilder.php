@@ -63,12 +63,12 @@ abstract class DataModelBuilder
     /**
      * @var \Propel\Generator\Builder\BuilderFactory\TableBuilderStore|null
      */
-    protected $tableBuilderStore = null;
+    protected $tableBuilderStore;
 
     /**
      * @var \Propel\Generator\Builder\Om\NameProducer|null
      */
-    protected $nameProducer = null;
+    protected $nameProducer;
 
     /**
      * @var \Propel\Generator\Builder\Om\ReferencedClasses
@@ -90,24 +90,23 @@ abstract class DataModelBuilder
     protected ?PlatformInterface $platform = null;
 
     /**
-     * Creates new instance of DataModelBuilder subclass.
-     *
-     * @param \Propel\Generator\Model\Table $table The Table which we are using to build [OM, DDL, etc.].
+     * @param \Propel\Generator\Model\Table $table
+     * @param \Propel\Generator\Builder\Om\ReferencedClasses|null $referencedClasses
      */
-    public function __construct(Table $table, AbstractOMBuilder $builder)
+    public function __construct(Table $table, ?ReferencedClasses $referencedClasses)
     {
         $this->setTable($table);
         $this->builderFactory = new BuilderFactory();
-        $this->referencedClasses = new ReferencedClasses($builder);
+        $this->referencedClasses = $referencedClasses;
     }
 
     /**
      * @param \Propel\Generator\Model\Table $table
-     * @param GeneratorConfigInterface|null $generatorConfig
+     * @param \Propel\Generator\Config\GeneratorConfigInterface|null $generatorConfig
      *
      * @return void
      */
-    protected function init(Table $table, ?GeneratorConfigInterface $generatorConfig)
+    protected function init(Table $table, ?GeneratorConfigInterface $generatorConfig): void
     {
         $this->table = $table;
         if (!$generatorConfig) {
@@ -116,7 +115,7 @@ abstract class DataModelBuilder
         $this->generatorConfig = $generatorConfig;
         $this->nameProducer = new NameProducer($generatorConfig->getConfiguredPluralizer());
         $this->builderFactory->setGeneratorConfig($generatorConfig);
-        $this->tableBuilderStore = new TableBuilderStore($table ,$this->builderFactory);
+        $this->tableBuilderStore = new TableBuilderStore($table, $this->builderFactory);
     }
 
     /**
@@ -398,7 +397,7 @@ abstract class DataModelBuilder
      *
      * @return string (e.g. 'MyTable' or 'ChildMyTable')
      */
-    public function resolveInternalNameOfStubObject(bool $fqcn = false): string
+    public function ownClassIdentifier(bool $fqcn = false): string
     {
         $stubObjectBuilder = $this->tableBuilderStore->getStubObjectBuilder();
 
@@ -599,7 +598,7 @@ abstract class DataModelBuilder
     /**
      * This declares the class use and returns the correct name to use (short classname, Alias, or FQCN)
      *
-     * @param AbstractOMBuilder $builder
+     * @param \Propel\Generator\Builder\Om\AbstractOMBuilder $builder
      * @param bool $fqcn true to return the $fqcn classname
      *
      * @return string ClassName, Alias or FQCN
@@ -665,7 +664,7 @@ abstract class DataModelBuilder
     }
 
     /**
-     * @param AbstractOMBuilder $builder
+     * @param \Propel\Generator\Builder\Om\AbstractOMBuilder $builder
      * @param string|bool $aliasPrefix the prefix for the Alias or True for auto generation of the Alias
      *
      * @return string

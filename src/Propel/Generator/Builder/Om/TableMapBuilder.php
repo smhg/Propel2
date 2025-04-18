@@ -1136,7 +1136,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      */
     protected function addGetOMClassNoInheritanceAbstract(string &$script): void
     {
-        $objectClassName = $this->resolveInternalNameOfStubObject();
+        $objectClassName = $this->ownClassIdentifier();
 
         $script .= "
     /**
@@ -1177,7 +1177,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      *
      * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array (" . $this->resolveInternalNameOfStubObject() . " object, last column rank)
+     * @return array (" . $this->ownClassIdentifier() . " object, last column rank)
      */
     public static function populateObject(array \$row, int \$offset = 0, string \$indexType = TableMap::TYPE_NUM): array
     {
@@ -1205,7 +1205,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
             \$cls = static::getOMClass(\$row, \$offset, false);";
         }
         $script .= "
-            /** @var {$this->resolveInternalNameOfStubObject()} \$obj */
+            /** @var {$this->ownClassIdentifier()} \$obj */
             \$obj = new \$cls();
             \$col = \$obj->hydrate(\$row, \$offset, false, \$indexType);
             {$this->getTableMapClassName()}::addInstanceToPool(\$obj, \$key);
@@ -1262,14 +1262,14 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
                 // class must be set each time from the record row
                 \$cls = static::getOMClass(\$row, 0);
                 \$cls = preg_replace('#\.#', '\\\\', \$cls);
-                /** @var {$this->resolveInternalNameOfStubObject()} \$obj */
+                /** @var {$this->ownClassIdentifier()} \$obj */
                 " . $this->buildObjectInstanceCreationCode('$obj', '$cls') . "
                 \$obj->hydrate(\$row);
                 \$results[] = \$obj;
                 {$this->getTableMapClassName()}::addInstanceToPool(\$obj, \$key);";
         } else {
             $script .= "
-                /** @var {$this->resolveInternalNameOfStubObject()} \$obj */
+                /** @var {$this->ownClassIdentifier()} \$obj */
                 " . $this->buildObjectInstanceCreationCode('$obj', '$cls') . "
                 \$obj->hydrate(\$row);
                 \$results[] = \$obj;
@@ -1435,9 +1435,9 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
     /**
      * @deprecated Delete via model or {$this->getQueryClassName()}.
      *
-     * Performs a DELETE on the database, given a " . $this->resolveInternalNameOfStubObject() . " or Criteria object OR a primary key value.
+     * Performs a DELETE on the database, given a " . $this->ownClassIdentifier() . " or Criteria object OR a primary key value.
      *
-     * @param mixed \$values Criteria or " . $this->resolveInternalNameOfStubObject() . " object or primary key or array of primary keys
+     * @param mixed \$values Criteria or " . $this->ownClassIdentifier() . " object or primary key or array of primary keys
      *              which is used to create the DELETE statement
      * @param ConnectionInterface \$con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
@@ -1541,7 +1541,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
     {
         $table = $this->getTable();
         $tableMapClass = $this->getTableMapClass();
-        $stubObjectName = $this->resolveInternalNameOfStubObject();
+        $stubObjectName = $this->ownClassIdentifier();
 
         $script .= "
     /**

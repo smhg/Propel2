@@ -8,8 +8,9 @@
 
 namespace Propel\Generator\Builder\Om;
 
-use Propel\Generator\Model\Table;
 use Propel\Generator\Exception\LogicException;
+use Propel\Generator\Model\ForeignKey;
+use Propel\Generator\Model\Table;
 
 class ReferencedClasses
 {
@@ -277,5 +278,25 @@ class ReferencedClasses
         }
 
         return false;
+    }
+
+    /**
+     * @param \Propel\Generator\Model\ForeignKey $fk
+     *
+     * @return string
+     */
+    protected function resolveSourceModelClassName(ForeignKey $fk): string
+    {
+        return $this->getInternalNameOfTable($fk->getTable());
+    }
+
+    /**
+     * @param \Propel\Generator\Model\ForeignKey $fk
+     *
+     * @return string
+     */
+    public function resolveForeignKeyTargetModelClassName(ForeignKey $fk): string
+    {
+        return $this->getInternalNameOfTable($fk->getForeignTableOrFail());
     }
 }

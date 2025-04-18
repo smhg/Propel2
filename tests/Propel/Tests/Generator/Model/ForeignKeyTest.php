@@ -351,28 +351,6 @@ class ForeignKeyTest extends ModelTestCase
     /**
      * @return void
      */
-    public function testGetOtherForeignKeys()
-    {
-        $fk = new ForeignKey();
-
-        $fks[] = new ForeignKey();
-        $fks[] = $fk;
-        $fks[] = new ForeignKey();
-
-        $table = $this->getTableMock('books');
-        $table
-            ->expects($this->once())
-            ->method('getForeignKeys')
-            ->will($this->returnValue($fks));
-
-        $fk->setTable($table);
-
-        $this->assertCount(2, $fk->getOtherFks());
-    }
-
-    /**
-     * @return void
-     */
     public function testSetForeignSchemaName()
     {
         $fk = new ForeignKey();

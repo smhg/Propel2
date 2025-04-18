@@ -44,7 +44,7 @@ class Issue656Test extends TestCase
 EOF;
             $builder = new QuickBuilder();
             $builder->setSchema($schema);
-            $builder->buildClasses(null, true);
+            $builder->buildClasses();
         }
     }
 

@@ -48,7 +48,7 @@ class CrossForeignKeys
      *
      * @var \Propel\Generator\Model\Table
      */
-    protected $table;
+    protected $sourceTable;
 
     /**
      * The cross-ref table (which has crossRef=true).
@@ -60,7 +60,7 @@ class CrossForeignKeys
     /**
      * All other outgoing relations from the middle-table to other tables.
      *
-     * @var array<\Propel\Generator\Model\ForeignKey>
+     * @var list<\Propel\Generator\Model\ForeignKey>
      */
     protected $crossForeignKeys = [];
 
@@ -72,13 +72,13 @@ class CrossForeignKeys
     protected $incomingForeignKey;
 
     /**
-     * @param \Propel\Generator\Model\ForeignKey $foreignKey
-     * @param \Propel\Generator\Model\Table $crossTable
+     * @param \Propel\Generator\Model\ForeignKey $middleToSourceFk
+     * @param \Propel\Generator\Model\Table $sourceTable
      */
-    public function __construct(ForeignKey $foreignKey, Table $crossTable)
+    public function __construct(ForeignKey $middleToSourceFk, Table $sourceTable)
     {
-        $this->setIncomingForeignKey($foreignKey);
-        $this->setTable($crossTable);
+        $this->setIncomingForeignKey($middleToSourceFk);
+        $this->setSourceTable($sourceTable);
     }
 
     /**
@@ -234,9 +234,9 @@ class CrossForeignKeys
      *
      * @return void
      */
-    public function setTable(Table $table): void
+    public function setSourceTable(Table $table): void
     {
-        $this->table = $table;
+        $this->sourceTable = $table;
     }
 
     /**
@@ -246,13 +246,13 @@ class CrossForeignKeys
      */
     public function getTable(): Table
     {
-        return $this->table;
+        return $this->sourceTable;
     }
 
     /**
      * @return bool
      */
-    public function hasCombinedKey(): bool
+    public function isMultiModel(): bool
     {
         return count($this->crossForeignKeys) > 1 || (bool)$this->getUnclassifiedPrimaryKeys();
     }
@@ -271,6 +271,9 @@ class CrossForeignKeys
         return $this->crossForeignKeys[0]->getForeignTableOrFail();
     }
 
+    /**
+     * @return string
+     */
     public function __tostring(): string
     {
         if (!$this->crossForeignKeys) {
@@ -279,11 +282,24 @@ class CrossForeignKeys
         $sourceTableName = $this->getTable()->getName();
         $middleTableName = $this->getMiddleTable()->getName();
         $targetTableName = $this->getTargetTable()->getName();
-        $fks = array_map(fn($fk) => $fk->__toString(),$this->getCrossForeignKeys());
+        // $fks = array_map(fn ($fk) => $fk->__toString(), $this->getCrossForeignKeys());
 
-        return "Many-to-many relation from $sourceTableName to $targetTableName via middle table $middleTableName"
-        . " \n Middle to source key ('incoming key'):\n" . $this->incomingForeignKey->__toString()
-        . " \n Middle to target keys ('crossForeignKeys'):\n" . implode("\n", $fks)
-        ;
+        return "Cross relation from '$sourceTableName' via middle table '$middleTableName' to '$targetTableName'\n";
+
+        //. " Middle to source key ('incoming key'):\n" . $this->incomingForeignKey->__toString()
+        //. " Middle to target keys ('crossForeignKeys'):\n" . implode("\n", $fks)
+    }
+
+    /**
+     * @param \Propel\Generator\Model\ForeignKey $excludeFk
+     *
+     * @return array<\Propel\Generator\Model\ForeignKey>
+     */
+    public function getKeysInOrder(ForeignKey $excludeFk): array
+    {
+        $relationFks = [$this->incomingForeignKey, ...$this->crossForeignKeys];
+        $middleTableFks = $this->middleTable->getForeignKeys();
+
+        return array_filter($middleTableFks, fn ($fk) => $fk !== $excludeFk && in_array($fk, $relationFks));
     }
 }

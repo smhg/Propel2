@@ -11,7 +11,7 @@ namespace Propel\Generator\Builder\Om;
 use DateTime;
 use Exception;
 use Propel\Common\Util\SetColumnConverter;
-use Propel\Generator\Builder\Om\ObjectBuilder\CrossFkCodeProducer;
+use Propel\Generator\Builder\Om\ObjectBuilder\AbstractCrossRelationCodeProducer;
 use Propel\Generator\Config\GeneratorConfigInterface;
 use Propel\Generator\Exception\EngineException;
 use Propel\Generator\Model\Column;
@@ -37,9 +37,9 @@ use Propel\Runtime\Exception\PropelException;
 class ObjectBuilder extends AbstractObjectBuilder
 {
     /**
-     * @var array<\Propel\Generator\Builder\Om\ObjectBuilder\CrossFkCodeProducer>
+     * @var array<\Propel\Generator\Builder\Om\ObjectBuilder\AbstractCrossRelationCodeProducer>
      */
-    protected $crossFkCodeProducers = [];
+    protected $crossRelationCodeProducers = [];
 
     /**
      * @param \Propel\Generator\Model\Table $table
@@ -48,22 +48,22 @@ class ObjectBuilder extends AbstractObjectBuilder
     {
         parent::__construct($table);
     }
-    
+
     /**
      * @param \Propel\Generator\Model\Table $table
-     * @param GeneratorConfigInterface|null $generatorConfig
+     * @param \Propel\Generator\Config\GeneratorConfigInterface|null $generatorConfig
      *
      * @return void
      */
-    protected function init(Table $table, ?GeneratorConfigInterface $generatorConfig)
+    protected function init(Table $table, ?GeneratorConfigInterface $generatorConfig): void
     {
         parent::init($table, $generatorConfig);
-        $this->crossFkCodeProducers = [];
+        $this->crossRelationCodeProducers = [];
         if (!$generatorConfig) {
             return;
         }
-        foreach($table->getCrossFks() as $crossFk) {
-            $this->crossFkCodeProducers[] = new CrossFkCodeProducer($crossFk, $this);
+        foreach ($table->getCrossFks() as $crossFk) {
+            $this->crossRelationCodeProducers[] = AbstractCrossRelationCodeProducer::create($crossFk, $this);
         }
     }
 
@@ -136,18 +136,22 @@ class ObjectBuilder extends AbstractObjectBuilder
         // Check to see whether any generated foreign key names
         // will conflict with column names.
 
-        $colPhpNames = [];
-        $fkPhpNames = [];
+        $columnNames = [];
+        $relationIdentifiers = [];
 
         foreach ($table->getColumns() as $col) {
-            $colPhpNames[] = $col->getPhpName();
+            $columnNames[] = $col->getPhpName();
         }
 
         foreach ($table->getForeignKeys() as $fk) {
-            $fkPhpNames[] = $this->getFKPhpNameAffix($fk, false);
+            $relationIdentifiers[] = $fk->getIdentifier();
         }
 
-        $intersect = array_intersect($colPhpNames, $fkPhpNames);
+        foreach ($table->getReferrers() as $fk) {
+            $relationIdentifiers[] = $fk->getIdentifierReversed();
+        }
+
+        $intersect = array_intersect($columnNames, $relationIdentifiers);
         if ($intersect) {
             throw new EngineException('One or more of your column names for [' . $table->getName() . '] table conflict with foreign key names (' . implode(', ', $intersect) . ')');
         }
@@ -160,6 +164,27 @@ class ObjectBuilder extends AbstractObjectBuilder
         foreach ($table->getForeignKeys() as $fk) {
             if ($fk->isMatchedByInverseFK()) {
                 throw new EngineException(sprintf('The 1:1 relationship expressed by foreign key %s is defined in both directions; Propel does not currently support this (if you must have both foreign key constraints, consider adding this constraint with a custom SQL file.)', $fk->getName()));
+            }
+        }
+
+        // check names from cross relations
+        foreach ($this->crossRelationCodeProducers as $crossRelationProducer) {
+            $reservedNames = $crossRelationProducer->reserveNamesForGetters();
+            foreach ($reservedNames as $crossRelationName) {
+                if (in_array($crossRelationName, $columnNames)) {
+                    $message = "Cross relation on table '{$table->getName()}' uses names which conflict with a column defined in the table.\n"
+                        . " - Column name: '{$crossRelationName}'\n - {$crossRelationProducer->getCrossRelation()->__toString()}\n"
+                        . 'You can rename the cross relation by setting a `phpName` attribute on the foreign key between middle table and target table.';
+
+                    throw new EngineException($message);
+                }
+                if (in_array($crossRelationName, $relationIdentifiers)) {
+                    $message = "Cross relation on table '{$table->getName()}' uses names which conflict with a relation to or from this table.\n"
+                        . " - Foreign key name: '{$crossRelationName}'\n - {$crossRelationProducer->getCrossRelation()->__toString()}\n"
+                        . 'You can rename the cross relation by setting a `phpName` attribute on the foreign key between middle table and target table.';
+
+                    throw new EngineException($message);
+                }
             }
         }
     }
@@ -366,8 +391,8 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
             $this->addAttributes($script);
         }
 
-        foreach ($this->crossFkCodeProducers as $producer) {
-            $producer->addCrossScheduledForDeletionAttribute($script);
+        foreach ($this->crossRelationCodeProducers as $producer) {
+            $producer->addScheduledForDeletionAttribute($script);
         }
 
         foreach ($table->getReferrers() as $refFK) {
@@ -420,8 +445,8 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
         $this->addFKMethods($script);
         $this->addRefFKMethods($script);
 
-        foreach ($this->crossFkCodeProducers as $producer) {
-            $producer->addCrossFKMethods($script);
+        foreach ($this->crossRelationCodeProducers as $producer) {
+            $producer->addMethods($script);
         }
 
         $this->addClear($script);
@@ -502,7 +527,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
         }
 
         // many-to-many relationships
-        foreach ($this->crossFkCodeProducers as $producer) {
+        foreach ($this->crossRelationCodeProducers as $producer) {
             $producer->addAttributes($script);
         }
 
@@ -3652,10 +3677,8 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
             }
         }
 
-        foreach ($this->crossFkCodeProducers as $producer) {
-            $columnName = $producer->buildLocalColumnNameForCrossRef(false);
-            $script .= "
-            \$this->$columnName = null;";
+        foreach ($this->crossRelationCodeProducers as $producer) {
+            $producer->addOnReloadCode($script);
         }
 
         $script .= "
@@ -4604,7 +4627,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
      * If the \$criteria is not null, it is used to always fetch the results from the database.
      * Otherwise the results are fetched from the database the first time, then cached.
      * Next time the same method is called without \$criteria, the cached collection is returned.
-     * If this " . $this->resolveInternalNameOfStubObject() . " is new, it will return
+     * If this " . $this->ownClassIdentifier() . " is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
      * @param Criteria \$criteria optional Criteria object to narrow the query
@@ -5090,8 +5113,8 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
             }
 ";
 
-        foreach ($this->crossFkCodeProducers as $producer) {
-            $producer->addCrossFkScheduledForDeletion($script);
+        foreach ($this->crossRelationCodeProducers as $producer) {
+            $producer->addDeleteScheduledItemsCode($script);
         }
 
         foreach ($table->getReferrers() as $refFK) {
@@ -5744,7 +5767,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
      * objects.
      *
      * @param bool \$deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
-     * @return " . $this->resolveInternalNameOfStubObject(true) . " Clone of current object.
+     * @return " . $this->ownClassIdentifier(true) . " Clone of current object.
      * @throws \Propel\Runtime\Exception\PropelException
      */
     public function copy(bool \$deepCopy = false)
@@ -5778,7 +5801,7 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
      * If desired, this method can also make copies of all associated (fkey referrers)
      * objects.
      *
-     * @param object \$copyObj An object of " . $this->resolveInternalNameOfStubObject(true) . " (or compatible) type.
+     * @param object \$copyObj An object of " . $this->ownClassIdentifier(true) . " (or compatible) type.
      * @param bool \$deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
      * @param bool \$makeNew Whether to reset autoincrement PKs and make the object new.
      * @throws \Propel\Runtime\Exception\PropelException
@@ -5976,19 +5999,8 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
             $vars[] = $varName;
         }
 
-        foreach ($this->crossFkCodeProducers as $producer) {
-            $varName = $producer->buildLocalColumnNameForCrossRef( false);
-
-            if ($producer->getCrossRelation()->hasCombinedKey()) {
-                $varName = 'combination' . ucfirst($varName); // TODO move to buildLocalColumnNameForCrossRef
-            }
-            $script .= "
-            if (\$this->$varName) {
-                foreach (\$this->$varName as \$o) {
-                    \$o->clearAllReferences(\$deep);
-                }
-            }";
-            $vars[] = $varName;
+        foreach ($this->crossRelationCodeProducers as $producer) {
+            $vars[] = $producer->addClearReferencesCode($script);
         }
 
         $script .= "

@@ -35,7 +35,7 @@ abstract class AbstractOMBuilder extends DataModelBuilder
      */
     public function __construct(Table $table)
     {
-        parent::__construct($table, $this);
+        parent::__construct($table, new ReferencedClasses($this));
     }
 
     /**
@@ -352,7 +352,7 @@ abstract class AbstractOMBuilder extends DataModelBuilder
      */
     public function getFKPhpNameAffix(ForeignKey $fk, bool $plural = false): string
     {
-        return $this->nameProducer->resolveRelationForwardName($fk, $plural);
+        return $this->nameProducer->resolveRelationIdentifier($fk, $plural);
     }
 
     /**
@@ -368,7 +368,7 @@ abstract class AbstractOMBuilder extends DataModelBuilder
      */
     protected static function getRelatedBySuffix(ForeignKey $fk): string
     {
-        return NameProducer::buildForeignKeyRelatedByNameSuffix($fk);
+        return $fk->buildIdentifierRelatedBySuffix();
     }
 
     /**
@@ -394,7 +394,7 @@ abstract class AbstractOMBuilder extends DataModelBuilder
      */
     protected static function getRefRelatedBySuffix(ForeignKey $fk): string
     {
-        return NameProducer::buildForeignKeyBackReferenceRelatedBySuffix($fk);
+        return $fk->buildIdentifierReversedRelatedBySuffix();
     }
 
     /**
