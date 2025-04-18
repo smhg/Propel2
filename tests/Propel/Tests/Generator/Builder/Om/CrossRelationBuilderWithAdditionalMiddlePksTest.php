@@ -12,7 +12,7 @@ use Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationMultiModelCodeProduce
 
 /**
  */
-class CrossRelationBuilderWithAdditionalMiddlePks extends AbstractCrossRelationBuilderTest
+class CrossRelationBuilderWithAdditionalMiddlePksTest extends AbstractCrossRelationBuilderTest
 {
     /**
      * @return void
