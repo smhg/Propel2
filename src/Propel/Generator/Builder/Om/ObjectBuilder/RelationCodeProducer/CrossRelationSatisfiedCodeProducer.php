@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Generator\Builder\Om\ObjectBuilder;
+namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\ForeignKey;
@@ -17,7 +17,7 @@ use Propel\Generator\Model\ForeignKey;
  * cross relations where the middle table is a ternary relation or its primary
  * key contains additional non-null columns).
  */
-class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
+class CrossRelationSatisfiedCodeProducer extends AbstractCrossRelationCodeProducer
 {
     /**
      * @return \Propel\Generator\Model\ForeignKey
@@ -104,7 +104,8 @@ class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
 
         $attributeName = $this->names->getAttributeWithCollectionName();
         $attributeIsPartialName = $this->names->getAttributeIsPartialName();
-        $objectCollectionType = $this->resolveObjectCollectorType();
+
+        [$objectCollectionClass, $objectCollectionType] = $this->resolveObjectCollectorClassNameAndType($this->getFkToTarget()->getForeignTable());
 
         $script .= "
     /**
@@ -122,7 +123,7 @@ class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
      *
      * @return $objectCollectionType
      */
-    public function get{$targetIdentifierPlural}(?Criteria \$criteria = null, ?ConnectionInterface \$con = null): ObjectCollection
+    public function get{$targetIdentifierPlural}(?Criteria \$criteria = null, ?ConnectionInterface \$con = null): $objectCollectionClass
     {
         \$partial = \$this->{$attributeIsPartialName} && !\$this->isNew();
         if (\$this->$attributeName === null || \$criteria !== null || \$partial) {
@@ -165,16 +166,6 @@ class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
     protected function setterItemIsArray(): bool
     {
         return false;
-    }
-
-    /**
-     * @return string
-     */
-    protected function resolveObjectCollectorType(): string
-    {
-        $collectionType = $this->getCollectionType();
-
-        return "ObjectCollection<$collectionType>"; // TODO get collection class from tablemap
     }
 
     /**

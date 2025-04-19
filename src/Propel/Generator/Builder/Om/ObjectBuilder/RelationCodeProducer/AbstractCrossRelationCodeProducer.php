@@ -6,10 +6,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Generator\Builder\Om\ObjectBuilder;
+namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use LogicException;
-use Propel\Generator\Builder\DataModelBuilder;
 use Propel\Generator\Builder\Om\ObjectBuilder;
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Config\GeneratorConfigInterface;
@@ -20,7 +19,7 @@ use Propel\Generator\Model\Table;
 /**
  * Generates a database loader file, which is used to register all table maps with the DatabaseMap.
  */
-abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
+abstract class AbstractCrossRelationCodeProducer extends AbstractRelationCodeProducer
 {
     /**
      * @var string
@@ -33,7 +32,7 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
     protected $crossRelation;
 
     /**
-     * @var \Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationNames
+     * @var \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\CrossRelationNames
      */
     protected $names;
 
@@ -77,13 +76,13 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
      * @param \Propel\Generator\Model\CrossRelation $crossRelation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $builder
      *
-     * @return \Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationSatisfied|\Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationPartial
+     * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\CrossRelationSatisfiedCodeProducer|\Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\CrossRelationPartialCodeProducer
      */
     public static function create(CrossRelation $crossRelation, ObjectBuilder $builder): self
     {
         return $crossRelation->isMultiModel()
-            ? new CrossRelationPartial($crossRelation, $builder)
-            : new CrossRelationSatisfied($crossRelation, $builder);
+            ? new CrossRelationPartialCodeProducer($crossRelation, $builder)
+            : new CrossRelationSatisfiedCodeProducer($crossRelation, $builder);
     }
 
     /**
@@ -144,11 +143,6 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
     abstract protected function setterItemIsArray(): bool;
 
     /**
-     * @return string
-     */
-    abstract protected function resolveObjectCollectorType(): string;
-
-    /**
      * @param string $script
      *
      * @return void
@@ -193,7 +187,7 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
      *
      * @param \Propel\Generator\Model\ForeignKey $firstFk
      *
-     * @return \Propel\Generator\Builder\Om\ObjectBuilder\FunctionArgumentSignatureCollector
+     * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\FunctionArgumentSignatureCollector
      */
     protected function collectSignatureWithFirstArgument(ForeignKey $firstFk): FunctionArgumentSignatureCollector
     {
@@ -211,10 +205,10 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
      * Collect signature from keys.
      *
      * @param \Propel\Generator\Model\ForeignKey|null $fkToIgnore
-     * @param \Propel\Generator\Builder\Om\ObjectBuilder\FunctionArgumentSignatureCollector|null $collector
+     * @param \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\FunctionArgumentSignatureCollector|null $collector
      * @param string|null $withDefaultValue Set to {@see FunctionArgumentSignatureCollector::USE_COLUMN_DEFAULT} or {@see FunctionArgumentSignatureCollector::USE_DEFAULT_NULL} to add default values to argument declarations.
      *
-     * @return \Propel\Generator\Builder\Om\ObjectBuilder\FunctionArgumentSignatureCollector
+     * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\FunctionArgumentSignatureCollector
      */
     protected function collectSignature(
         ?ForeignKey $fkToIgnore = null,
@@ -305,11 +299,11 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
         $attributeName = '$' . $this->names->getAttributeWithCollectionName();
         $attributePartialName = '$' . $this->names->getAttributeIsPartialName();
         $relationIdentifier = $this->names->getTargetIdentifier(false);
-        $collectionType = $this->resolveObjectCollectorType();
+        [$_, $objectCollectionType] = $this->resolveObjectCollectorClassNameAndType();
 
         $script .= "
     /**
-     * @var $collectionType Objects in $relationIdentifier relation.
+     * @var $objectCollectionType Objects in $relationIdentifier relation.
      */
     protected $attributeName;
 
@@ -328,7 +322,7 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
     {
         $attributeName = $this->names->getAttributeScheduledForDeletionName();
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
-        $objectCollectionType = $this->resolveObjectCollectorType();
+        [$_, $objectCollectionType] = $this->resolveObjectCollectorClassNameAndType();
 
         $script .= "
     /**

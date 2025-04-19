@@ -6,10 +6,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Generator\Builder\Om\ObjectBuilder;
+namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\ForeignKey;
+use Propel\Generator\Model\Table;
 use Propel\Runtime\Collection\ObjectCombinationCollection;
 
 /**
@@ -18,7 +19,7 @@ use Propel\Runtime\Collection\ObjectCombinationCollection;
  * additional data is required along with the element of the opposite table to
  * produce entries in the middle table.
  */
-class CrossRelationPartial extends AbstractCrossRelationCodeProducer
+class CrossRelationPartialCodeProducer extends AbstractCrossRelationCodeProducer
 {
     /**
      * @var string
@@ -163,7 +164,7 @@ class CrossRelationPartial extends AbstractCrossRelationCodeProducer
      */
     protected function addGetters(string &$script): void
     {
-        $objectCollectionType = $this->resolveObjectCollectorType();
+        [$objectCollectionClassName, $objectCollectionType] = $this->resolveObjectCollectorClassNameAndType();
         $sourceIdentifierSingular = $this->names->getSourceIdentifier(false);
         $crossRefTableName = $this->crossRelation->getMiddleTable()->getName();
 
@@ -194,7 +195,7 @@ class CrossRelationPartial extends AbstractCrossRelationCodeProducer
      *
      * @return $objectCollectionType
      */
-    public function get{$targetIdentifierPlural}(?Criteria \$criteria = null, ?ConnectionInterface \$con = null): ObjectCombinationCollection
+    public function get{$targetIdentifierPlural}(?Criteria \$criteria = null, ?ConnectionInterface \$con = null): $objectCollectionClassName
     {
         \$partial = \$this->$attributeIsPartialName && !\$this->isNew();
         if (\$this->$attributeName !== null && !\$partial && !\$criteria) {
@@ -310,13 +311,17 @@ class CrossRelationPartial extends AbstractCrossRelationCodeProducer
     }
 
     /**
-     * @return string
+     * @param \Propel\Generator\Model\Table $table
+     *
+     * @return array{string, string}
      */
-    protected function resolveObjectCollectorType(): string
+    protected function resolveObjectCollectorClassNameAndType(Table $table = null): array
     {
+        $className = 'ObjectCombinationCollection';
         $collectionType = $this->getCollectionType();
+        $typeString =  '\\' . ObjectCombinationCollection::class . "<$collectionType>";
 
-        return '\\' . ObjectCombinationCollection::class . "<$collectionType>";
+        return [$className, $typeString];
     }
 
     /**

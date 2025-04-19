@@ -6,9 +6,9 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Tests\Generator\Builder\Om;
+namespace Propel\Tests\Generator\Builder\Om\RelationCodeProducer;
 
-use Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationPartial;
+use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\CrossRelationPartialCodeProducer;
 
 /**
  */
@@ -19,7 +19,7 @@ class CrossRelationBuilderPartialPkTest extends AbstractCrossRelationBuilderTest
      */
     public function testType(): void
     {
-        $this->assertInstanceOf(CrossRelationPartial::class, $this->getCodeProducer());
+        $this->assertInstanceOf(CrossRelationPartialCodeProducer::class, $this->getCodeProducer());
     }
 
     /**

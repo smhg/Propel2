@@ -11,7 +11,7 @@ namespace Propel\Generator\Builder\Om;
 use DateTime;
 use Exception;
 use Propel\Common\Util\SetColumnConverter;
-use Propel\Generator\Builder\Om\ObjectBuilder\AbstractCrossRelationCodeProducer;
+use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\AbstractCrossRelationCodeProducer;
 use Propel\Generator\Config\GeneratorConfigInterface;
 use Propel\Generator\Exception\EngineException;
 use Propel\Generator\Model\Column;
@@ -37,7 +37,7 @@ use Propel\Runtime\Exception\PropelException;
 class ObjectBuilder extends AbstractObjectBuilder
 {
     /**
-     * @var array<\Propel\Generator\Builder\Om\ObjectBuilder\AbstractCrossRelationCodeProducer>
+     * @var array<\Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\AbstractCrossRelationCodeProducer>
      */
     protected $crossRelationCodeProducers = [];
 
@@ -62,7 +62,7 @@ class ObjectBuilder extends AbstractObjectBuilder
         if (!$generatorConfig) {
             return;
         }
-        foreach ($table->getCrossFks() as $crossFk) {
+        foreach ($table->getCrossRelations() as $crossFk) {
             $this->crossRelationCodeProducers[] = AbstractCrossRelationCodeProducer::create($crossFk, $this);
         }
     }
