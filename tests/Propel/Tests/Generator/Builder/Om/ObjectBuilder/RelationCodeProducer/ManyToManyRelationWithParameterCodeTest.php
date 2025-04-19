@@ -8,18 +8,18 @@
 
 namespace Propel\Tests\Generator\Builder\Om\RelationCodeProducer;
 
-use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\CrossRelationPartialCodeProducer;
+use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\TernaryRelationCodeProducer;
 
 /**
  */
-class CrossRelationBuilderPartialPkTest extends AbstractCrossRelationBuilderTest
+class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
 {
     /**
      * @return void
      */
     public function testType(): void
     {
-        $this->assertInstanceOf(CrossRelationPartialCodeProducer::class, $this->getCodeProducer());
+        $this->assertInstanceOf(TernaryRelationCodeProducer::class, $this->getCodeProducer());
     }
 
     /**

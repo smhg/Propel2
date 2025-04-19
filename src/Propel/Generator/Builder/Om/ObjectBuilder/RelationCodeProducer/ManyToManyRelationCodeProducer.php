@@ -10,6 +10,7 @@ namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\ForeignKey;
+use Propel\Generator\Model\Table;
 
 /**
  * Produces code for cross/many-to-many relations that requires only an element
@@ -17,7 +18,7 @@ use Propel\Generator\Model\ForeignKey;
  * cross relations where the middle table is a ternary relation or its primary
  * key contains additional non-null columns).
  */
-class CrossRelationSatisfiedCodeProducer extends AbstractCrossRelationCodeProducer
+class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
 {
     /**
      * @return \Propel\Generator\Model\ForeignKey
@@ -25,6 +26,16 @@ class CrossRelationSatisfiedCodeProducer extends AbstractCrossRelationCodeProduc
     protected function getFkToTarget(): ForeignKey
     {
         return $this->crossRelation->getCrossForeignKeys()[0]; // fixed shape has only ever one fk.
+    }
+
+    /**
+     * @param \Propel\Generator\Model\Table $table
+     *
+     * @return array{string, string}
+     */
+    protected function resolveObjectCollectorClassNameAndType(Table $table = null): array
+    {
+        return parent::resolveObjectCollectorClassNameAndType($table ?? $this->getFkToTarget()->getForeignTable());
     }
 
     /**
@@ -57,7 +68,7 @@ class CrossRelationSatisfiedCodeProducer extends AbstractCrossRelationCodeProduc
             true,
         );
 
-        $foreignTableMapName = $this->resolveClassNameForTable(GeneratorConfig::KEY_TABLEMAP, $fk->getTable());
+        $foreignTableMapName = $this->resolveClassNameForTable(GeneratorConfig::KEY_TABLEMAP, $fk->getForeignTable());
 
         $script .= $this->buildInitCode(null, $foreignTableMapName, $relatedObjectClassName);
     }

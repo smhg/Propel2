@@ -19,7 +19,7 @@ use Propel\Runtime\Collection\ObjectCombinationCollection;
  * additional data is required along with the element of the opposite table to
  * produce entries in the middle table.
  */
-class CrossRelationPartialCodeProducer extends AbstractCrossRelationCodeProducer
+class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
 {
     /**
      * @var string

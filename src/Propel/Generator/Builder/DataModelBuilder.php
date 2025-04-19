@@ -10,7 +10,7 @@ namespace Propel\Generator\Builder;
 
 use Propel\Common\Pluralizer\PluralizerInterface;
 use Propel\Generator\Builder\BuilderFactory\BuilderFactory;
-use Propel\Generator\Builder\BuilderFactory\TableBuilderStore;
+use Propel\Generator\Builder\BuilderFactory\CodeBuilderStore;
 use Propel\Generator\Builder\Om\AbstractObjectBuilder;
 use Propel\Generator\Builder\Om\AbstractOMBuilder;
 use Propel\Generator\Builder\Om\MultiExtendObjectBuilder;
@@ -61,9 +61,9 @@ abstract class DataModelBuilder
     protected $builderFactory;
 
     /**
-     * @var \Propel\Generator\Builder\BuilderFactory\TableBuilderStore|null
+     * @var \Propel\Generator\Builder\BuilderFactory\CodeBuilderStore|null
      */
-    protected $tableBuilderStore;
+    protected $codeBuilderStore;
 
     /**
      * @var \Propel\Generator\Builder\Om\NameProducer|null
@@ -115,7 +115,7 @@ abstract class DataModelBuilder
         $this->generatorConfig = $generatorConfig;
         $this->nameProducer = new NameProducer($generatorConfig->getConfiguredPluralizer());
         $this->builderFactory->setGeneratorConfig($generatorConfig);
-        $this->tableBuilderStore = new TableBuilderStore($table, $this->builderFactory);
+        $this->codeBuilderStore = new CodeBuilderStore($table, $this->builderFactory);
     }
 
     /**
@@ -348,14 +348,15 @@ abstract class DataModelBuilder
      *
      * @param string $classType
      * @param \Propel\Generator\Model\Table $table
+     * @param bool $fullyQualified
      *
      * @return string
      */
-    protected function resolveClassNameForTable(string $classType, Table $table)
+    protected function resolveClassNameForTable(string $classType, Table $table, bool $fullyQualified = false)
     {
         $builderStub = $this->builderFactory->createBuilderForTable($table, $classType);
 
-        return $this->referencedClasses->getInternalNameOfBuilderResultClass($builderStub);
+        return $this->referencedClasses->getInternalNameOfBuilderResultClass($builderStub, $fullyQualified);
     }
 
     /**
@@ -369,21 +370,19 @@ abstract class DataModelBuilder
      */
     public function getQueryClassName(bool $fqcn = false): string
     {
-        $queryStubBuilder = $this->tableBuilderStore->getStubQueryBuilder();
+        $queryStubBuilder = $this->codeBuilderStore->getStubQueryBuilder();
 
         return $this->referencedClasses->getInternalNameOfBuilderResultClass($queryStubBuilder, $fqcn);
     }
 
     /**
-     * @deprecated use aptly-named {@see static::getInternalNameOfStubObject()}
-     *
      * @param bool $fqcn
      *
      * @return string (e.g. 'MyTable' or 'ChildMyTable')
      */
     public function getObjectClassName(bool $fqcn = false): string
     {
-        $stubObjectBuilder = $this->tableBuilderStore->getStubObjectBuilder();
+        $stubObjectBuilder = $this->codeBuilderStore->getStubObjectBuilder();
 
         return $this->referencedClasses->getInternalNameOfBuilderResultClass($stubObjectBuilder, $fqcn);
     }
@@ -399,7 +398,7 @@ abstract class DataModelBuilder
      */
     public function ownClassIdentifier(bool $fqcn = false): string
     {
-        $stubObjectBuilder = $this->tableBuilderStore->getStubObjectBuilder();
+        $stubObjectBuilder = $this->codeBuilderStore->getStubObjectBuilder();
 
         return $this->referencedClasses->getInternalNameOfBuilderResultClass($stubObjectBuilder, $fqcn);
     }
@@ -412,7 +411,7 @@ abstract class DataModelBuilder
      */
     public function getObjectName(): string
     {
-        return $this->tableBuilderStore->getStubObjectBuilder()->getUnqualifiedClassName();
+        return $this->codeBuilderStore->getStubObjectBuilder()->getUnqualifiedClassName();
     }
 
     /**
@@ -436,7 +435,7 @@ abstract class DataModelBuilder
      */
     public function getObjectBuilder(): ObjectBuilder
     {
-        return $this->tableBuilderStore->getObjectBuilder();
+        return $this->codeBuilderStore->getObjectBuilder();
     }
 
     /**
@@ -446,7 +445,7 @@ abstract class DataModelBuilder
      */
     public function getStubObjectBuilder(): AbstractObjectBuilder
     {
-        return $this->tableBuilderStore->getStubObjectBuilder();
+        return $this->codeBuilderStore->getStubObjectBuilder();
     }
 
     /**
@@ -456,7 +455,7 @@ abstract class DataModelBuilder
      */
     public function getQueryBuilder(): AbstractOMBuilder
     {
-        return $this->tableBuilderStore->getQueryBuilder();
+        return $this->codeBuilderStore->getQueryBuilder();
     }
 
     /**
@@ -466,7 +465,7 @@ abstract class DataModelBuilder
      */
     public function getStubQueryBuilder(): AbstractOMBuilder
     {
-        return $this->tableBuilderStore->getStubQueryBuilder();
+        return $this->codeBuilderStore->getStubQueryBuilder();
     }
 
     /**
@@ -476,7 +475,7 @@ abstract class DataModelBuilder
      */
     public function getTableMapBuilder(): TableMapBuilder
     {
-        return $this->tableBuilderStore->getTableMapBuilder();
+        return $this->codeBuilderStore->getTableMapBuilder();
     }
 
     /**
@@ -486,7 +485,7 @@ abstract class DataModelBuilder
      */
     public function getInterfaceBuilder(): AbstractOMBuilder
     {
-        return $this->tableBuilderStore->getInterfaceBuilder();
+        return $this->codeBuilderStore->getInterfaceBuilder();
     }
 
     /**
@@ -496,7 +495,7 @@ abstract class DataModelBuilder
      */
     public function getMultiExtendObjectBuilder(): MultiExtendObjectBuilder
     {
-        return $this->tableBuilderStore->getMultiExtendObjectBuilder();
+        return $this->codeBuilderStore->getMultiExtendObjectBuilder();
     }
 
     /**
@@ -508,7 +507,7 @@ abstract class DataModelBuilder
      */
     public function getNewQueryInheritanceBuilder(Inheritance $child): AbstractOMBuilder
     {
-        return $this->tableBuilderStore->createQueryInheritanceBuilder($child);
+        return $this->codeBuilderStore->createQueryInheritanceBuilder($child);
     }
 
     /**
@@ -520,7 +519,7 @@ abstract class DataModelBuilder
      */
     public function getNewStubQueryInheritanceBuilder(Inheritance $child): AbstractOMBuilder
     {
-        return $this->tableBuilderStore->createStubQueryInheritanceBuilder($child);
+        return $this->codeBuilderStore->createStubQueryInheritanceBuilder($child);
     }
 
     /**

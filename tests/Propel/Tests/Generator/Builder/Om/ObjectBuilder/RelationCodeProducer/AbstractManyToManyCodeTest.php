@@ -9,7 +9,7 @@
 namespace Propel\Tests\Generator\Builder\Om\RelationCodeProducer;
 
 use Propel\Generator\Builder\Om\ObjectBuilder;
-use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\AbstractCrossRelationCodeProducer;
+use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\AbstractManyToManyCodeProducer;
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\CrossRelation;
 use Propel\Generator\Util\QuickBuilder;
@@ -17,7 +17,7 @@ use Propel\Tests\TestCase;
 
 /**
  */
-abstract class AbstractCrossRelationBuilderTest extends TestCase
+abstract class AbstractManyToManyCodeTest extends TestCase
 {
     /**
      * @var string
@@ -25,7 +25,7 @@ abstract class AbstractCrossRelationBuilderTest extends TestCase
     protected $tableName = 'user';
 
     /**
-     * @var \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\AbstractCrossRelationCodeProducer
+     * @var \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\AbstractManyToManyCodeProducer
      */
     protected $crossFkCodeProducer;
 
@@ -53,7 +53,7 @@ abstract class AbstractCrossRelationBuilderTest extends TestCase
     }
 
 
-    protected function getCodeProducer(): AbstractCrossRelationCodeProducer
+    protected function getCodeProducer(): AbstractManyToManyCodeProducer
     {
         if (!$this->crossFkCodeProducer) {
             $this->init();

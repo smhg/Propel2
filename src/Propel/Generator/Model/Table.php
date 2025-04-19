@@ -892,7 +892,7 @@ class Table extends ScopedMappingModel implements IdMethod
      *
      * @return array<\Propel\Generator\Model\CrossRelation>
      */
-    public function getCrossFks(): array
+    public function getCrossRelations(): array
     {
         $crossFks = [];
         foreach ($this->referrers as $relationToThis) {
@@ -2167,7 +2167,7 @@ class Table extends ScopedMappingModel implements IdMethod
      */
     public function hasCrossForeignKeys(): bool
     {
-        return count($this->getCrossFks()) !== 0;
+        return count($this->getCrossRelations()) !== 0;
     }
 
     /**

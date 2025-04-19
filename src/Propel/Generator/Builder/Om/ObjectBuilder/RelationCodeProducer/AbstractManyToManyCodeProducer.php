@@ -19,7 +19,7 @@ use Propel\Generator\Model\Table;
 /**
  * Generates a database loader file, which is used to register all table maps with the DatabaseMap.
  */
-abstract class AbstractCrossRelationCodeProducer extends AbstractRelationCodeProducer
+abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProducer
 {
     /**
      * @var string
@@ -44,12 +44,8 @@ abstract class AbstractCrossRelationCodeProducer extends AbstractRelationCodePro
      */
     protected function __construct(CrossRelation $crossRelation, ObjectBuilder $parentBuilder)
     {
-        parent::__construct($crossRelation->getTable(), $parentBuilder->referencedClasses);
         $this->crossRelation = $crossRelation;
-        if (!$parentBuilder->getGeneratorConfig()) {
-            throw new LogicException('CrossFkCodeProducer should not be created before GeneratorConfig is available.');
-        }
-        $this->init($this->getTable(), $parentBuilder->getGeneratorConfig());
+        parent::__construct($crossRelation->getTable(), $parentBuilder);
     }
 
     /**
@@ -76,13 +72,13 @@ abstract class AbstractCrossRelationCodeProducer extends AbstractRelationCodePro
      * @param \Propel\Generator\Model\CrossRelation $crossRelation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $builder
      *
-     * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\CrossRelationSatisfiedCodeProducer|\Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\CrossRelationPartialCodeProducer
+     * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\ManyToManyRelationCodeProducer|\Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\TernaryRelationCodeProducer
      */
     public static function create(CrossRelation $crossRelation, ObjectBuilder $builder): self
     {
         return $crossRelation->isMultiModel()
-            ? new CrossRelationPartialCodeProducer($crossRelation, $builder)
-            : new CrossRelationSatisfiedCodeProducer($crossRelation, $builder);
+            ? new TernaryRelationCodeProducer($crossRelation, $builder)
+            : new ManyToManyRelationCodeProducer($crossRelation, $builder);
     }
 
     /**
