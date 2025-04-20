@@ -74,6 +74,13 @@ class GeneratorConfig extends ConfigurationManager implements GeneratorConfigInt
     protected $behaviorLocator;
 
     /**
+     * Config key for name of query class (base class).
+     *
+     * @var string
+     */
+    public const KEY_COLLECTION = 'collection';
+
+    /**
      * Connections configured in the `generator` section of the configuration file
      *
      * @var array

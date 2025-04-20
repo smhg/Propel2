@@ -89,6 +89,7 @@ class QueryBuilder extends AbstractOMBuilder
     protected function addClassOpen(string &$script): void
     {
         $table = $this->getTable();
+        $collectionBuilder = $this->builderFactory->createObjectCollectionBuilder($this->getTable());
 
         $script .= $this->renderTemplate('baseQueryClassHeader.php', [
             'tableName' => $table->getName(),
@@ -106,6 +107,8 @@ class QueryBuilder extends AbstractOMBuilder
 
             'relationNames' => $this->getRelationNames(),
             'relatedTableQueryClassNames' => $this->getRelatedTableQueryClassNames(),
+
+            'objectCollectionType' => $collectionBuilder->resolveTableCollectionClassType(),
         ]);
     }
 

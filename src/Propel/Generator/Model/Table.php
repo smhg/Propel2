@@ -17,6 +17,7 @@ use Propel\Generator\Exception\InvalidArgumentException;
 use Propel\Generator\Exception\LogicException;
 use Propel\Generator\Platform\MysqlPlatform;
 use Propel\Generator\Platform\PlatformInterface;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Exception\RuntimeException;
 use Propel\Runtime\Util\UuidConverter;
 
@@ -2324,5 +2325,27 @@ class Table extends ScopedMappingModel implements IdMethod
         $value = $this->getAttribute('bulk-load') ?? 'false';
 
         return strtolower($value) !== 'false';
+    }
+
+    /**
+     * Check if the table should generate its own collection class.
+     *
+     * @return bool
+     */
+    public function useGeneratedCollectionClass(): bool
+    {
+        $value = $this->getAttribute('generate-collection') ?? 'true';
+
+        return strtolower($value) !== 'false';
+    }
+
+    /**
+     * Collection class name used by this table, fully qualified.
+     *
+     * @return bool
+     */
+    public function getCollectionClassNameFq(): string
+    {
+        return $this->getAttribute('collection-class') ?? '\\' . ObjectCollection::class;
     }
 }

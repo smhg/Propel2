@@ -200,6 +200,8 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      */
     protected function addConstants(): string
     {
+        $collectionBuilder = $this->builderFactory->createObjectCollectionBuilder($this->getTable());
+
         return $this->renderTemplate('tableMapConstants', [
             'className' => $this->getClasspath(),
             'dbName' => $this->getDatabase()->getName(),
@@ -212,6 +214,8 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
             'nbHydrateColumns' => $this->getTable()->getNumColumns() - $this->getTable()->getNumLazyLoadColumns(),
             'columns' => $this->getTable()->getColumns(),
             'stringFormat' => $this->getTable()->getDefaultStringFormat(),
+            'objectCollectionClassName' => $collectionBuilder->resolveTableCollectionClassNameFq(),
+            'objectCollectionType' => $collectionBuilder->resolveTableCollectionClassType(),
         ]);
     }
 

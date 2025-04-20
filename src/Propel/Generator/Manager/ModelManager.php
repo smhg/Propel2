@@ -68,7 +68,7 @@ class ModelManager extends AbstractManager
                         // -----------------------------------------------------------------------------------------
 
                         // these files are always created / overwrite any existing files
-                        foreach (['object', 'tablemap', 'query'] as $target) {
+                        foreach (['object', 'tablemap', 'query', 'collection'] as $target) {
                             $builder = $generatorConfig->getConfiguredBuilder($table, $target);
                             $nbWrittenFiles += $this->doBuild($builder);
                         }
