@@ -39,7 +39,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @var ObjectCollection<ChildTeam> Objects in LeTeam relation.
+     * @var \Base\Collection\TeamCollection Objects in LeTeam relation.
      */
     protected $collLeTeams;
 
@@ -57,7 +57,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Items of LeTeam relation marked for deletion.
      *
-     * @var ObjectCollection<ChildTeam>
+     * @var \Base\Collection\TeamCollection
      */
     protected $leTeamsScheduledForDeletion = null;
 ';
@@ -131,7 +131,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
      */
     public function initLeTeams(): void
     {
-        $collectionClassName = TeamUserTableMap::getTableMap()->getCollectionClassName();
+        $collectionClassName = TeamTableMap::getTableMap()->getCollectionClassName();
         $this->collLeTeams = new $collectionClassName;
         $this->collLeTeamsIsPartial = true;
         $this->collLeTeams->setModel(\'\Team\');
@@ -196,9 +196,9 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * @param \Propel\Runtime\ActiveQuery\Criteria $criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return ObjectCollection<ChildTeam>
+     * @return \Base\Collection\TeamCollection
      */
-    public function getLeTeams(?Criteria $criteria = null, ?ConnectionInterface $con = null): ObjectCollection
+    public function getLeTeams(?Criteria $criteria = null, ?ConnectionInterface $con = null): TeamCollection
     {
         $partial = $this->collLeTeamsIsPartial && !$this->isNew();
         if ($this->collLeTeams === null || $criteria !== null || $partial) {

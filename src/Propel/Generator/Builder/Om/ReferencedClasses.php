@@ -98,7 +98,7 @@ class ReferencedClasses
      * @param \Propel\Generator\Builder\Om\AbstractOMBuilder $builder
      * @param string|bool $aliasPrefix the prefix for the Alias or True for auto generation of the Alias
      *
-     * @return string
+     * @return string the short ClassName or an alias
      */
     public function registerBuilderResultClass(AbstractOMBuilder $builder, $aliasPrefix = false): string
     {

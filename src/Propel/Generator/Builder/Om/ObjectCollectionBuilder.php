@@ -35,7 +35,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
     }
 
     /**
-     * @return array{collectionClassName: string, collectionClassNameFq: string, collectionClassType: string, relationIdentifier: string, relationIdentifierInMethod: string[]|null}
+     * @return array{collectionClassName: string, collectionClassNameFq: string, collectionClassType: string, relationIdentifier: string, relationIdentifierInMethod: array<string>|null}
      */
     protected function getMapping(): array
     {
@@ -63,12 +63,12 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
     {
         $namespace = parent::getNamespace();
         if (!$namespace) {
-            return '';
+            return 'Base\\Collection';
         }
 
         $namespaceMap = $this->getBuildProperty('generator.objectModel.namespaceCollection');
         if (!$namespaceMap) {
-            return $namespace . '\\Base\\Collection';
+            return $namespace . 'Base\\Collection';
         }
 
         return "$namespace\\$namespaceMap";
@@ -185,6 +185,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
      * @param string $relationIdentifier
      * @param string $relationIdentifierInMethod
      * @param \Propel\Generator\Model\Table $table
+     *
      * @return array{collectionClassName: string, collectionClassNameFq: class-string, collectionClassType: string, relationIdentifier: string, relationIdentifierInMethod: string}
      */
     protected function builtTableCollectionMapping(string $relationIdentifier, string $relationIdentifierInMethod, Table $table): array
@@ -214,10 +215,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
     protected function resolveParentCollectionType(): string
     {
         $table = $this->getTable();
-        $collectionClassNameFq = $table->getCollectionClassNameFq();
-        if (!$collectionClassNameFq[0] === '\\') {
-            $collectionClassNameFq = '\\' . $collectionClassNameFq;
-        }
+        $collectionClassNameFq = $this->normalizeClassName($table->getCollectionClassNameFq());
         if ($collectionClassNameFq && $collectionClassNameFq !== '\\' . ObjectCollection::class) {
             return $collectionClassNameFq;
         }
@@ -249,7 +247,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
      */
     public function resolveTableCollectionClassType(?Table $table = null): string
     {
-        $className = $this->resolveTableCollectionClassNameFq($table);
+        $className = $this->normalizeClassName($this->resolveTableCollectionClassNameFq($table));
         if ($className !== '\\' . ObjectCollection::class) {
             return $className;
         }
@@ -257,5 +255,17 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
         $modelClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $table ?? $this->getTable());
 
         return '\\' . ObjectCollection::class . "<$modelClassName>";
+    }
+
+    /**
+     * @param string $className
+     *
+     * @return string
+     */
+    protected function normalizeClassName(string $className): string
+    {
+        $needsSlashesAtStart = $className[0] !== '\\' && strpos('\\', $className) !== false;
+
+        return $needsSlashesAtStart ? "\\$className" : $className;
     }
 }

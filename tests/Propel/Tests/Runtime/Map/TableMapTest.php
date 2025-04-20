@@ -29,6 +29,16 @@ class TableMapTest extends TestCase
     protected $databaseMap;
 
     /**
+     * @var string
+     */
+    protected $tableName;
+
+    /**
+     * @var TableMap
+     */
+    protected $tmap;
+
+    /**
      * @return void
      */
     protected function setUp(): void
@@ -243,19 +253,19 @@ class TableMapTest extends TestCase
         $foreigntmap2 = new TableMap('baz');
         $foreigntmap2->setClassName('Baz');
         $this->databaseMap->addTableObject($foreigntmap2);
-        $this->rmap1 = $this->tmap->addRelation('Bar', 'Bar', RelationMap::MANY_TO_ONE);
-        $this->rmap2 = $this->tmap->addRelation('Bazz', 'Baz', RelationMap::ONE_TO_MANY);
+        $rmap1 = $this->tmap->addRelation('Bar', 'Bar', RelationMap::MANY_TO_ONE);
+        $rmap2 = $this->tmap->addRelation('Bazz', 'Baz', RelationMap::ONE_TO_MANY);
         $this->tmap->getRelations();
         // now on to the test
-        $this->assertEquals($this->rmap1->getLocalTable(), $this->tmap, 'adding a relation with HAS_ONE sets the local table to the current table');
-        $this->assertEquals($this->rmap1->getForeignTable(), $foreigntmap1, 'adding a relation with HAS_ONE sets the foreign table according to the name given');
-        $this->assertEquals(RelationMap::MANY_TO_ONE, $this->rmap1->getType(), 'adding a relation with HAS_ONE sets the foreign table type accordingly');
+        $this->assertEquals($rmap1->getLocalTable(), $this->tmap, 'adding a relation with HAS_ONE sets the local table to the current table');
+        $this->assertEquals($rmap1->getForeignTable(), $foreigntmap1, 'adding a relation with HAS_ONE sets the foreign table according to the name given');
+        $this->assertEquals(RelationMap::MANY_TO_ONE, $rmap1->getType(), 'adding a relation with HAS_ONE sets the foreign table type accordingly');
 
-        $this->assertEquals($this->rmap2->getForeignTable(), $this->tmap, 'adding a relation with HAS_MANY sets the foreign table to the current table');
-        $this->assertEquals($this->rmap2->getLocalTable(), $foreigntmap2, 'adding a relation with HAS_MANY sets the local table according to the name given');
-        $this->assertEquals(RelationMap::ONE_TO_MANY, $this->rmap2->getType(), 'adding a relation with HAS_MANY sets the foreign table type accordingly');
+        $this->assertEquals($rmap2->getForeignTable(), $this->tmap, 'adding a relation with HAS_MANY sets the foreign table to the current table');
+        $this->assertEquals($rmap2->getLocalTable(), $foreigntmap2, 'adding a relation with HAS_MANY sets the local table according to the name given');
+        $this->assertEquals(RelationMap::ONE_TO_MANY, $rmap2->getType(), 'adding a relation with HAS_MANY sets the foreign table type accordingly');
 
-        $expectedRelations = ['Bar' => $this->rmap1, 'Bazz' => $this->rmap2];
+        $expectedRelations = ['Bar' => $rmap1, 'Bazz' => $rmap2];
         $this->assertEquals($expectedRelations, $this->tmap->getRelations(), 'getRelations() returns an associative array of all the relations');
     }
 
@@ -298,47 +308,6 @@ class TableMapTest extends TestCase
     public function testGetCollectionClassNameReturnsObjectCollection()
     {
         $this->assertEquals(ObjectCollection::class, $this->tmap->getCollectionClassName());
-    }
-
-    /**
-     * @return void
-     */
-    public function testGetCollectionClassNameReturnsCustomCollection()
-    {
-        $classWithCollection = __NAMESPACE__ . '\ExtendingTest';
-        $this->tmap->setClassName($classWithCollection);
-        $this->assertEquals(ExtendingTestCollection::class, $this->tmap->getCollectionClassName());
-    }
-
-    /**
-     * @return void
-     */
-    public function testGetCollectionClassNameReturnsOnlyCollections()
-    {
-        $classWithUnrelatedCollection = __NAMESPACE__ . '\NonExtendingTest';
-        $this->tmap->setClassName($classWithUnrelatedCollection);
-        $this->assertEquals(ObjectCollection::class, $this->tmap->getCollectionClassName());
-    }
-}
-
-class ExtendingTestCollection extends ObjectCollection
-{
-}
-
-class NonExtendingTestCollection
-{
-}
-
-class TestableTableMap extends TableMap
-{
-    public function hasPrefix($data)
-    {
-        return parent::hasPrefix($data);
-    }
-
-    public function removePrefix($data)
-    {
-        return parent::removePrefix($data);
     }
 }
 

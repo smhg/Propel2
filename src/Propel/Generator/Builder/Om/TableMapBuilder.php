@@ -8,6 +8,7 @@
 
 namespace Propel\Generator\Builder\Om;
 
+use Propel\Generator\Builder\Om\TableMapBuilder\TableMapBuilderValidation;
 use Propel\Generator\Model\ForeignKey;
 use Propel\Generator\Model\IdMethod;
 use Propel\Generator\Model\PropelTypes;
@@ -20,6 +21,25 @@ use Propel\Generator\Platform\PlatformInterface;
  */
 class TableMapBuilder extends AbstractOMBuilder
 {
+ /**
+  * @return void
+  */
+    protected function validateModel(): void
+    {
+        parent::validateModel();
+        $this->disallowImplicitCollectionReplacement();
+    }
+
+    /**
+     * @throws \Propel\Generator\Exception\DeprecatedUsageException
+     *
+     * @return void
+     */
+    protected function disallowImplicitCollectionReplacement(): void
+    {
+        TableMapBuilderValidation::validate($this);
+    }
+
     /**
      * Gets the package for the map builder classes.
      *
