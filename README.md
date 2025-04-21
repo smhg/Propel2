@@ -58,9 +58,12 @@ $q = $q->useEssayRelatedByFirstAuthorIdExistsQuery();  // EssayQuery<AuthorQuery
 $q = $q->endUse();                                     // AuthorQuery<BookQuery<null>>
 $q = $q->endUse();                                     // BookQuery<null>
 
-$o = $q->findObjects();                                // ObjectCollection<Book>
-$b = $q->getFirst();                                   // Book|null
+// findObjects() returns object collection
+$o = $q->findObjects();                                // BookCollection
+$a = $o->populateAuthor()                              // AuthorCollection
+$a = $a->getFirst();                                   // Author|null
 
+// findTuples() returns arrays
 $a = $q->findTuples();                                 // ArrayCollection
 $r = $q->getFirst();                                   // array<string, mixed>|null
 ```
@@ -204,7 +207,7 @@ Cross-relations that were previously prefixed with "Cross" are now named correct
 
 Some things I would like to do when I find the time:
 - Delay resolving of column names until query is created.
-- Automatically build subclasses of ObjectCollection for each model class, which provide typed entries to `ObjectCollection::populateRelation()` for model relations (i.e. `AuthorQuery::create()->findObjects()->populateBooks()`).
+- ~~Automatically build subclasses of ObjectCollection for each model class, which provide typed entries to `ObjectCollection::populateRelation()` for model relations (i.e. `AuthorQuery::create()->findObjects()->populateBooks()`).~~ :heavy_check_mark:
 - Get prepared statement parameters without building filters for QueryCache behavior.
 
 # Disclaimer
