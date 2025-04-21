@@ -133,8 +133,6 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
      * This does not modify the database; however, it will remove any associated objects, causing
      * them to be refetched by subsequent calls to accessor method.
      *
-     * @see static::addTeamDayTypes()
-     *
      * @return void
      */
     public function clearTeamDayTypes(): void
@@ -327,7 +325,7 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
-     * @return \Propel\Runtime\Collection\ObjectCollection<ChildTeam>
+     * @return \Base\Collection\TeamCollection
      */
     public function getTeams(?string $day = null, ?int $type = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
     {
@@ -372,7 +370,8 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
         }
 
         $this->combinationTeamDayTypesIsPartial = false;
-        $this->combinationTeamDayTypes = $teamDayTypes;
+        $this->combinationTeamDayTypes = $teamDayTypes instanceof ObjectCombinationCollection
+            ? $teamDayTypes : new ObjectCombinationCollection($teamDayTypes->getData());
 
         return $this;
     }

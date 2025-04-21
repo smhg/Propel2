@@ -33,7 +33,7 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
     protected function __construct(ForeignKey $relation, ObjectBuilder $parentBuilder)
     {
         $this->relation = $relation;
-        parent::__construct($relation->getTable(), $parentBuilder);
+        parent::__construct($relation->getForeignTable(), $parentBuilder);
     }
 
     public static function create(ForeignKey $relation, ObjectBuilder $parentBuilder): AbstractIncomingRelationCode

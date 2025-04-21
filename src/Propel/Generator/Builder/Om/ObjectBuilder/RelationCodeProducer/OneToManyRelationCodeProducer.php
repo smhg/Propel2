@@ -58,13 +58,13 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      */
     public function addAttributes(string &$script): void
     {
-        $refFK = $this->relation;
-        $className = $this->getClassNameFromTable($refFK->getTable());
+        $className = $this->getClassNameFromTable($this->relation->getTable());
         $variable = '$' . $this->getAttributeName();
+        [$_, $collectionType] = $this->resolveObjectCollectionClassNameAndType($this->relation->getTable());
 
         $script .= "
     /**
-     * @var ObjectCollection<{$className}>|null Collection to store aggregation of $className objects.
+     * @var $collectionType|null Collection to store aggregation of $className objects.
      */
     protected $variable;
 
@@ -139,15 +139,15 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      */
     public function addClearReferencesCode(string &$script): string
     {
-        $varName = $this->getAttributeName();
+        $attributeName = $this->getAttributeName();
         $script .= "
-        if (\$this->$varName) {
-            foreach (\$this->$varName as \$o) {
+        if (\$this->$attributeName) {
+            foreach (\$this->$attributeName as \$o) {
                 \$o->clearAllReferences(\$deep);
             }
         }";
 
-        return $varName;
+        return $attributeName;
     }
 
     /**
@@ -159,15 +159,17 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      */
     protected function addInit(string &$script): void
     {
-        $refFK = $this->relation;
-        $relCol = $this->getRefFKPhpNameAffix($refFK, true);
-        $collName = $this->getAttributeName();
+        $table = $this->relation->getTable();
+        $relationIdentifierPlural = $this->relation->getIdentifierReversed($this->getPluralizer());
+        $attributeName = $this->getAttributeName();
+        [$collectionClassName] = $this->resolveObjectCollectionClassNameAndType($table);
+        $modelClassNameFq = $this->getClassNameFromBuilder($this->getNewStubObjectBuilder($table), true);
 
         $script .= "
     /**
-     * Initializes the $collName collection.
+     * Initializes the $attributeName collection.
      *
-     * By default this just sets the $collName collection to an empty array (like clear$collName());
+     * By default this just sets the $attributeName collection to an empty array (like clear$attributeName());
      * however, you may wish to override this method in your stub class to provide setting appropriate
      * to your application -- for example, setting the initial array to the values stored in database.
      *
@@ -176,16 +178,14 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      *
      * @return void
      */
-    public function init$relCol(bool \$overrideExisting = true): void
+    public function init$relationIdentifierPlural(bool \$overrideExisting = true): void
     {
-        if (\$this->$collName  !== null&& !\$overrideExisting) {
+        if (\$this->$attributeName !== null && !\$overrideExisting) {
             return;
         }
 
-        \$collectionClassName = " . $this->getClassNameFromBuilder($this->getNewTableMapBuilder($refFK->getTable())) . "::getTableMap()->getCollectionClassName();
-
-        \$this->{$collName} = new \$collectionClassName;
-        \$this->{$collName}->setModel('" . $this->getClassNameFromBuilder($this->getNewStubObjectBuilder($refFK->getTable()), true) . "');
+        \$this->{$attributeName} = new $collectionClassName();
+        \$this->{$attributeName}->setModel('$modelClassNameFq');
     }
 ";
     }
@@ -199,27 +199,24 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      */
     protected function addClear(string &$script): void
     {
-        $refFK = $this->relation;
-        $relCol = $this->getRefFKPhpNameAffix($refFK, true);
-        $collName = $this->getAttributeName();
+        $relationIdentifierPlural = $this->relation->getIdentifierReversed($this->getPluralizer());
+        $attributeName = $this->getAttributeName();
 
         $script .= "
     /**
-     * Clears out the $collName collection
+     * Clears out the $attributeName collection
      *
      * This does not modify the database; however, it will remove any associated objects, causing
      * them to be refetched by subsequent calls to accessor method.
      *
      * @return \$this
-     * @see add$relCol()
      */
-    public function clear$relCol()
+    public function clear$relationIdentifierPlural(): static
     {
-        \$this->$collName = null; // important to set this to NULL since that means it is uninitialized
+        \$this->$attributeName = null;
 
         return \$this;
-    }
-";
+    }\n";
     }
 
     /**
@@ -237,33 +234,38 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
         $className = $this->getClassNameFromTable($refFK->getTable());
 
         if ($tblFK->getChildrenColumn()) {
-            $className = $this->getClassNameFromTable($refFK->getTable());
+            $className = $this->getClassNameFromTable($refFK->getTable()); // same as above?
         }
+        $modelVar = '$' . lcfirst($className);
 
-        $collName = $this->getAttributeName();
+        $attributeName = $this->getAttributeName();
 
         $scheduledForDeletion = lcfirst($this->getRefFKPhpNameAffix($refFK, true)) . 'ScheduledForDeletion';
+
+        $relationIdentifierSingular = $refFK->getIdentifierReversed();
+        $relationIdentifierPlural = $refFK->getIdentifierReversed($this->getPluralizer());
 
         $script .= "
     /**
      * Method called to associate a $className object to this object
      * through the $className foreign key attribute.
      *
-     * @param $className \$l $className
-     * @return \$this The current object (for fluent API support)
+     * @param $className $modelVar
+     *
+     * @return \$this
      */
-    public function add" . $this->getRefFKPhpNameAffix($refFK, false) . "($className \$l)
+    public function add{$relationIdentifierSingular}($className $modelVar)
     {
-        if (\$this->$collName === null) {
-            \$this->init" . $this->getRefFKPhpNameAffix($refFK, true) . "();
-            \$this->{$collName}Partial = true;
+        if (\$this->$attributeName === null) {
+            \$this->init{$relationIdentifierPlural}();
+            \$this->{$attributeName}Partial = true;
         }
 
-        if (!\$this->{$collName}->contains(\$l)) {
-            \$this->doAdd" . $this->getRefFKPhpNameAffix($refFK, false) . "(\$l);
+        if (!\$this->{$attributeName}->contains($modelVar)) {
+            \$this->doAdd{$relationIdentifierSingular}($modelVar);
 
-            if (\$this->{$scheduledForDeletion} and \$this->{$scheduledForDeletion}->contains(\$l)) {
-                \$this->{$scheduledForDeletion}->remove(\$this->{$scheduledForDeletion}->search(\$l));
+            if (\$this->{$scheduledForDeletion} && \$this->{$scheduledForDeletion}->contains($modelVar)) {
+                \$this->{$scheduledForDeletion}->remove(\$this->{$scheduledForDeletion}->search($modelVar));
             }
         }
 
@@ -293,10 +295,12 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
     /**
      * Returns the number of related $className objects.
      *
-     * @param Criteria \$criteria
+     * @param Criteria|null \$criteria
      * @param bool \$distinct
-     * @param ConnectionInterface \$con
+     * @param ConnectionInterface|null \$con
+     *
      * @return int Count of related $className objects.
+     *
      * @throws \Propel\Runtime\Exception\PropelException
      */
     public function count{$relCol}(?Criteria \$criteria = null, bool \$distinct = false, ?ConnectionInterface \$con = null): int
@@ -336,15 +340,18 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
     protected function addGet(string &$script): void
     {
         $refFK = $this->relation;
-        $fkQueryClassName = $this->getClassNameFromBuilder($this->getNewStubQueryBuilder($refFK->getTable()));
-        $relCol = $this->getRefFKPhpNameAffix($refFK, true);
-        $collName = $this->getAttributeName();
-
-        $className = $this->getClassNameFromTable($refFK->getTable());
+        $table = $refFK->getTable();
+        $attributeName = $this->getAttributeName();
+        
+        $modelClassName = $this->getClassNameFromTable($table);
+        $modelClassNameFqcn = $this->getClassNameFromBuilder($this->getNewStubObjectBuilder($table), true);
+        $relationIdentifierPlural = $refFK->getIdentifierReversed($this->getPluralizer());
+        $fkQueryClassName = $this->getClassNameFromBuilder($this->getNewStubQueryBuilder($table));
+        [$collectionClassName, $collectionType] = $this->resolveObjectCollectionClassNameAndType($table);
 
         $script .= "
     /**
-     * Gets an array of $className objects which contain a foreign key that references this object.
+     * Gets an array of $modelClassName objects which contain a foreign key that references this object.
      *
      * If the \$criteria is not null, it is used to always fetch the results from the database.
      * Otherwise the results are fetched from the database the first time, then cached.
@@ -352,63 +359,66 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      * If this " . $this->ownClassIdentifier() . " is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
-     * @param Criteria \$criteria optional Criteria object to narrow the query
-     * @param ConnectionInterface \$con optional connection object
-     * @return ObjectCollection|{$className}[] List of $className objects
-     * @phpstan-return ObjectCollection&\Traversable<{$className}> List of $className objects
+     * @param Criteria|null \$criteria
+     * @param ConnectionInterface|null \$con
+     *
+     * @return $collectionType
+     *
      * @throws \Propel\Runtime\Exception\PropelException
      */
-    public function get$relCol(?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
+    public function get$relationIdentifierPlural(?Criteria \$criteria = null, ?ConnectionInterface \$con = null): $collectionClassName
     {
-        \$partial = \$this->{$collName}Partial && !\$this->isNew();
-        if (\$this->$collName === null|| \$criteria !== null|| \$partial) {
-            if (\$this->isNew()) {
-                // return empty collection
-                if (\$this->$collName === null) {
-                    \$this->init" . $this->getRefFKPhpNameAffix($refFK, true) . "();
-                } else {
-                    \$collectionClassName = " . $this->getClassNameFromBuilder($this->getNewTableMapBuilder($refFK->getTable())) . "::getTableMap()->getCollectionClassName();
+        \$partial = \$this->{$attributeName}Partial && !\$this->isNew();
+        if (\$this->$attributeName && !\$criteria && !\$partial) {
+            return \$this->$attributeName;
+        }
 
-                    \$$collName = new \$collectionClassName;
-                    \${$collName}->setModel('" . $this->getClassNameFromBuilder($this->getNewStubObjectBuilder($refFK->getTable()), true) . "');
+        if (\$this->isNew()) {
+            // return empty collection
+            if (\$this->$attributeName === null) {
+                \$this->init{$relationIdentifierPlural}();
 
-                    return \$$collName;
-                }
-            } else {
-                \$$collName = $fkQueryClassName::create(null, \$criteria)
-                    ->filterBy" . $refFK->getIdentifier() . "(\$this)
-                    ->find(\$con);
+                return \$this->$attributeName;
+            }
 
-                if (\$criteria !== null) {
-                    if (false !== \$this->{$collName}Partial && count(\$$collName)) {
-                        \$this->init" . $this->getRefFKPhpNameAffix($refFK, true) . "(false);
+            \$$attributeName = new $collectionClassName();
+            \${$attributeName}->setModel('$modelClassNameFqcn');
 
-                        foreach (\$$collName as \$obj) {
-                            if (false == \$this->{$collName}->contains(\$obj)) {
-                                \$this->{$collName}->append(\$obj);
-                            }
-                        }
+            return \$$attributeName;
+        }
 
-                        \$this->{$collName}Partial = true;
-                    }
+        \$$attributeName = $fkQueryClassName::create(null, \$criteria)
+            ->filterBy" . $refFK->getIdentifier() . "(\$this)
+            ->find(\$con);
 
-                    return \$$collName;
-                }
+        if (\$criteria) {
+            if (\$this->{$attributeName}Partial !== false && count(\$$attributeName)) {
+                \$this->init{$relationIdentifierPlural}(false);
 
-                if (\$partial && \$this->$collName) {
-                    foreach (\$this->$collName as \$obj) {
-                        if (\$obj->isNew()) {
-                            \${$collName}[] = \$obj;
-                        }
+                foreach (\$$attributeName as \$obj) {
+                    if (!\$this->{$attributeName}->contains(\$obj)) {
+                        \$this->{$attributeName}->append(\$obj);
                     }
                 }
 
-                \$this->$collName = \$$collName;
-                \$this->{$collName}Partial = false;
+                \$this->{$attributeName}Partial = true;
+            }
+
+            return \$$attributeName;
+        }
+
+        if (\$this->{$attributeName}Partial && \$this->$attributeName) {
+            foreach (\$this->$attributeName as \$obj) {
+                if (\$obj->isNew()) {
+                    \${$attributeName}[] = \$obj;
+                }
             }
         }
 
-        return \$this->$collName;
+        \$this->$attributeName = \$$attributeName;
+        \$this->{$attributeName}Partial = false;
+
+        return \$this->$attributeName;
     }
 ";
     }
@@ -426,55 +436,54 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
 
         $className = $this->getClassNameFromTable($refFK->getTable());
 
-        $inputCollection = lcfirst($relatedName);
+        $inputCollectionVar = lcfirst($relatedName);
         $inputCollectionEntry = lcfirst($this->getRefFKPhpNameAffix($refFK, false));
-
-        $collName = $this->getAttributeName();
+        [$targetCollectionType, $_] = $this->resolveObjectCollectionClassNameAndType($refFK->getTable());
+        $attributeName = $this->getAttributeName();
         $relCol = $refFK->getIdentifier();
 
         $script .= "
     /**
      * Sets a collection of $className objects related by a one-to-many relationship
      * to the current object.
+     *
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param Collection \${$inputCollection} A Propel collection.
-     * @param ConnectionInterface \$con Optional connection object
-     * @return \$this The current object (for fluent API support)
+     * @param \Propel\Runtime\Collection\Collection<$className> \${$inputCollectionVar}
+     * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con
+     *
+     * @return \$this
      */
-    public function set{$relatedName}(Collection \${$inputCollection}, ?ConnectionInterface \$con = null)
+    public function set{$relatedName}(Collection \${$inputCollectionVar}, ?ConnectionInterface \$con = null): static
     {
-        /** @var {$className}[] \${$inputCollection}ToDelete */
-        \${$inputCollection}ToDelete = \$this->get{$relatedName}(new Criteria(), \$con)->diff(\${$inputCollection});
-
-        ";
+        \${$inputCollectionVar}ToDelete = \$this->get{$relatedName}(null, \$con)->diff(\${$inputCollectionVar});\n";
 
         if ($refFK->isAtLeastOneLocalPrimaryKey()) {
             $script .= "
         //since at least one column in the foreign key is at the same time a PK
         //we can not just set a PK to NULL in the lines below. We have to store
         //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
-        \$this->{$inputCollection}ScheduledForDeletion = clone \${$inputCollection}ToDelete;
+        \$this->{$inputCollectionVar}ScheduledForDeletion = clone \${$inputCollectionVar}ToDelete;
 ";
         } else {
             $script .= "
-        \$this->{$inputCollection}ScheduledForDeletion = \${$inputCollection}ToDelete;
-";
+        \$this->{$inputCollectionVar}ScheduledForDeletion = \${$inputCollectionVar}ToDelete;\n";
         }
 
         $script .= "
-        foreach (\${$inputCollection}ToDelete as \${$inputCollectionEntry}Removed) {
+        foreach (\${$inputCollectionVar}ToDelete as \${$inputCollectionEntry}Removed) {
             \${$inputCollectionEntry}Removed->set{$relCol}(null);
         }
 
-        \$this->{$collName} = null;
-        foreach (\${$inputCollection} as \${$inputCollectionEntry}) {
+        \$this->{$attributeName} = null;
+        foreach (\${$inputCollectionVar} as \${$inputCollectionEntry}) {
             \$this->add{$relatedObjectClassName}(\${$inputCollectionEntry});
         }
 
-        \$this->{$collName} = \${$inputCollection};
-        \$this->{$collName}Partial = false;
+        \$this->{$attributeName}Partial = false;
+        \$this->{$attributeName} = \${$inputCollectionVar} instanceof $targetCollectionType
+            ? \${$inputCollectionVar} : new $targetCollectionType(\${$inputCollectionVar}->getData());
 
         return \$this;
     }
@@ -504,6 +513,8 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
         $script .= "
     /**
      * @param {$className} \${$lowerRelatedObjectClassName} The $className object to add.
+     *
+     * @return void
      */
     protected function doAdd{$relatedObjectClassName}($className \${$lowerRelatedObjectClassName}): void
     {
@@ -523,11 +534,11 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
     {
         $refFK = $this->relation;
 
-        $tblFK = $refFK->getTable();
+        $targetTable = $refFK->getTable();
 
         $className = $this->getClassNameFromTable($refFK->getTable());
 
-        if ($tblFK->getChildrenColumn()) {
+        if ($targetTable->getChildrenColumn()) {
             $className = $this->getClassNameFromTable($refFK->getTable());
         }
 
@@ -543,9 +554,10 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
         $script .= "
     /**
      * @param {$className} \${$lowerRelatedObjectClassName} The $className object to remove.
-     * @return \$this The current object (for fluent API support)
+     *
+     * @return \$this
      */
-    public function remove{$relatedObjectClassName}($className \${$lowerRelatedObjectClassName})
+    public function remove{$relatedObjectClassName}($className \${$lowerRelatedObjectClassName}): static
     {
         if (\$this->get{$relatedName}()->contains(\${$lowerRelatedObjectClassName})) {
             \$pos = \$this->{$collName}->search(\${$lowerRelatedObjectClassName});
@@ -581,19 +593,18 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      */
     protected function addPartial(string &$script): void
     {
-        $refFK = $this->relation;
-        $relCol = $this->getRefFKPhpNameAffix($refFK, true);
-        $collName = $this->getAttributeName();
+        $relCol = $this->relation->getIdentifierReversed($this->getPluralizer());
+        $attributeName = $this->getAttributeName();
 
         $script .= "
     /**
-     * Reset is the $collName collection loaded partially.
+     * Reset is the $attributeName collection loaded partially.
      *
      * @return void
      */
-    public function resetPartial{$relCol}(\$v = true): void
+    public function resetPartial{$relCol}(\$isPartial = true): void
     {
-        \$this->{$collName}Partial = \$v;
+        \$this->{$attributeName}Partial = \$isPartial;
     }
 ";
     }
@@ -607,65 +618,54 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      */
     protected function addGetJoinMethods(string &$script): void
     {
-        $refFK = $this->relation;
-        $table = $this->getTable();
-        $tblFK = $refFK->getTable();
-        $joinBehavior = $this->getBuildProperty('generator.objectModel.useLeftJoinsInDoJoinMethods') ? 'Criteria::LEFT_JOIN' : 'Criteria::INNER_JOIN';
+        $targetTable = $this->relation->getTable();
+        $modelClassName = $targetTable->getPhpName();
+        $joinBehavior = $this->getBuildProperty('generator.objectModel.useLeftJoinsInDoJoinMethods')
+            ? 'Criteria::LEFT_JOIN' : 'Criteria::INNER_JOIN';
 
-        $fkQueryClassName = $this->getClassNameFromBuilder($this->getNewStubQueryBuilder($refFK->getTable()));
-        $relCol = $this->getRefFKPhpNameAffix($refFK, true);
+        $targetQueryClassName = $this->getClassNameFromBuilder($this->getNewStubQueryBuilder($targetTable));
+        $relationIdentifierPlural = $this->relation->getIdentifierReversed($this->getPluralizer());
+        $relationRelatedBySuffix = $this->relation->buildIdentifierRelatedBySuffix();
+        [$collectionClassName, $collectionType] = $this->resolveObjectCollectionClassNameAndType($targetTable);
 
-        $className = $this->getClassNameFromTable($tblFK);
-
-        foreach ($tblFK->getForeignKeys() as $fk2) {
-            $tblFK2 = $fk2->getForeignTable();
-            $doJoinGet = !$tblFK2->isForReferenceOnly();
-
-            // it doesn't make sense to join in rows from the current table, since we are fetching
-            // objects related to *this* table (i.e. the joined rows will all be the same row as current object)
-            if ($this->getTable()->getPhpName() == $tblFK2->getPhpName()) {
-                $doJoinGet = false;
+        foreach ($targetTable->getForeignKeys() as $relationAtTarget) {
+            $tblFK2 = $relationAtTarget->getForeignTable();
+            if ($tblFK2->isForReferenceOnly() || $this->relation === $relationAtTarget) {
+                continue;
             }
 
-            $relCol2 = $fk2->getIdentifier();
-
-            if (
-                $refFK->buildIdentifierRelatedBySuffix() != '' &&
-                ($refFK->buildIdentifierRelatedBySuffix() == $fk2->buildIdentifierRelatedBySuffix())
-            ) {
-                $doJoinGet = false;
+            if ($relationRelatedBySuffix && $relationRelatedBySuffix === $relationAtTarget->buildIdentifierRelatedBySuffix())
+            {
+                continue;
             }
 
-            if ($doJoinGet) {
-                $script .= "
+            $currentRelationIdentifier = $relationAtTarget->getIdentifier();
 
+            $script .= "
     /**
+     * @deprecated do join yourself if you need it. 
+     *
      * If this collection has already been initialized with
      * an identical criteria, it returns the collection.
-     * Otherwise if this " . $table->getPhpName() . " is new, it will return
-     * an empty collection; or if this " . $table->getPhpName() . " has previously
-     * been saved, it will retrieve related $relCol from storage.
+     * Otherwise if this $modelClassName is new, it will return
+     * an empty collection; or if this $modelClassName has previously
+     * been saved, it will retrieve related $relationIdentifierPlural from storage.
      *
-     * This method is protected by default in order to keep the public
-     * api reasonable.  You can provide public methods for those you
-     * actually need in " . $table->getPhpName() . ".
-     *
-     * @param Criteria \$criteria optional Criteria object to narrow the query
-     * @param ConnectionInterface \$con optional connection object
+     * @param Criteria|null \$criteria
+     * @param ConnectionInterface|null
      * @param string \$joinBehavior optional join type to use (defaults to $joinBehavior)
-     * @return ObjectCollection|{$className}[] List of $className objects
-     * @phpstan-return ObjectCollection&\Traversable<$className}> List of $className objects
+     *
+     * @return $collectionType
      */
-    public function get" . $relCol . 'Join' . $relCol2 . "(?Criteria \$criteria = null, ?ConnectionInterface \$con = null, \$joinBehavior = $joinBehavior)
+    public function get{$relationIdentifierPlural}Join{$currentRelationIdentifier}(?Criteria \$criteria = null, ?ConnectionInterface \$con = null, \$joinBehavior = $joinBehavior): $collectionClassName
     {";
                 $script .= "
-        \$query = $fkQueryClassName::create(null, \$criteria);
-        \$query->joinWith('" . $fk2->getIdentifier() . "', \$joinBehavior);
+        \$query = $targetQueryClassName::create(null, \$criteria);
+        \$query->joinWith('$currentRelationIdentifier', \$joinBehavior);
 
-        return \$this->get" . $relCol . "(\$query, \$con);
+        return \$this->get{$relationIdentifierPlural}(\$query, \$con);
     }
 ";
-            } /* end if ($doJoinGet) */
-        } /* end foreach ($tblFK->getForeignKeys() as $fk2) { */
+        }
     }
 }

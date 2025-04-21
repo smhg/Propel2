@@ -164,7 +164,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      */
     protected function addGetters(string &$script): void
     {
-        [$objectCollectionClassName, $objectCollectionType] = $this->resolveObjectCollectorClassNameAndType();
+        [$objectCollectionClassName, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
         $sourceIdentifierSingular = $this->names->getSourceIdentifier(false);
         $crossRefTableName = $this->crossRelation->getMiddleTable()->getName();
 
@@ -283,6 +283,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
         $relatedObjectClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $relationFk->getForeignTable());
 
         [$argumentDeclaration, $functionParameters, $phpDoc] = $this->collectSignature($relationFk, null, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
+        [$_, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType($relationFk->getForeignTable());
 
         $script .= "
     /**
@@ -293,7 +294,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      * @param \Propel\Runtime\ActiveQuery\Criteria|null \$criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con
      *
-     * @return \Propel\Runtime\Collection\ObjectCollection<$relatedObjectClassName>
+     * @return $objectCollectionType
      */
     public function get{$relationIdentifier}($argumentDeclaration, ?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
     {
@@ -315,10 +316,14 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return array{string, string}
      */
-    protected function resolveObjectCollectorClassNameAndType(Table $table = null): array
+    protected function resolveObjectCollectionClassNameAndType(Table $table = null): array
     {
+        if ($table) {
+            return parent::resolveObjectCollectionClassNameAndType($table);
+        }
+
         $className = 'ObjectCombinationCollection';
-        $collectionType = $this->getCollectionType();
+        $collectionType = $this->getCollectionContentType();
         $typeString =  '\\' . ObjectCombinationCollection::class . "<$collectionType>";
 
         return [$className, $typeString];

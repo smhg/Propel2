@@ -133,8 +133,6 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
      * This does not modify the database; however, it will remove any associated objects, causing
      * them to be refetched by subsequent calls to accessor method.
      *
-     * @see static::addTeamEvents()
-     *
      * @return void
      */
     public function clearTeamEvents(): void
@@ -349,7 +347,7 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
-     * @return \Propel\Runtime\Collection\ObjectCollection<ChildTeam>
+     * @return \Base\Collection\TeamCollection
      */
     public function getTeams(ChildEvent $event, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
     {
@@ -365,7 +363,7 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
-     * @return \Propel\Runtime\Collection\ObjectCollection<ChildEvent>
+     * @return \Base\Collection\EventCollection
      */
     public function getEvents(ChildTeam $team, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
     {
@@ -410,7 +408,8 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
         }
 
         $this->combinationTeamEventsIsPartial = false;
-        $this->combinationTeamEvents = $teamEvents;
+        $this->combinationTeamEvents = $teamEvents instanceof ObjectCombinationCollection
+            ? $teamEvents : new ObjectCombinationCollection($teamEvents->getData());
 
         return $this;
     }

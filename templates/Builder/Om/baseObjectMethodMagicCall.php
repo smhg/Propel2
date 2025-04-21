@@ -13,7 +13,7 @@
      */
     public function __call($name, $params)
     {
-        <?php echo $behaviorCallScript?>
+        <?= $behaviorCallScript?>
 
         return $this->__parentCall($name, $params);
     }
@@ -30,9 +30,9 @@
      *
      * @return array|string
      */
-    public function __<?php echo ($behaviorCallScript) ? 'parentCall' : 'call'?>($name, $params)
+    public function __<?= $behaviorCallScript ? 'parentCall' : 'call'?>($name, $params)
     {
-        if (0 === strpos($name, 'get')) {
+        if (strpos($name, 'get') === 0) {
             $virtualColumn = substr($name, 3);
             if ($this->hasVirtualColumn($virtualColumn)) {
                 return $this->getVirtualColumn($virtualColumn);
@@ -44,7 +44,7 @@
             }
         }
 
-        if (0 === strpos($name, 'from')) {
+        if (strpos($name, 'from') === 0) {
             $format = substr($name, 4);
             $inputData = $params[0];
             $keyType = $params[1] ?? TableMap::TYPE_PHPNAME;
@@ -52,7 +52,7 @@
             return $this->importFrom($format, $inputData, $keyType);
         }
 
-        if (0 === strpos($name, 'to')) {
+        if (strpos($name, 'to') === 0) {
             $format = substr($name, 2);
             $includeLazyLoadColumns = $params[0] ?? true;
             $keyType = $params[1] ?? TableMap::TYPE_PHPNAME;

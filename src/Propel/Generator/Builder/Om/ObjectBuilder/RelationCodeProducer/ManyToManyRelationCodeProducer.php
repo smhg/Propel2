@@ -33,9 +33,9 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return array{string, string}
      */
-    protected function resolveObjectCollectorClassNameAndType(Table $table = null): array
+    protected function resolveObjectCollectionClassNameAndType(Table $table = null): array
     {
-        return parent::resolveObjectCollectorClassNameAndType($table ?? $this->getFkToTarget()->getForeignTable());
+        return parent::resolveObjectCollectionClassNameAndType($table ?? $this->getFkToTarget()->getForeignTable());
     }
 
     /**
@@ -116,7 +116,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
         $attributeName = $this->names->getAttributeWithCollectionName();
         $attributeIsPartialName = $this->names->getAttributeIsPartialName();
 
-        [$objectCollectionClass, $objectCollectionType] = $this->resolveObjectCollectorClassNameAndType($this->getFkToTarget()->getForeignTable());
+        [$objectCollectionClass, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType($this->getFkToTarget()->getForeignTable());
 
         $script .= "
     /**
@@ -129,7 +129,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
      * If this " . $this->ownClassIdentifier() . " is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
-     * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Optional query object to filter the query
+     * @param \Propel\Runtime\ActiveQuery\Criteria|null \$criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con Optional connection object
      *
      * @return $objectCollectionType
@@ -270,6 +270,8 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
 
         $script .= "
     /**{$phpDoc}
+     *
+     * @return void
      */
     protected function doAdd{$targetIdentifierSingular}($parameterDeclaration): void
     {

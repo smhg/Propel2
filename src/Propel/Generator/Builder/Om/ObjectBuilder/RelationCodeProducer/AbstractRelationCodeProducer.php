@@ -43,7 +43,7 @@ abstract class AbstractRelationCodeProducer extends DataModelBuilder
      *
      * @return array{string, string}
      */
-    protected function resolveObjectCollectorClassNameAndType(Table $table = null): array
+    protected function resolveObjectCollectionClassNameAndType(Table $table = null): array
     {
         $table ??= $this->getTable();
         $builder = $this->builderFactory->createObjectCollectionBuilder($table);

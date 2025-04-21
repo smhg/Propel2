@@ -295,7 +295,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         $attributeName = '$' . $this->names->getAttributeWithCollectionName();
         $attributePartialName = '$' . $this->names->getAttributeIsPartialName();
         $relationIdentifier = $this->names->getTargetIdentifier(false);
-        [$_, $objectCollectionType] = $this->resolveObjectCollectorClassNameAndType();
+        [$_, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
 
         $script .= "
     /**
@@ -318,7 +318,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     {
         $attributeName = $this->names->getAttributeScheduledForDeletionName();
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
-        [$_, $objectCollectionType] = $this->resolveObjectCollectorClassNameAndType();
+        [$_, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
 
         $script .= "
     /**
@@ -348,8 +348,6 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
      * This does not modify the database; however, it will remove any associated objects, causing
      * them to be refetched by subsequent calls to accessor method.
      *
-     * @see static::add{$targetIdentifierPlural}()
-     *
      * @return void
      */
     public function clear{$targetIdentifierPlural}(): void
@@ -369,11 +367,11 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         $varName = $this->names->getAttributeWithCollectionName();
 
         $script .= "
-            if (\$this->$varName) {
-                foreach (\$this->$varName as \$o) {
-                    \$o->clearAllReferences(\$deep);
-                }
-            }";
+        if (\$this->$varName) {
+            foreach (\$this->$varName as \$o) {
+                \$o->clearAllReferences(\$deep);
+            }
+        }";
 
         return $varName;
     }
@@ -459,7 +457,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     /**
      * @return string
      */
-    protected function getCollectionType(): string
+    protected function getCollectionContentType(): string
     {
         return $this->collectSignature()->buildCombinedType();
     }
@@ -476,8 +474,9 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
 
-        $collectionVar = lcfirst($targetIdentifierPlural);
-        $collectionType = $this->getCollectionType();
+        $inputCollectionVar = '$' . lcfirst($targetIdentifierPlural);
+        $collectionContentType = $this->getCollectionContentType();
+        [$targetCollectionType, $_] = $this->resolveObjectCollectionClassNameAndType();
         $foreachItem = lcfirst($targetIdentifierSingular);
         $crossRefTableName = $this->crossRelation->getMiddleTable()->getName();
         $attributeName = $this->names->getAttributeWithCollectionName();
@@ -491,30 +490,31 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<$collectionType> \${$collectionVar} A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<$collectionContentType> $inputCollectionVar A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con Optional connection object
      *
      * @return \$this
      */
-    public function set{$targetIdentifierPlural}(Collection \${$collectionVar}, ?ConnectionInterface \$con = null): static
+    public function set{$targetIdentifierPlural}(Collection $inputCollectionVar, ?ConnectionInterface \$con = null): static
     {
         \$this->clear{$targetIdentifierPlural}();
         \$current{$targetIdentifierPlural} = \$this->get{$targetIdentifierPlural}();
 
-        \${$attributeScheduledForDeletionVarName} = \$current{$targetIdentifierPlural}->diff(\${$collectionVar});
+        \${$attributeScheduledForDeletionVarName} = \$current{$targetIdentifierPlural}->diff($inputCollectionVar);
 
         foreach (\${$attributeScheduledForDeletionVarName} as \$toDelete) {
             \$this->remove{$targetIdentifierSingular}($spreader\$toDelete);
         }
 
-        foreach (\${$collectionVar} as \${$foreachItem}) {
+        foreach ($inputCollectionVar as \${$foreachItem}) {
             if (!\$current{$targetIdentifierPlural}->contains(\${$foreachItem})) {
                 \$this->doAdd{$targetIdentifierSingular}($spreader\${$foreachItem});
             }
         }
 
         \$this->{$attributeIsPartialName} = false;
-        \$this->$attributeName = \${$collectionVar};
+        \$this->$attributeName = $inputCollectionVar instanceof $targetCollectionType
+            ? $inputCollectionVar : new $targetCollectionType({$inputCollectionVar}->getData());
 
         return \$this;
     }

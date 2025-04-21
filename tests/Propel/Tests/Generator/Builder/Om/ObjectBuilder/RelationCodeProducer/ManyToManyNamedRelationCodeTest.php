@@ -105,8 +105,6 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * This does not modify the database; however, it will remove any associated objects, causing
      * them to be refetched by subsequent calls to accessor method.
      *
-     * @see static::addLeTeams()
-     *
      * @return void
      */
     public function clearLeTeams(): void
@@ -193,7 +191,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * If this ChildUser is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
-     * @param \Propel\Runtime\ActiveQuery\Criteria $criteria Optional query object to filter the query
+     * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
      * @return \Base\Collection\TeamCollection
@@ -268,7 +266,8 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
         }
 
         $this->collLeTeamsIsPartial = false;
-        $this->collLeTeams = $leTeams;
+        $this->collLeTeams = $leTeams instanceof TeamCollection
+            ? $leTeams : new TeamCollection($leTeams->getData());
 
         return $this;
     }
@@ -350,6 +349,8 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
         $expected = '
     /**
      * @param ChildTeam $leTeam
+     *
+     * @return void
      */
     protected function doAddLeTeam(ChildTeam $leTeam): void
     {
@@ -417,11 +418,11 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     public function testClearReferencesCode()
     {
         $expected = '
-            if ($this->collLeTeams) {
-                foreach ($this->collLeTeams as $o) {
-                    $o->clearAllReferences($deep);
-                }
-            }';
+        if ($this->collLeTeams) {
+            foreach ($this->collLeTeams as $o) {
+                $o->clearAllReferences($deep);
+            }
+        }';
 
         $this->assertProducedCodeMatches('addClearReferencesCode', $expected);
     }
