@@ -6,20 +6,20 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Tests\Generator\Builder\Om;
+namespace Propel\Tests\Generator\Builder\Om\RelationCodeProducer;
 
-use Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationPartial;
+use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\TernaryRelationCodeProducer;
 
 /**
  */
-class CrossRelationBuilderPartialPkTest extends AbstractCrossRelationBuilderTest
+class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
 {
     /**
      * @return void
      */
     public function testType(): void
     {
-        $this->assertInstanceOf(CrossRelationPartial::class, $this->getCodeProducer());
+        $this->assertInstanceOf(TernaryRelationCodeProducer::class, $this->getCodeProducer());
     }
 
     /**
@@ -132,8 +132,6 @@ class CrossRelationBuilderPartialPkTest extends AbstractCrossRelationBuilderTest
      *
      * This does not modify the database; however, it will remove any associated objects, causing
      * them to be refetched by subsequent calls to accessor method.
-     *
-     * @see static::addTeamDayTypes()
      *
      * @return void
      */
@@ -327,7 +325,7 @@ class CrossRelationBuilderPartialPkTest extends AbstractCrossRelationBuilderTest
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
-     * @return \Propel\Runtime\Collection\ObjectCollection<ChildTeam>
+     * @return \Base\Collection\TeamCollection
      */
     public function getTeams(?string $day = null, ?int $type = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
     {
@@ -372,7 +370,8 @@ class CrossRelationBuilderPartialPkTest extends AbstractCrossRelationBuilderTest
         }
 
         $this->combinationTeamDayTypesIsPartial = false;
-        $this->combinationTeamDayTypes = $teamDayTypes;
+        $this->combinationTeamDayTypes = $teamDayTypes instanceof ObjectCombinationCollection
+            ? $teamDayTypes : new ObjectCombinationCollection($teamDayTypes->getData());
 
         return $this;
     }

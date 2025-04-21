@@ -27,6 +27,8 @@ class OgTableMapModifier
     }
 
     /**
+     * Hook in {@see TableMapBuilder::addClassBody()}.
+     *
      * @param \Propel\Generator\Builder\Om\TableMapBuilder $builder
      *
      * @return string
@@ -39,15 +41,15 @@ class OgTableMapModifier
     }
 
     /**
+     * Hook in {@see TableMapBuilder::addClassBody()}.
+     *
      * @param \Propel\Generator\Builder\Om\TableMapBuilder $builder
      *
      * @return string
      */
     public function staticMethods(TableMapBuilder $builder): string
     {
-        return $this->behavior->renderLocalTemplate('tableMapOutputGroupsMethods', [
-            'objectCollectionClass' => $this->behavior->getObjectCollectionClass(),
-        ]);
+        return $this->behavior->renderLocalTemplate('tableMapOutputGroupsMethods');
     }
 
     /**

@@ -109,13 +109,14 @@ protected \$old{$relationName}{$aggregateName};
     public function objectFilter(string &$script, AbstractOMBuilder $builder): void
     {
         $relationName = $this->getRelationName($builder);
+        $varName = '$' . lcfirst($relationName);
         $aggregateName = $this->getParameter('aggregate_name');
         $relatedClass = $builder->getClassNameFromBuilder($builder->getNewStubObjectBuilder($this->getForeignTable()));
-        $search = "    public function set{$relationName}(?{$relatedClass} \$v = null)
+        $search = "    public function set{$relationName}(?{$relatedClass} $varName = null)
     {";
         $replace = $search . "
         // aggregate_column_relation behavior
-        if (null !== \$this->a{$relationName} && \$v !== \$this->a{$relationName}) {
+        if (\$this->a{$relationName} !== null && $varName !== \$this->a{$relationName}) {
             \$this->old{$relationName}{$aggregateName} = \$this->a{$relationName};
         }";
         $script = str_replace($search, $replace, $script);

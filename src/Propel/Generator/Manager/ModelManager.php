@@ -59,85 +59,87 @@ class ModelManager extends AbstractManager
                 $this->log(' - Database: ' . $database->getName());
 
                 foreach ($database->getTables() as $table) {
-                    if (!$table->isForReferenceOnly()) {
-                        $nbWrittenFiles = 0;
-                        $this->log('  + Table: ' . $table->getName());
+                    if ($table->isForReferenceOnly()) {
+                        continue;
+                    }
 
-                        // -----------------------------------------------------------------------------------------
-                        // Create Object, and TableMap classes
-                        // -----------------------------------------------------------------------------------------
+                    $nbWrittenFiles = 0;
+                    $this->log('  + Table: ' . $table->getName());
 
-                        // these files are always created / overwrite any existing files
-                        foreach (['object', 'tablemap', 'query'] as $target) {
-                            $builder = $generatorConfig->getConfiguredBuilder($table, $target);
-                            $nbWrittenFiles += $this->doBuild($builder);
-                        }
+                    // -----------------------------------------------------------------------------------------
+                    // Create Object, and TableMap classes
+                    // -----------------------------------------------------------------------------------------
 
-                        // -----------------------------------------------------------------------------------------
-                        // Create [empty] stub Object classes if they don't exist
-                        // -----------------------------------------------------------------------------------------
+                    // these files are always created / overwrite any existing files
+                    foreach (['object', 'tablemap', 'query', 'collection'] as $target) {
+                        $builder = $generatorConfig->getConfiguredBuilder($table, $target);
+                        $nbWrittenFiles += $this->doBuild($builder);
+                    }
 
-                        // these classes are only generated if they don't already exist
-                        foreach (['objectstub', 'querystub'] as $target) {
-                            $builder = $generatorConfig->getConfiguredBuilder($table, $target);
-                            $nbWrittenFiles += $this->doBuild($builder, false);
-                        }
+                    // -----------------------------------------------------------------------------------------
+                    // Create [empty] stub Object classes if they don't exist
+                    // -----------------------------------------------------------------------------------------
 
-                        // -----------------------------------------------------------------------------------------
-                        // Create [empty] stub child Object classes if they don't exist
-                        // -----------------------------------------------------------------------------------------
+                    // these classes are only generated if they don't already exist
+                    foreach (['objectstub', 'querystub'] as $target) {
+                        $builder = $generatorConfig->getConfiguredBuilder($table, $target);
+                        $nbWrittenFiles += $this->doBuild($builder, false);
+                    }
 
-                        // If table has enumerated children (uses inheritance) then create the empty child stub classes if they don't already exist.
-                        $col = $table->getChildrenColumn();
-                        if ($col) {
-                            if ($col->isEnumeratedClasses()) {
-                                foreach ($col->getChildren() as $child) {
-                                    foreach (['queryinheritance'] as $target) {
-                                        if (!$child->getAncestor() && $child->getClassName() === $table->getPhpName()) {
-                                            continue;
-                                        }
-                                        /** @var \Propel\Generator\Builder\Om\QueryInheritanceBuilder $builder */
-                                        $builder = $generatorConfig->getConfiguredBuilder($table, $target);
-                                        $builder->setChild($child);
-                                        $nbWrittenFiles += $this->doBuild($builder);
+                    // -----------------------------------------------------------------------------------------
+                    // Create [empty] stub child Object classes if they don't exist
+                    // -----------------------------------------------------------------------------------------
+
+                    // If table has enumerated children (uses inheritance) then create the empty child stub classes if they don't already exist.
+                    $col = $table->getChildrenColumn();
+                    if ($col) {
+                        if ($col->isEnumeratedClasses()) {
+                            foreach ($col->getChildren() as $child) {
+                                foreach (['queryinheritance'] as $target) {
+                                    if (!$child->getAncestor() && $child->getClassName() === $table->getPhpName()) {
+                                        continue;
                                     }
+                                    /** @var \Propel\Generator\Builder\Om\QueryInheritanceBuilder $builder */
+                                    $builder = $generatorConfig->getConfiguredBuilder($table, $target);
+                                    $builder->setChild($child);
+                                    $nbWrittenFiles += $this->doBuild($builder);
+                                }
 
-                                    foreach (['objectmultiextend', 'queryinheritancestub'] as $target) {
-                                        /** @var \Propel\Generator\Builder\Om\MultiExtendObjectBuilder $builder */
-                                        $builder = $generatorConfig->getConfiguredBuilder($table, $target);
-                                        $builder->setChild($child);
-                                        $nbWrittenFiles += $this->doBuild($builder, false);
-                                    }
+                                foreach (['objectmultiextend', 'queryinheritancestub'] as $target) {
+                                    /** @var \Propel\Generator\Builder\Om\MultiExtendObjectBuilder $builder */
+                                    $builder = $generatorConfig->getConfiguredBuilder($table, $target);
+                                    $builder->setChild($child);
+                                    $nbWrittenFiles += $this->doBuild($builder, false);
                                 }
                             }
                         }
+                    }
 
-                        // -----------------------------------------------------------------------------------------
-                        // Create [empty] Interface if it doesn't exist
-                        // -----------------------------------------------------------------------------------------
+                    // -----------------------------------------------------------------------------------------
+                    // Create [empty] Interface if it doesn't exist
+                    // -----------------------------------------------------------------------------------------
 
-                        // Create [empty] interface if it does not already exist
-                        if ($table->getInterface()) {
-                            $builder = $generatorConfig->getConfiguredBuilder($table, 'interface');
-                            $nbWrittenFiles += $this->doBuild($builder, false);
+                    // Create [empty] interface if it does not already exist
+                    if ($table->getInterface()) {
+                        $builder = $generatorConfig->getConfiguredBuilder($table, 'interface');
+                        $nbWrittenFiles += $this->doBuild($builder, false);
+                    }
+
+                    // ----------------------------------
+                    // Create classes added by behaviors
+                    // ----------------------------------
+                    if ($table->hasAdditionalBuilders()) {
+                        foreach ($table->getAdditionalBuilders() as $builderClass) {
+                            /** @var \Propel\Generator\Builder\Om\AbstractOMBuilder $builder */
+                            $builder = new $builderClass($table);
+                            $builder->setGeneratorConfig($generatorConfig);
+                            $nbWrittenFiles += $this->doBuild($builder, $builder->overwrite ?? true);
                         }
+                    }
 
-                        // ----------------------------------
-                        // Create classes added by behaviors
-                        // ----------------------------------
-                        if ($table->hasAdditionalBuilders()) {
-                            foreach ($table->getAdditionalBuilders() as $builderClass) {
-                                /** @var \Propel\Generator\Builder\Om\AbstractOMBuilder $builder */
-                                $builder = new $builderClass($table);
-                                $builder->setGeneratorConfig($generatorConfig);
-                                $nbWrittenFiles += $this->doBuild($builder, $builder->overwrite ?? true);
-                            }
-                        }
-
-                        $totalNbFiles += $nbWrittenFiles;
-                        if ($nbWrittenFiles === 0) {
-                            $this->log("\t\t(no change)");
-                        }
+                    $totalNbFiles += $nbWrittenFiles;
+                    if ($nbWrittenFiles === 0) {
+                        $this->log("\t\t(no change)");
                     }
                 }
             }

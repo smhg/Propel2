@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
 
-<database package="core.author" name="bookstore" defaultIdMethod="native">
+<database package="core.author" name="bookstore" defaultIdMethod="native" generate-collection="false">
 
   <table name="author" description="Author Table">
         <behavior name="auto_add_pk"/>

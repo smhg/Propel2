@@ -64,6 +64,8 @@ EOF;
 
         $objectA->setIssue656TestObjectsRelatedByTo($collection);
 
-        $this->assertEquals($collection, $objectA->getIssue656TestObjectsRelatedByTo());
+        $storedCollection = $objectA->getIssue656TestObjectsRelatedByTo();
+        $this->assertInstanceOf('Base\Collection\Issue656TestObjectCollection', $storedCollection, 'Return type of getter should not be affected by setter input');
+        $this->assertEquals($collection->getData(), $storedCollection->getData());
     }
 }

@@ -6,20 +6,20 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Tests\Generator\Builder\Om;
+namespace Propel\Tests\Generator\Builder\Om\RelationCodeProducer;
 
-use Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationPartial;
+use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\TernaryRelationCodeProducer;
 
 /**
  */
-class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderTest
+class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
 {
     /**
      * @return void
      */
     public function testType(): void
     {
-        $this->assertInstanceOf(CrossRelationPartial::class, $this->getCodeProducer());
+        $this->assertInstanceOf(TernaryRelationCodeProducer::class, $this->getCodeProducer());
     }
 
     /**
@@ -47,14 +47,14 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     {
         $expected = '
     /**
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent, string}> Objects in LeTeamLeEventDate relation.
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent}> Objects in TeamEvent relation.
      */
-    protected $combinationLeTeamLeEventDates;
+    protected $combinationTeamEvents;
 
     /**
      * @var bool
      */
-    protected $combinationLeTeamLeEventDatesIsPartial;
+    protected $combinationTeamEventsIsPartial;
 ';
         $this->assertProducedCodeMatches('addAttributes', $expected);
     }
@@ -66,11 +66,11 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     {
         $expected = '
     /**
-     * Items of LeTeamLeEventDate relation marked for deletion.
+     * Items of TeamEvent relation marked for deletion.
      *
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent, string}>
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent}>
      */
-    protected $leTeamLeEventDatesScheduledForDeletion = null;
+    protected $teamEventsScheduledForDeletion = null;
 ';
         $this->assertProducedCodeMatches('addScheduledForDeletionAttribute', $expected);
     }
@@ -83,18 +83,18 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     {
         $expected = '
     /**
-     * Initializes the combinationLeTeamLeEventDates crossRef collection.
+     * Initializes the combinationTeamEvents crossRef collection.
      *
-     * By default this just sets the combinationLeTeamLeEventDates collection to an empty collection (like clearLeTeamLeEventDates());
+     * By default this just sets the combinationTeamEvents collection to an empty collection (like clearTeamEvents());
      * however, you may wish to override this method in your stub class to provide setting appropriate
      * to your application -- for example, setting the initial array to the values stored in database.
      *
      * @return void
      */
-    public function initLeTeamLeEventDates(): void
+    public function initTeamEvents(): void
     {
-        $this->combinationLeTeamLeEventDates = new ObjectCombinationCollection();
-        $this->combinationLeTeamLeEventDatesIsPartial = true;
+        $this->combinationTeamEvents = new ObjectCombinationCollection();
+        $this->combinationTeamEventsIsPartial = true;
     }
 ';
         $this->assertProducedCodeMatches('addInit', $expected);
@@ -108,13 +108,13 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     {
         $expected = '
     /**
-     * Checks if the combinationLeTeamLeEventDates collection is loaded.
+     * Checks if the combinationTeamEvents collection is loaded.
      *
      * @return bool
      */
-    public function isLeTeamLeEventDatesLoaded(): bool
+    public function isTeamEventsLoaded(): bool
     {
-        return $this->combinationLeTeamLeEventDates !== null;
+        return $this->combinationTeamEvents !== null;
     }
 ';
         $this->assertProducedCodeMatches('addisLoaded', $expected);
@@ -128,18 +128,16 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     {
         $expected = '
     /**
-     * Clears out the combinationLeTeamLeEventDates collection
+     * Clears out the combinationTeamEvents collection
      *
      * This does not modify the database; however, it will remove any associated objects, causing
      * them to be refetched by subsequent calls to accessor method.
      *
-     * @see static::addLeTeamLeEventDates()
-     *
      * @return void
      */
-    public function clearLeTeamLeEventDates(): void
+    public function clearTeamEvents(): void
     {
-        $this->combinationLeTeamLeEventDates = null; // important to set this to NULL since that means it is uninitialized
+        $this->combinationTeamEvents = null; // important to set this to NULL since that means it is uninitialized
     }
 ';
         $this->assertProducedCodeMatches('addClear', $expected);
@@ -151,7 +149,7 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     public function testOnReloadCode()
     {
         $expected = '
-        $this->combinationLeTeamLeEventDates = null;';
+        $this->combinationTeamEvents = null;';
 
         $this->assertProducedCodeMatches('addOnReloadCode', $expected);
     }
@@ -162,15 +160,14 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     public function testDeleteScheduledItemsCode()
     {
         $expected = '
-            if ($this->leTeamLeEventDatesScheduledForDeletion !== null && !$this->leTeamLeEventDatesScheduledForDeletion->isEmpty()) {
+            if ($this->teamEventsScheduledForDeletion !== null && !$this->teamEventsScheduledForDeletion->isEmpty()) {
                 $pks = [];
-                foreach ($this->leTeamLeEventDatesScheduledForDeletion as $combination) {
+                foreach ($this->teamEventsScheduledForDeletion as $combination) {
                     $entryPk = [];
 
                     $entryPk[0] = $this->getId();
                     $entryPk[1] = $combination[0]->getId();
                     $entryPk[2] = $combination[1]->getId();
-                    $entryPk[3] = $combination[2];
 
                     $pks[] = $entryPk;
                 }
@@ -179,11 +176,11 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
                     ->filterByPrimaryKeys($pks)
                     ->delete($con);
 
-                $this->leTeamLeEventDatesScheduledForDeletion = null;
+                $this->teamEventsScheduledForDeletion = null;
             }
 
-            if ($this->combinationLeTeamLeEventDates !== null) {
-                foreach ($this->combinationLeTeamLeEventDates as $combination) {
+            if ($this->combinationTeamEvents !== null) {
+                foreach ($this->combinationTeamEvents as $combination) {
                     $model = $combination[0];
                     if (!$model->isDeleted() && ($model->isNew() || $model->isModified())) {
                         $model->save($con);
@@ -210,25 +207,20 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     /**
      * Returns a new query object pre configured with filters from current object and given arguments to query the database.
      *
-     * @param ChildEvent $leEvent
-     * @param string|null $date
+     * @param ChildEvent $event
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      *
      * @return ChildTeamQuery
      */
-    public function createLeTeamsQuery(ChildEvent $leEvent, ?string $date = null, ?Criteria $criteria = null): ChildTeamQuery
+    public function createTeamsQuery(ChildEvent $event, ?Criteria $criteria = null): ChildTeamQuery
     {
         $query = ChildTeamQuery::create($criteria)
-            ->filterByLeUser($this);
+            ->filterByUser($this);
 
         $teamUserQuery = $query->useTeamUserQuery();
 
-        if ($leEvent !== null) {
-            $teamUserQuery->filterByLeEvent($leEvent);
-        }
-
-        if ($date !== null) {
-            $teamUserQuery->filterByDate($date);
+        if ($event !== null) {
+            $teamUserQuery->filterByEvent($event);
         }
 
         $teamUserQuery->endUse();
@@ -239,25 +231,20 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     /**
      * Returns a new query object pre configured with filters from current object and given arguments to query the database.
      *
-     * @param ChildTeam $leTeam
-     * @param string|null $date
+     * @param ChildTeam $team
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      *
      * @return ChildEventQuery
      */
-    public function createLeEventsQuery(ChildTeam $leTeam, ?string $date = null, ?Criteria $criteria = null): ChildEventQuery
+    public function createEventsQuery(ChildTeam $team, ?Criteria $criteria = null): ChildEventQuery
     {
         $query = ChildEventQuery::create($criteria)
-            ->filterByLeUser($this);
+            ->filterByUser($this);
 
         $teamUserQuery = $query->useTeamUserQuery();
 
-        if ($leTeam !== null) {
-            $teamUserQuery->filterByLeTeam($leTeam);
-        }
-
-        if ($date !== null) {
-            $teamUserQuery->filterByDate($date);
+        if ($team !== null) {
+            $teamUserQuery->filterByTeam($team);
         }
 
         $teamUserQuery->endUse();
@@ -274,7 +261,7 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     public function testReserveNamesForGetters()
     {
         $reservedNames = $this->getCodeProducer()->reserveNamesForGetters();
-        $expected = ['LeTeamLeEventDate', 'LeTeam', 'LeEvent'];
+        $expected = ['TeamEvent', 'Team', 'Event'];
         $this->assertEqualsCanonicalizing($expected, $reservedNames);
     }
 
@@ -297,93 +284,90 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent, string}>
+     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent}>
      */
-    public function getLeTeamLeEventDates(?Criteria $criteria = null, ?ConnectionInterface $con = null): ObjectCombinationCollection
+    public function getTeamEvents(?Criteria $criteria = null, ?ConnectionInterface $con = null): ObjectCombinationCollection
     {
-        $partial = $this->combinationLeTeamLeEventDatesIsPartial && !$this->isNew();
-        if ($this->combinationLeTeamLeEventDates !== null && !$partial && !$criteria) {
-            return $this->combinationLeTeamLeEventDates;
+        $partial = $this->combinationTeamEventsIsPartial && !$this->isNew();
+        if ($this->combinationTeamEvents !== null && !$partial && !$criteria) {
+            return $this->combinationTeamEvents;
         }
 
         if ($this->isNew()) {
             // return empty collection
-            if ($this->combinationLeTeamLeEventDates === null) {
-                $this->initLeTeamLeEventDates();
+            if ($this->combinationTeamEvents === null) {
+                $this->initTeamEvents();
             }
 
-            return $this->combinationLeTeamLeEventDates;
+            return $this->combinationTeamEvents;
         }
 
         $query = ChildTeamUserQuery::create(null, $criteria)
-            ->filterByLeUser($this)
-            ->joinLeTeam()
-            ->joinLeEvent()
+            ->filterByUser($this)
+            ->joinTeam()
+            ->joinEvent()
             ;
 
         $items = $query->find($con);
-        $combinationLeTeamLeEventDates = new ObjectCombinationCollection();
+        $combinationTeamEvents = new ObjectCombinationCollection();
         foreach ($items as $item) {
             $combination = [];
 
-            $combination[] = $item->getLeTeam();
-            $combination[] = $item->getLeEvent();
-            $combination[] = $item->getDate();
+            $combination[] = $item->getTeam();
+            $combination[] = $item->getEvent();
 
-            $combinationLeTeamLeEventDates[] = $combination;
+            $combinationTeamEvents[] = $combination;
         }
 
         if ($criteria) {
-            return $combinationLeTeamLeEventDates;
+            return $combinationTeamEvents;
         }
 
-        if ($partial && $this->combinationLeTeamLeEventDates) {
+        if ($partial && $this->combinationTeamEvents) {
             //make sure that already added objects gets added to the list of the database.
-            foreach ($this->combinationLeTeamLeEventDates as $obj) {
-                if (!$combinationLeTeamLeEventDates->contains($obj)) {
-                    $combinationLeTeamLeEventDates[] = $obj;
+            foreach ($this->combinationTeamEvents as $obj) {
+                if (!$combinationTeamEvents->contains($obj)) {
+                    $combinationTeamEvents[] = $obj;
                 }
             }
         }
 
-        $this->combinationLeTeamLeEventDates = $combinationLeTeamLeEventDates;
-        $this->combinationLeTeamLeEventDatesIsPartial = false;
+        $this->combinationTeamEvents = $combinationTeamEvents;
+        $this->combinationTeamEventsIsPartial = false;
 
-        return $this->combinationLeTeamLeEventDates;
+        return $this->combinationTeamEvents;
     }
 
     /**
      * Returns a not cached ObjectCollection of ChildTeam objects. This will hit always the databases.
      * If you have attached new ChildTeam object to this object you need to call `save` first to get
-     * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
+     * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param ChildEvent $leEvent
-     * @param string|null $date
+     * @param ChildEvent $event
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
-     * @return \Propel\Runtime\Collection\ObjectCollection<ChildTeam>
+     * @return \Base\Collection\TeamCollection
      */
-    public function getLeTeams(ChildEvent $leEvent, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    public function getTeams(ChildEvent $event, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
     {
-        return $this->createLeTeamsQuery($leEvent, $date, $criteria)->find($con);
+        return $this->createTeamsQuery($event, $criteria)->find($con);
     }
 
     /**
      * Returns a not cached ObjectCollection of ChildEvent objects. This will hit always the databases.
      * If you have attached new ChildEvent object to this object you need to call `save` first to get
-     * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
+     * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param ChildTeam $leTeam
-     * @param string|null $date
+     * @param ChildTeam $team
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
-     * @return \Propel\Runtime\Collection\ObjectCollection<ChildEvent>
+     * @return \Base\Collection\EventCollection
      */
-    public function getLeEvents(ChildTeam $leTeam, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    public function getEvents(ChildTeam $team, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
     {
-        return $this->createLeEventsQuery($leTeam, $date, $criteria)->find($con);
+        return $this->createEventsQuery($team, $criteria)->find($con);
     }
 ';
         $this->assertProducedCodeMatches('addGetters', $expected);
@@ -396,35 +380,36 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     {
         $expected = '
     /**
-     * Sets a collection of LeTeamLeEventDate objects related by a many-to-many relationship
+     * Sets a collection of TeamEvent objects related by a many-to-many relationship
      * to the current object by way of the team_user cross-reference table.
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<array{ChildTeam, ChildEvent, string}> $leTeamLeEventDates A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<array{ChildTeam, ChildEvent}> $teamEvents A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
      * @return $this
      */
-    public function setLeTeamLeEventDates(Collection $leTeamLeEventDates, ?ConnectionInterface $con = null): static
+    public function setTeamEvents(Collection $teamEvents, ?ConnectionInterface $con = null): static
     {
-        $this->clearLeTeamLeEventDates();
-        $currentLeTeamLeEventDates = $this->getLeTeamLeEventDates();
+        $this->clearTeamEvents();
+        $currentTeamEvents = $this->getTeamEvents();
 
-        $leTeamLeEventDatesScheduledForDeletion = $currentLeTeamLeEventDates->diff($leTeamLeEventDates);
+        $teamEventsScheduledForDeletion = $currentTeamEvents->diff($teamEvents);
 
-        foreach ($leTeamLeEventDatesScheduledForDeletion as $toDelete) {
-            $this->removeLeTeamLeEventDate(...$toDelete);
+        foreach ($teamEventsScheduledForDeletion as $toDelete) {
+            $this->removeTeamEvent(...$toDelete);
         }
 
-        foreach ($leTeamLeEventDates as $leTeamLeEventDate) {
-            if (!$currentLeTeamLeEventDates->contains($leTeamLeEventDate)) {
-                $this->doAddLeTeamLeEventDate(...$leTeamLeEventDate);
+        foreach ($teamEvents as $teamEvent) {
+            if (!$currentTeamEvents->contains($teamEvent)) {
+                $this->doAddTeamEvent(...$teamEvent);
             }
         }
 
-        $this->combinationLeTeamLeEventDatesIsPartial = false;
-        $this->combinationLeTeamLeEventDates = $leTeamLeEventDates;
+        $this->combinationTeamEventsIsPartial = false;
+        $this->combinationTeamEvents = $teamEvents instanceof ObjectCombinationCollection
+            ? $teamEvents : new ObjectCombinationCollection($teamEvents->getData());
 
         return $this;
     }
@@ -439,28 +424,28 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     {
         $expected = '
     /**
-     * Gets the number of LeTeamLeEventDate objects related by a many-to-many relationship
+     * Gets the number of TeamEvent objects related by a many-to-many relationship
      * to the current object by way of the team_user cross-reference table.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
      * @param bool $distinct Set to true to force count distinct
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return int The number of related LeTeamLeEventDate objects
+     * @return int The number of related TeamEvent objects
      */
-    public function countLeTeamLeEventDates(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    public function countTeamEvents(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
     {
-        $partial = $this->combinationLeTeamLeEventDatesIsPartial && !$this->isNew();
-        if ($this->combinationLeTeamLeEventDates && !$criteria && !$partial) {
-            return count($this->combinationLeTeamLeEventDates);
+        $partial = $this->combinationTeamEventsIsPartial && !$this->isNew();
+        if ($this->combinationTeamEvents && !$criteria && !$partial) {
+            return count($this->combinationTeamEvents);
         }
 
-        if ($this->isNew() && $this->combinationLeTeamLeEventDates === null) {
+        if ($this->isNew() && $this->combinationTeamEvents === null) {
             return 0;
         }
 
         if ($partial && !$criteria) {
-            return count($this->getLeTeamLeEventDates());
+            return count($this->getTeamEvents());
         }
 
         $query = ChildTeamQuery::create(null, $criteria);
@@ -469,42 +454,40 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
         }
 
         return $query
-            ->filterByLeUser($this)
+            ->filterByUser($this)
             ->count($con);
     }
 
     /**
      * Returns the not cached count of ChildTeam objects. This will hit always the databases.
      * If you have attached new ChildTeam object to this object you need to call `save` first to get
-     * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
+     * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param ChildEvent $leEvent
-     * @param string|null $date
+     * @param ChildEvent $event
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
      * @return int
      */
-    public function countLeTeams(ChildEvent $leEvent, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
+    public function countTeams(ChildEvent $event, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
     {
-        return $this->createLeTeamsQuery($leEvent, $date, $criteria)->count($con);
+        return $this->createTeamsQuery($event, $criteria)->count($con);
     }
 
     /**
      * Returns the not cached count of ChildEvent objects. This will hit always the databases.
      * If you have attached new ChildEvent object to this object you need to call `save` first to get
-     * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
+     * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param ChildTeam $leTeam
-     * @param string|null $date
+     * @param ChildTeam $team
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
      * @return int
      */
-    public function countLeEvents(ChildTeam $leTeam, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
+    public function countEvents(ChildTeam $team, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
     {
-        return $this->createLeEventsQuery($leTeam, $date, $criteria)->count($con);
+        return $this->createEventsQuery($team, $criteria)->count($con);
     }
 ';
         $this->assertProducedCodeMatches('addCount', $expected);
@@ -517,48 +500,46 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     {
         $expected = '
     /**
-     * Associate a LeTeam with this object through the team_user cross reference table.
+     * Associate a Team with this object through the team_user cross reference table.
      *
-     * @param ChildTeam $leTeam
-     * @param ChildEvent $leEvent
-     * @param string $date
+     * @param ChildTeam $team
+     * @param ChildEvent $event
      *
      * @return static
      */
-    public function addLeTeam(ChildTeam $leTeam, ChildEvent $leEvent, string $date): static
+    public function addTeam(ChildTeam $team, ChildEvent $event): static
     {
-        if ($this->combinationLeTeamLeEventDates === null) {
-            $this->initLeTeamLeEventDates();
+        if ($this->combinationTeamEvents === null) {
+            $this->initTeamEvents();
         }
 
-        if (!$this->getLeTeamLeEventDates()->contains([$leTeam, $leEvent, $date])) {
+        if (!$this->getTeamEvents()->contains([$team, $event])) {
             // only add it if the **same** object is not already associated
-            $this->combinationLeTeamLeEventDates->push([$leTeam, $leEvent, $date]);
-            $this->doAddLeTeamLeEventDate($leTeam, $leEvent, $date);
+            $this->combinationTeamEvents->push([$team, $event]);
+            $this->doAddTeamEvent($team, $event);
         }
 
         return $this;
     }
 
     /**
-     * Associate a LeEvent with this object through the team_user cross reference table.
+     * Associate a Event with this object through the team_user cross reference table.
      *
-     * @param ChildEvent $leEvent
-     * @param ChildTeam $leTeam
-     * @param string $date
+     * @param ChildEvent $event
+     * @param ChildTeam $team
      *
      * @return static
      */
-    public function addLeEvent(ChildEvent $leEvent, ChildTeam $leTeam, string $date): static
+    public function addEvent(ChildEvent $event, ChildTeam $team): static
     {
-        if ($this->combinationLeTeamLeEventDates === null) {
-            $this->initLeTeamLeEventDates();
+        if ($this->combinationTeamEvents === null) {
+            $this->initTeamEvents();
         }
 
-        if (!$this->getLeTeamLeEventDates()->contains([$leTeam, $leEvent, $date])) {
+        if (!$this->getTeamEvents()->contains([$team, $event])) {
             // only add it if the **same** object is not already associated
-            $this->combinationLeTeamLeEventDates->push([$leTeam, $leEvent, $date]);
-            $this->doAddLeTeamLeEventDate($leTeam, $leEvent, $date);
+            $this->combinationTeamEvents->push([$team, $event]);
+            $this->doAddTeamEvent($team, $event);
         }
 
         return $this;
@@ -574,39 +555,37 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     {
         $expected = '
     /**
-     * @param ChildTeam $leTeam
-     * @param ChildEvent $leEvent
-     * @param string $date
+     * @param ChildTeam $team
+     * @param ChildEvent $event
      *
      * return void
      */
-    protected function doAddLeTeamLeEventDate(ChildTeam $leTeam, ChildEvent $leEvent, string $date): void
+    protected function doAddTeamEvent(ChildTeam $team, ChildEvent $event): void
     {
         $teamUser = new ChildTeamUser();
-        $teamUser->setLeTeam($leTeam);
-        $teamUser->setLeEvent($leEvent);
-        $teamUser->setDate($date);
-        $teamUser->setLeUser($this);
+        $teamUser->setTeam($team);
+        $teamUser->setEvent($event);
+        $teamUser->setUser($this);
 
         $this->addTeamUser($teamUser);
 
         // set the back reference to this object directly as using provided method either results
         // in endless loop or in multiple relations
-        $leUserLeEventDatesEntry = [$this, $leEvent, $date];
-        if ($leTeam->isLeUserLeEventDatesLoaded()) {
-            $leTeam->getLeUserLeEventDates()->push($leUserLeEventDatesEntry);
-        } elseif (!$leTeam->getLeUserLeEventDates()->contains($leUserLeEventDatesEntry)) {
-            $leTeam->initLeUserLeEventDates();
-            $leTeam->getLeUserLeEventDates()->push($leUserLeEventDatesEntry);
+        $userEventsEntry = [$this, $event];
+        if ($team->isUserEventsLoaded()) {
+            $team->getUserEvents()->push($userEventsEntry);
+        } elseif (!$team->getUserEvents()->contains($userEventsEntry)) {
+            $team->initUserEvents();
+            $team->getUserEvents()->push($userEventsEntry);
         }
         // set the back reference to this object directly as using provided method either results
         // in endless loop or in multiple relations
-        $leUserLeTeamDatesEntry = [$this, $leTeam, $date];
-        if ($leEvent->isLeUserLeTeamDatesLoaded()) {
-            $leEvent->getLeUserLeTeamDates()->push($leUserLeTeamDatesEntry);
-        } elseif (!$leEvent->getLeUserLeTeamDates()->contains($leUserLeTeamDatesEntry)) {
-            $leEvent->initLeUserLeTeamDates();
-            $leEvent->getLeUserLeTeamDates()->push($leUserLeTeamDatesEntry);
+        $userTeamsEntry = [$this, $team];
+        if ($event->isUserTeamsLoaded()) {
+            $event->getUserTeams()->push($userTeamsEntry);
+        } elseif (!$event->getUserTeams()->contains($userTeamsEntry)) {
+            $event->initUserTeams();
+            $event->getUserTeams()->push($userTeamsEntry);
         }
     }
 ';
@@ -620,46 +599,44 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     {
         $expected = '
     /**
-     * Remove leTeam, leEvent, date of this object through the team_user cross reference table.
+     * Remove team, event of this object through the team_user cross reference table.
      *
-     * @param ChildTeam $leTeam
-     * @param ChildEvent $leEvent
-     * @param string $date
+     * @param ChildTeam $team
+     * @param ChildEvent $event
      *
      * @return static
      */
-    public function removeLeTeamLeEventDate(ChildTeam $leTeam, ChildEvent $leEvent, string $date): static
+    public function removeTeamEvent(ChildTeam $team, ChildEvent $event): static
     {
-        if (!$this->getLeTeamLeEventDates()->contains([$leTeam, $leEvent, $date])) {
+        if (!$this->getTeamEvents()->contains([$team, $event])) {
             return $this;
         }
 
         $teamUser = new ChildTeamUser();
-        $teamUser->setLeTeam($leTeam);
-        if ($leTeam->isLeUserLeEventDatesLoaded()) {
+        $teamUser->setTeam($team);
+        if ($team->isUserEventsLoaded()) {
             //remove the back reference if available
-            $leTeam->getLeUserLeEventDates()->removeObject([$this, $leEvent, $date]);
+            $team->getUserEvents()->removeObject([$this, $event]);
         }
 
-        $teamUser->setLeEvent($leEvent);
-        if ($leEvent->isLeUserLeTeamDatesLoaded()) {
+        $teamUser->setEvent($event);
+        if ($event->isUserTeamsLoaded()) {
             //remove the back reference if available
-            $leEvent->getLeUserLeTeamDates()->removeObject([$this, $leTeam, $date]);
+            $event->getUserTeams()->removeObject([$this, $team]);
         }
 
-        $teamUser->setDate($date);
-        $teamUser->setLeUser($this);
+        $teamUser->setUser($this);
         $this->removeTeamUser(clone $teamUser);
         $teamUser->clear();
 
-        $this->combinationLeTeamLeEventDates->remove($this->combinationLeTeamLeEventDates->search([$leTeam, $leEvent, $date]));
+        $this->combinationTeamEvents->remove($this->combinationTeamEvents->search([$team, $event]));
 
-        if ($this->leTeamLeEventDatesScheduledForDeletion === null) {
-            $this->leTeamLeEventDatesScheduledForDeletion = clone $this->combinationLeTeamLeEventDates;
-            $this->leTeamLeEventDatesScheduledForDeletion->clear();
+        if ($this->teamEventsScheduledForDeletion === null) {
+            $this->teamEventsScheduledForDeletion = clone $this->combinationTeamEvents;
+            $this->teamEventsScheduledForDeletion->clear();
         }
 
-        $this->leTeamLeEventDatesScheduledForDeletion->push([$leTeam, $leEvent, $date]);
+        $this->teamEventsScheduledForDeletion->push([$team, $event]);
 
         return $this;
     }
@@ -673,8 +650,8 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
     public function testClearReferencesCode()
     {
         $expected = '
-            if ($this->combinationLeTeamLeEventDates) {
-                foreach ($this->combinationLeTeamLeEventDates as $o) {
+            if ($this->combinationTeamEvents) {
+                foreach ($this->combinationTeamEvents as $o) {
                     $o[0]->clearAllReferences($deep);
                 }
             }';
@@ -692,24 +669,22 @@ class CrossRelationBuilderTernaryNamedTest extends AbstractCrossRelationBuilderT
 
     <table name="user">
         <column name="id" type="INTEGER" primaryKey="true" autoIncrement="true"/>
-
     </table>
 
     <table name="team_user" isCrossRef="true">
         <column name="user_id" type="INTEGER" primaryKey="true" required="true" />
         <column name="team_id" type="INTEGER" primaryKey="true" required="true" />
         <column name="event_id" type="INTEGER" primaryKey="true" required="true" />
-        <column name="date" type="datetime" primaryKey="true" required="true" />
 
-        <foreign-key foreignTable="user" phpName="LeUser">
+        <foreign-key foreignTable="user">
             <reference local="user_id" foreign="id" />
         </foreign-key>
 
-        <foreign-key foreignTable="team" phpName="LeTeam">
+        <foreign-key foreignTable="team">
             <reference local="team_id" foreign="id" />
         </foreign-key>
 
-        <foreign-key foreignTable="event" phpName="LeEvent">
+        <foreign-key foreignTable="event">
             <reference local="event_id" foreign="id" />
         </foreign-key>
     </table>

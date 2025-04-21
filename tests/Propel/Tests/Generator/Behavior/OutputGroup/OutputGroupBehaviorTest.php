@@ -45,7 +45,7 @@ class OutputGroupBehaviorTest extends TestCase
         <column name="photo" type="BLOB" lazyLoad="true"/>
     </table>
 
-    <table name="og_account" outputGroup="public">
+    <table name="og_account" outputGroup="public" generate-collection="false">
         <column name="employee_id" type="INTEGER" primaryKey="true" outputGroup="short"/>
         <column name="login" type="VARCHAR" size="32" outputGroup="short"/>
         <column name="password" type="VARCHAR" size="100" ignoreGroup="public"/>
@@ -83,6 +83,9 @@ EOF;
         QuickBuilder::buildSchema($schema);
     }
 
+    /**
+     * @return OgAccount
+     */
     public function getPopulatedAccountObject()
     {
         $employee = (new OgEmployee())->fromArray([
@@ -207,10 +210,25 @@ EOF;
      *
      * @return void
      */
-    public function testUpdatedCollectionClassName()
+    public function testGeneratedCollectionHasMethod()
     {
         $collectionClass = Map\OgEmployeeTableMap::getTableMap()->getCollectionClassName();
+        $collection = new $collectionClass();
+        $hasToOutputGroupMethod = method_exists($collection, 'toOutputGroup');
 
-        $this->assertEquals(ObjectCollectionWithOutputGroups::class, $collectionClass);
+        $this->assertTrue($hasToOutputGroupMethod, 'Collection should have toOutputGroup()');
+    }
+
+    /**
+     * @dataProvider outputGroupDataProvider
+     *
+     * @return void
+     */
+    public function testNonGeneratedCollectionWasUpdated()
+    {
+        $collectionClass = Map\OgAccountTableMap::getTableMap()->getCollectionClassName();
+
+        $this->assertEquals(ObjectCollectionWithOutputGroups::class, $collectionClass, 'Non-generated collection should be ObjectCollectionWithOutputGroups');
+
     }
 }

@@ -8,7 +8,6 @@
 
 namespace Propel\Runtime\Map;
 
-use Propel\Runtime\Collection\Collection;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Exception\LogicException;
 use Propel\Runtime\Map\Exception\ColumnNotFoundException;
@@ -66,6 +65,11 @@ class TableMap
      * @var string
      */
     public const TYPE_NUM = 'num';
+
+    /**
+     * @var class-string
+     */
+    public const DEFAULT_OBJECT_COLLECTION = ObjectCollection::class;
 
     /**
      * Columns in the table
@@ -363,16 +367,11 @@ class TableMap
     /**
      * Get the Collection ClassName to this table.
      *
-     * @return class-string<\Propel\Runtime\Collection\Collection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>
+     * @return class-string
      */
     public function getCollectionClassName(): string
     {
-        $collectionClassName = $this->getClassName() . 'Collection';
-        if (class_exists($collectionClassName) && is_subclass_of($collectionClassName, Collection::class)) {
-            return $collectionClassName;
-        }
-
-        return ObjectCollection::class;
+        return static::DEFAULT_OBJECT_COLLECTION;
     }
 
     /**

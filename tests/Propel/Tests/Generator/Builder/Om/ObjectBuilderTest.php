@@ -49,7 +49,7 @@ class ObjectBuilderTest extends TestCase
         $col3 = new Column('Bar');
         $col3->setDomain(new Domain('DATE'));
         $col3->setDefaultValue(new ColumnDefaultValue('0000-00-00', ColumnDefaultValue::TYPE_VALUE));
-        $val3 = 'NULL';
+        $val3 = 'null';
 
         return [
             [$col1, $val1],

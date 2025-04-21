@@ -23,7 +23,11 @@
         <column name="name" required="true" type="VARCHAR" size="128" default="Penguin" description="Publisher Name"/>
     </table>
 
-    <table name="author" description="Author Table">
+    <table
+        name="author"
+        collection-class="\Propel\Tests\Bookstore\MyAuthorCollection"
+        generate-collection="false"
+    >
         <column name="id" required="true" primaryKey="true" autoIncrement="true" type="INTEGER" description="Author Id"/>
         <column name="first_name" required="true" type="VARCHAR" size="128" description="First Name"/>
         <column name="last_name" required="true" type="VARCHAR" size="128" description="Last Name"/>

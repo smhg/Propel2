@@ -44,17 +44,3 @@ public static function getOutputGroupData($outputGroupName): array
         'relation' => null,
     ];
 }
-
-/**
- * Get the Collection ClassName to this table.
- *
- * @return string
- */
-public function getCollectionClassName(): string
-{
-    $parentCollectionClassName = parent::getCollectionClassName();
-
-    return ($parentCollectionClassName === \Propel\Runtime\Collection\ObjectCollection::class)
-        ? '<?= $objectCollectionClass ?>'
-        : $parentCollectionClassName;
-}

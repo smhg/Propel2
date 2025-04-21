@@ -650,7 +650,7 @@ class GeneratedObjectRelTest extends BookstoreEmptyTestBase
 
         $this->assertEquals(3, $coll->count());
         $this->assertEquals(3, count($bookClubList->getBooks()));
-        $this->assertSame($coll, $bookClubList->getBooks());
+        $this->assertSame($coll->getData(), $bookClubList->getBooks()->getData());
         $this->assertEquals(3, BookQuery::create()->count());
         $this->assertEquals(1, BookClubListQuery::create()->count());
         $this->assertEquals(3, BookListRelQuery::create()->count());

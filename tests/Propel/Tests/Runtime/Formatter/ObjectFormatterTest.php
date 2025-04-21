@@ -13,10 +13,8 @@ use Propel\Runtime\Collection\Collection;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Formatter\ObjectFormatter;
-use Propel\Runtime\Propel;
-use Propel\Tests\Bookstore\AuthorCollection;
 use Propel\Tests\Bookstore\Book;
-use Propel\Tests\Bookstore\Map\BookTableMap;
+use Propel\Tests\Bookstore\MyAuthorCollection;
 use Propel\Tests\Helpers\Bookstore\BookstoreDataPopulator;
 use Propel\Tests\Helpers\Bookstore\BookstoreEmptyTestBase;
 
@@ -75,7 +73,7 @@ class ObjectFormatterTest extends BookstoreEmptyTestBase
         $formatter = new ObjectFormatter();
         $formatter->setClass('\Propel\Tests\Bookstore\Author');
         $authors = $formatter->format($stmt);
-        $this->assertTrue($authors instanceof AuthorCollection);
+        $this->assertInstanceOf(MyAuthorCollection::class, $authors);
     }
 
     /**

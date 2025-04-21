@@ -19,7 +19,7 @@ use Propel\Generator\Model\Table;
 /**
  * A BuilderFactory with a table. Keeps references to the builders once created.
  */
-class TableBuilderStore
+class CodeBuilderStore
 {
     /**
      * The current table.

@@ -366,6 +366,7 @@ class ObjectCollection extends Collection
             $relationClassName = $relationMap->getRightTable()->getClassName();
             $collectionClassName = $relationMap->getRightTable()->getCollectionClassName();
 
+            /** @var \Propel\Runtime\Collection\Collection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface> $collection */
             $collection = new $collectionClassName();
             $collection->setModel($relationClassName);
             /** @var \Propel\Runtime\Formatter\AbstractFormatter<\Propel\Runtime\ActiveRecord\ActiveRecordInterface, \Propel\Runtime\Collection\Collection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>> $formatter */

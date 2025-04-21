@@ -1510,7 +1510,7 @@ EOF;
 
         $this->assertEquals(3, $coll->count());
         $this->assertEquals(3, count($a->getBooks()));
-        $this->assertSame($coll, $a->getBooks());
+        $this->assertSame($coll->getData(), $a->getBooks()->getData());
         $this->assertEquals(1, AuthorQuery::create()->count());
         $this->assertEquals(3, BookQuery::create()->count());
     }

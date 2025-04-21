@@ -6,20 +6,18 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Tests\Generator\Builder\Om;
+namespace Propel\Tests\Generator\Builder\Om\RelationCodeProducer;
 
 use Propel\Generator\Builder\Om\ObjectBuilder;
-use Propel\Generator\Builder\Om\ObjectBuilder\AbstractCrossRelationCodeProducer;
+use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\AbstractManyToManyCodeProducer;
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\CrossRelation;
-use Propel\Generator\Model\Database;
-use Propel\Generator\Model\Table;
 use Propel\Generator\Util\QuickBuilder;
 use Propel\Tests\TestCase;
 
 /**
  */
-abstract class AbstractCrossRelationBuilderTest extends TestCase
+abstract class AbstractManyToManyCodeTest extends TestCase
 {
     /**
      * @var string
@@ -27,7 +25,7 @@ abstract class AbstractCrossRelationBuilderTest extends TestCase
     protected $tableName = 'user';
 
     /**
-     * @var AbstractCrossRelationCodeProducer
+     * @var \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\AbstractManyToManyCodeProducer
      */
     protected $crossFkCodeProducer;
 
@@ -55,7 +53,7 @@ abstract class AbstractCrossRelationBuilderTest extends TestCase
     }
 
 
-    protected function getCodeProducer(): AbstractCrossRelationCodeProducer
+    protected function getCodeProducer(): AbstractManyToManyCodeProducer
     {
         if (!$this->crossFkCodeProducer) {
             $this->init();
@@ -78,7 +76,7 @@ abstract class AbstractCrossRelationBuilderTest extends TestCase
         $objectBuilder = $this->createObjectBuilder($this->getSchema(), $this->tableName);
 
         $this->crossFkCodeProducer = $this->getObjectPropertyValue($objectBuilder, 'crossRelationCodeProducers')[0];
-        $this->crossFk = $objectBuilder->getTable()->getCrossFks()[0];
+        $this->crossFk = $objectBuilder->getTable()->getCrossRelations()[0];
     }
 
     /**

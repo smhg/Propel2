@@ -8,6 +8,7 @@
 
 namespace Propel\Generator\Behavior\OutputGroup;
 
+use Propel\Generator\Builder\Om\ObjectCollectionBuilder;
 use Propel\Generator\Model\Behavior;
 use Propel\Generator\Model\MappingModel;
 use Propel\Generator\Model\Table;
@@ -106,15 +107,35 @@ class OutputGroupBehavior extends Behavior
     }
 
     /**
-     * @see \Propel\Generator\Model\Behavior::getTable()
+     * This method is automatically called on table behaviors when the database
+     * model is finished. Override this method to add columns to the current
+     * table.
      *
-     * @param \Propel\Generator\Model\Table $table
+     * @see Database::doFinalInitialization()
      *
      * @return void
      */
-    public function setTable(Table $table): void
+    public function modifyTable(): void
     {
-        parent::setTable($table);
+        $table = $this->getTable();
+        if ($table->useGeneratedCollectionClass() || $table->hasCollectionClassAttribute()) {
+             // output group method will be added in addObjectCollectionMethods() or is handled by user
+            return;
+        }
+
+        $table->setCollectionClass(ObjectCollectionWithOutputGroups::class);
+    }
+
+    /**
+     * Hook in {@see \Propel\Generator\Builder\Om\ObjectCollectionBuilder::addClassOpen()}.
+     *
+     * @param \Propel\Generator\Builder\Om\ObjectCollectionBuilder $builder
+     *
+     * @return string
+     */
+    public function addObjectCollectionMethods(ObjectCollectionBuilder $builder): string
+    {
+        return $this->renderLocalTemplate('toOutputGroupMethod');
     }
 
     /**

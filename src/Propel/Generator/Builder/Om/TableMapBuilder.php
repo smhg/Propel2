@@ -8,6 +8,7 @@
 
 namespace Propel\Generator\Builder\Om;
 
+use Propel\Generator\Builder\Om\TableMapBuilder\TableMapBuilderValidation;
 use Propel\Generator\Model\ForeignKey;
 use Propel\Generator\Model\IdMethod;
 use Propel\Generator\Model\PropelTypes;
@@ -20,6 +21,23 @@ use Propel\Generator\Platform\PlatformInterface;
  */
 class TableMapBuilder extends AbstractOMBuilder
 {
+ /**
+  * @return void
+  */
+    protected function validateModel(): void
+    {
+        parent::validateModel();
+        $this->disallowImplicitCollectionReplacement();
+    }
+
+    /**
+     * @return void
+     */
+    protected function disallowImplicitCollectionReplacement(): void
+    {
+        TableMapBuilderValidation::validate($this);
+    }
+
     /**
      * Gets the package for the map builder classes.
      *
@@ -200,6 +218,8 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      */
     protected function addConstants(): string
     {
+        $collectionBuilder = $this->builderFactory->createObjectCollectionBuilder($this->getTable());
+
         return $this->renderTemplate('tableMapConstants', [
             'className' => $this->getClasspath(),
             'dbName' => $this->getDatabase()->getName(),
@@ -212,6 +232,8 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
             'nbHydrateColumns' => $this->getTable()->getNumColumns() - $this->getTable()->getNumLazyLoadColumns(),
             'columns' => $this->getTable()->getColumns(),
             'stringFormat' => $this->getTable()->getDefaultStringFormat(),
+            'objectCollectionClassName' => $collectionBuilder->resolveTableCollectionClassNameFq(),
+            'objectCollectionType' => $collectionBuilder->resolveTableCollectionClassType(),
         ]);
     }
 
@@ -623,6 +645,28 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      */
     protected function addBuildRelations(string &$script): void
     {
+        $addRelationStatements = '';
+
+        foreach ($this->getTable()->getForeignKeys() as $fkey) {
+            $relationName = $fkey->getIdentifier();
+            $addRelationStatements .= $this->buildAddRelationStatement($relationName, $fkey, 'RelationMap::MANY_TO_ONE', false, false, 'null');
+        }
+
+        foreach ($this->getTable()->getReferrers() as $fkey) {
+            $relationName = $fkey->getIdentifierReversed();
+            $cardinalityConstant = 'RelationMap::ONE_TO_' . ($fkey->isLocalPrimaryKey() ? 'ONE' : 'MANY');
+            $pluralName = $fkey->isLocalPrimaryKey() ? 'null' : "'" . $this->getRefFKPhpNameAffix($fkey, true) . "'";
+            $addRelationStatements .= $this->buildAddRelationStatement($relationName, $fkey, $cardinalityConstant, true, false, $pluralName);
+        }
+
+        foreach ($this->getTable()->getCrossRelations() as $crossFKs) {
+            foreach ($crossFKs->getCrossForeignKeys() as $fk) {
+                $relationName = $fk->getIdentifier();
+                $pluralName = "'" . $this->getFKPhpNameAffix($fk, true) . "'";
+                $addRelationStatements .= $this->buildAddRelationStatement($relationName, $fk, 'RelationMap::MANY_TO_MANY', false, true, $pluralName);
+            }
+        }
+
         $script .= "
     /**
      * Build the RelationMap objects for this table relationships
@@ -630,27 +674,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      * @return void
      */
     public function buildRelations(): void
-    {";
-        foreach ($this->getTable()->getForeignKeys() as $fkey) {
-            $relationName = $this->getFKPhpNameAffix($fkey);
-            $script .= $this->buildAddRelationStatement($relationName, $fkey, 'RelationMap::MANY_TO_ONE', false, false, 'null');
-        }
-
-        foreach ($this->getTable()->getReferrers() as $fkey) {
-            $relationName = $this->getRefFKPhpNameAffix($fkey);
-            $cardinalityConstant = 'RelationMap::ONE_TO_' . ($fkey->isLocalPrimaryKey() ? 'ONE' : 'MANY');
-            $pluralName = $fkey->isLocalPrimaryKey() ? 'null' : "'" . $this->getRefFKPhpNameAffix($fkey, true) . "'";
-            $script .= $this->buildAddRelationStatement($relationName, $fkey, $cardinalityConstant, true, false, $pluralName);
-        }
-
-        foreach ($this->getTable()->getCrossFks() as $crossFKs) {
-            foreach ($crossFKs->getCrossForeignKeys() as $crossFK) {
-                $relationName = $this->getFKPhpNameAffix($crossFK);
-                $pluralName = "'" . $this->getFKPhpNameAffix($crossFK, true) . "'";
-                $script .= $this->buildAddRelationStatement($relationName, $crossFK, 'RelationMap::MANY_TO_MANY', false, true, $pluralName);
-            }
-        }
-        $script .= "
+    {\n$addRelationStatements
     }
 ";
     }

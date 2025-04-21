@@ -75,7 +75,7 @@ class ObjectFormatter extends AbstractFormatter
     }
 
     /**
-     * @return class-string<\Propel\Runtime\Collection\Collection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>|null
+     * @return class-string|null
      */
     public function getCollectionClassName(): ?string
     {

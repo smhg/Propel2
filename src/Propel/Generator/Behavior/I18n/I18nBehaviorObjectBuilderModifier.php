@@ -293,10 +293,16 @@ class I18nBehaviorObjectBuilderModifier
         $i18nTablePhpName = $this->builder->getNewStubObjectBuilder($i18nTable)->getUnprefixedClassName();
         $localeColumnName = $this->behavior->getLocaleColumn()->getPhpName();
         $pattern = '/public function add' . $i18nTablePhpName . '.*[\r\n]\s*\{/';
+
+        $matches = [];
+        $argGroupPattern = '/public function add' . $i18nTablePhpName . '\(\w+ (\$\w+)\)/';
+        preg_match($argGroupPattern, $script, $matches);
+        $inputVar = $matches[1];
+
         $addition = "
-        if (\$l && \$locale = \$l->get$localeColumnName()) {
+        if ($inputVar && \$locale = {$inputVar}->get$localeColumnName()) {
             \$this->set{$localeColumnName}(\$locale);
-            \$this->currentTranslations[\$locale] = \$l;
+            \$this->currentTranslations[\$locale] = $inputVar;
         }";
         $replacement = "\$0$addition";
         $script = preg_replace($pattern, $replacement, $script);

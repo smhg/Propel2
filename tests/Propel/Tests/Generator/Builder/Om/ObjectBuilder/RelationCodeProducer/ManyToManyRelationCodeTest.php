@@ -6,18 +6,20 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Tests\Generator\Builder\Om;
+namespace Propel\Tests\Generator\Builder\Om\RelationCodeProducer;
 
-use Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationSatisfied;
+use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\ManyToManyRelationCodeProducer;
 
-class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilderTest
+/**
+ */
+class ManyToManyRelationCodeTest extends AbstractManyToManyCodeTest
 {
     /**
      * @return void
      */
     public function testType(): void
     {
-        $this->assertInstanceOf(CrossRelationSatisfied::class, $this->getCodeProducer());
+        $this->assertInstanceOf(ManyToManyRelationCodeProducer::class, $this->getCodeProducer());
     }
 
     /**
@@ -39,14 +41,14 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     {
         $expected = '
     /**
-     * @var ObjectCollection<ChildTeam> Objects in LeTeam relation.
+     * @var \Base\Collection\TeamCollection Objects in Team relation.
      */
-    protected $collLeTeams;
+    protected $collTeams;
 
     /**
      * @var bool
      */
-    protected $collLeTeamsIsPartial;
+    protected $collTeamsIsPartial;
 ';
         $this->assertProducedCodeMatches('addAttributes', $expected);
     }
@@ -55,11 +57,11 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     {
         $expected = '
     /**
-     * Items of LeTeam relation marked for deletion.
+     * Items of Team relation marked for deletion.
      *
-     * @var ObjectCollection<ChildTeam>
+     * @var \Base\Collection\TeamCollection
      */
-    protected $leTeamsScheduledForDeletion = null;
+    protected $teamsScheduledForDeletion = null;
 ';
         $this->assertProducedCodeMatches('addScheduledForDeletionAttribute', $expected);
     }
@@ -67,9 +69,9 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     public function testDeleteScheduledItemsCode()
     {
         $expected = '
-            if ($this->leTeamsScheduledForDeletion !== null && !$this->leTeamsScheduledForDeletion->isEmpty()) {
+            if ($this->teamsScheduledForDeletion !== null && !$this->teamsScheduledForDeletion->isEmpty()) {
                 $pks = [];
-                foreach ($this->leTeamsScheduledForDeletion as $entry) {
+                foreach ($this->teamsScheduledForDeletion as $entry) {
                     $entryPk = [];
 
                     $entryPk[1] = $this->getId();
@@ -81,13 +83,13 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
                     ->filterByPrimaryKeys($pks)
                     ->delete($con);
 
-                $this->leTeamsScheduledForDeletion = null;
+                $this->teamsScheduledForDeletion = null;
             }
 
-            if ($this->collLeTeams) {
-                foreach ($this->collLeTeams as $leTeam) {
-                    if (!$leTeam->isDeleted() && ($leTeam->isNew() || $leTeam->isModified())) {
-                        $leTeam->save($con);
+            if ($this->collTeams) {
+                foreach ($this->collTeams as $team) {
+                    if (!$team->isDeleted() && ($team->isNew() || $team->isModified())) {
+                        $team->save($con);
                     }
                 }
             }
@@ -100,18 +102,16 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     {
         $expected = '
     /**
-     * Clears out the collLeTeams collection
+     * Clears out the collTeams collection
      *
      * This does not modify the database; however, it will remove any associated objects, causing
      * them to be refetched by subsequent calls to accessor method.
      *
-     * @see static::addLeTeams()
-     *
      * @return void
      */
-    public function clearLeTeams(): void
+    public function clearTeams(): void
     {
-        $this->collLeTeams = null; // important to set this to NULL since that means it is uninitialized
+        $this->collTeams = null; // important to set this to NULL since that means it is uninitialized
     }
 ';
         $this->assertProducedCodeMatches('addClear', $expected);
@@ -121,20 +121,20 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     {
         $expected = '
     /**
-     * Initializes the collLeTeams crossRef collection.
+     * Initializes the collTeams crossRef collection.
      *
-     * By default this just sets the collLeTeams collection to an empty collection (like clearLeTeams());
+     * By default this just sets the collTeams collection to an empty collection (like clearTeams());
      * however, you may wish to override this method in your stub class to provide setting appropriate
      * to your application -- for example, setting the initial array to the values stored in database.
      *
      * @return void
      */
-    public function initLeTeams(): void
+    public function initTeams(): void
     {
-        $collectionClassName = TeamUserTableMap::getTableMap()->getCollectionClassName();
-        $this->collLeTeams = new $collectionClassName;
-        $this->collLeTeamsIsPartial = true;
-        $this->collLeTeams->setModel(\'\Team\');
+        $collectionClassName = TeamTableMap::getTableMap()->getCollectionClassName();
+        $this->collTeams = new $collectionClassName;
+        $this->collTeamsIsPartial = true;
+        $this->collTeams->setModel(\'\Team\');
     }
 ';
         $this->assertProducedCodeMatches('addInit', $expected);
@@ -143,7 +143,7 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     public function testOnReloadCode()
     {
         $expected = '
-        $this->collLeTeams = null;';
+        $this->collTeams = null;';
 
         $this->assertProducedCodeMatches('addOnReloadCode', $expected);
     }
@@ -152,13 +152,13 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     {
         $expected = '
     /**
-     * Checks if the collLeTeams collection is loaded.
+     * Checks if the collTeams collection is loaded.
      *
      * @return bool
      */
-    public function isLeTeamsLoaded(): bool
+    public function isTeamsLoaded(): bool
     {
-        return $this->collLeTeams !== null;
+        return $this->collTeams !== null;
     }
 ';
         $this->assertProducedCodeMatches('addisLoaded', $expected);
@@ -176,7 +176,7 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     public function testReserveNamesForGetters()
     {
         $reservedNames = $this->getCodeProducer()->reserveNamesForGetters();
-        $expected = ['LeTeam'];
+        $expected = ['Team'];
         $this->assertEqualsCanonicalizing($expected, $reservedNames);
     }
 
@@ -193,44 +193,44 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
      * If this ChildUser is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
-     * @param \Propel\Runtime\ActiveQuery\Criteria $criteria Optional query object to filter the query
+     * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return ObjectCollection<ChildTeam>
+     * @return \Base\Collection\TeamCollection
      */
-    public function getLeTeams(?Criteria $criteria = null, ?ConnectionInterface $con = null): ObjectCollection
+    public function getTeams(?Criteria $criteria = null, ?ConnectionInterface $con = null): TeamCollection
     {
-        $partial = $this->collLeTeamsIsPartial && !$this->isNew();
-        if ($this->collLeTeams === null || $criteria !== null || $partial) {
+        $partial = $this->collTeamsIsPartial && !$this->isNew();
+        if ($this->collTeams === null || $criteria !== null || $partial) {
             if ($this->isNew()) {
                 // return empty collection
-                if ($this->collLeTeams === null) {
-                    $this->initLeTeams();
+                if ($this->collTeams === null) {
+                    $this->initTeams();
                 }
             } else {
 
                 $query = ChildTeamQuery::create(null, $criteria)
-                    ->filterByLeUser($this);
-                $collLeTeams = $query->find($con);
+                    ->filterByUser($this);
+                $collTeams = $query->find($con);
                 if ($criteria !== null) {
-                    return $collLeTeams;
+                    return $collTeams;
                 }
 
-                if ($partial && $this->collLeTeams) {
+                if ($partial && $this->collTeams) {
                     //make sure that already added objects gets added to the list of the database.
-                    foreach ($this->collLeTeams as $obj) {
-                        if (!$collLeTeams->contains($obj)) {
-                            $collLeTeams[] = $obj;
+                    foreach ($this->collTeams as $obj) {
+                        if (!$collTeams->contains($obj)) {
+                            $collTeams[] = $obj;
                         }
                     }
                 }
 
-                $this->collLeTeams = $collLeTeams;
-                $this->collLeTeamsIsPartial = false;
+                $this->collTeams = $collTeams;
+                $this->collTeamsIsPartial = false;
             }
         }
 
-        return $this->collLeTeams;
+        return $this->collTeams;
     }
 ';
         $this->assertProducedCodeMatches('addGetters', $expected);
@@ -240,35 +240,36 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     {
         $expected = '
     /**
-     * Sets a collection of LeTeam objects related by a many-to-many relationship
+     * Sets a collection of Team objects related by a many-to-many relationship
      * to the current object by way of the team_user cross-reference table.
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<ChildTeam> $leTeams A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<ChildTeam> $teams A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
      * @return $this
      */
-    public function setLeTeams(Collection $leTeams, ?ConnectionInterface $con = null): static
+    public function setTeams(Collection $teams, ?ConnectionInterface $con = null): static
     {
-        $this->clearLeTeams();
-        $currentLeTeams = $this->getLeTeams();
+        $this->clearTeams();
+        $currentTeams = $this->getTeams();
 
-        $leTeamsScheduledForDeletion = $currentLeTeams->diff($leTeams);
+        $teamsScheduledForDeletion = $currentTeams->diff($teams);
 
-        foreach ($leTeamsScheduledForDeletion as $toDelete) {
-            $this->removeLeTeam($toDelete);
+        foreach ($teamsScheduledForDeletion as $toDelete) {
+            $this->removeTeam($toDelete);
         }
 
-        foreach ($leTeams as $leTeam) {
-            if (!$currentLeTeams->contains($leTeam)) {
-                $this->doAddLeTeam($leTeam);
+        foreach ($teams as $team) {
+            if (!$currentTeams->contains($team)) {
+                $this->doAddTeam($team);
             }
         }
 
-        $this->collLeTeamsIsPartial = false;
-        $this->collLeTeams = $leTeams;
+        $this->collTeamsIsPartial = false;
+        $this->collTeams = $teams instanceof TeamCollection
+            ? $teams : new TeamCollection($teams->getData());
 
         return $this;
     }
@@ -280,28 +281,28 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     {
         $expected = '
     /**
-     * Gets the number of LeTeam objects related by a many-to-many relationship
+     * Gets the number of Team objects related by a many-to-many relationship
      * to the current object by way of the team_user cross-reference table.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
      * @param bool $distinct Set to true to force count distinct
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return int The number of related LeTeam objects
+     * @return int The number of related Team objects
      */
-    public function countLeTeams(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    public function countTeams(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
     {
-        $partial = $this->collLeTeamsIsPartial && !$this->isNew();
-        if ($this->collLeTeams && !$criteria && !$partial) {
-            return count($this->collLeTeams);
+        $partial = $this->collTeamsIsPartial && !$this->isNew();
+        if ($this->collTeams && !$criteria && !$partial) {
+            return count($this->collTeams);
         }
 
-        if ($this->isNew() && $this->collLeTeams === null) {
+        if ($this->isNew() && $this->collTeams === null) {
             return 0;
         }
 
         if ($partial && !$criteria) {
-            return count($this->getLeTeams());
+            return count($this->getTeams());
         }
 
         $query = ChildTeamQuery::create(null, $criteria);
@@ -310,7 +311,7 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
         }
 
         return $query
-            ->filterByLeUser($this)
+            ->filterByUser($this)
             ->count($con);
     }
 ';
@@ -321,22 +322,22 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     {
         $expected = '
     /**
-     * Associate a LeTeam with this object through the team_user cross reference table.
+     * Associate a Team with this object through the team_user cross reference table.
      *
-     * @param ChildTeam $leTeam
+     * @param ChildTeam $team
      *
      * @return static
      */
-    public function addLeTeam(ChildTeam $leTeam): static
+    public function addTeam(ChildTeam $team): static
     {
-        if ($this->collLeTeams === null) {
-            $this->initLeTeams();
+        if ($this->collTeams === null) {
+            $this->initTeams();
         }
 
-        if (!$this->getLeTeams()->contains($leTeam)) {
+        if (!$this->getTeams()->contains($team)) {
             // only add it if the **same** object is not already associated
-            $this->collLeTeams->push($leTeam);
-            $this->doAddLeTeam($leTeam);
+            $this->collTeams->push($team);
+            $this->doAddTeam($team);
         }
 
         return $this;
@@ -349,23 +350,25 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     {
         $expected = '
     /**
-     * @param ChildTeam $leTeam
+     * @param ChildTeam $team
+     *
+     * @return void
      */
-    protected function doAddLeTeam(ChildTeam $leTeam): void
+    protected function doAddTeam(ChildTeam $team): void
     {
         $teamUser = new ChildTeamUser();
-        $teamUser->setLeTeam($leTeam);
-        $teamUser->setLeUser($this);
+        $teamUser->setTeam($team);
+        $teamUser->setUser($this);
 
         $this->addTeamUser($teamUser);
 
         // set the back reference to this object directly as using provided method either results
         // in endless loop or in multiple relations
-        if (!$leTeam->isLeUsersLoaded()) {
-            $leTeam->initLeUsers();
-            $leTeam->getLeUsers()->push($this);
-        } elseif (!$leTeam->getLeUsers()->contains($this)) {
-            $leTeam->getLeUsers()->push($this);
+        if (!$team->isUsersLoaded()) {
+            $team->initUsers();
+            $team->getUsers()->push($this);
+        } elseif (!$team->getUsers()->contains($this)) {
+            $team->getUsers()->push($this);
         }
     }
 ';
@@ -376,37 +379,37 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     {
         $expected = '
     /**
-     * Remove leTeam of this object through the team_user cross reference table.
+     * Remove team of this object through the team_user cross reference table.
      *
-     * @param ChildTeam $leTeam
+     * @param ChildTeam $team
      *
      * @return static
      */
-    public function removeLeTeam(ChildTeam $leTeam): static
+    public function removeTeam(ChildTeam $team): static
     {
-        if (!$this->getLeTeams()->contains($leTeam)) {
+        if (!$this->getTeams()->contains($team)) {
             return $this;
         }
 
         $teamUser = new ChildTeamUser();
-        $teamUser->setLeTeam($leTeam);
-        if ($leTeam->isLeUsersLoaded()) {
+        $teamUser->setTeam($team);
+        if ($team->isUsersLoaded()) {
             //remove the back reference if available
-            $leTeam->getLeUsers()->removeObject($this);
+            $team->getUsers()->removeObject($this);
         }
 
-        $teamUser->setLeUser($this);
+        $teamUser->setUser($this);
         $this->removeTeamUser(clone $teamUser);
         $teamUser->clear();
 
-        $this->collLeTeams->remove($this->collLeTeams->search($leTeam));
+        $this->collTeams->remove($this->collTeams->search($team));
 
-        if ($this->leTeamsScheduledForDeletion === null) {
-            $this->leTeamsScheduledForDeletion = clone $this->collLeTeams;
-            $this->leTeamsScheduledForDeletion->clear();
+        if ($this->teamsScheduledForDeletion === null) {
+            $this->teamsScheduledForDeletion = clone $this->collTeams;
+            $this->teamsScheduledForDeletion->clear();
         }
 
-        $this->leTeamsScheduledForDeletion->push($leTeam);
+        $this->teamsScheduledForDeletion->push($team);
 
         return $this;
     }
@@ -417,11 +420,11 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
     public function testClearReferencesCode()
     {
         $expected = '
-            if ($this->collLeTeams) {
-                foreach ($this->collLeTeams as $o) {
-                    $o->clearAllReferences($deep);
-                }
-            }';
+        if ($this->collTeams) {
+            foreach ($this->collTeams as $o) {
+                $o->clearAllReferences($deep);
+            }
+        }';
 
         $this->assertProducedCodeMatches('addClearReferencesCode', $expected);
     }
@@ -431,8 +434,12 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
      */
     protected function getSchema(): string
     {
+        /* 
+         * User <---n--- member of ---m---> Team
+         */  
         return <<<EOF
 <database>
+
     <table name="user">
         <column name="id" type="INTEGER" primaryKey="true" autoIncrement="true"/>
     </table>
@@ -441,12 +448,11 @@ class CrossRelationBuilderSatisfiedNamedTest extends AbstractCrossRelationBuilde
         <column name="team_id" type="INTEGER" primaryKey="true" />
         <column name="user_id" type="INTEGER" primaryKey="true" />
 
-        <foreign-key foreignTable="user" phpName="LeUser">
-            <reference local="user_id" foreign="id" />
-        </foreign-key>
-
-        <foreign-key foreignTable="team" phpName="LeTeam">
+        <foreign-key foreignTable="team">
             <reference local="team_id" foreign="id" />
+        </foreign-key>
+        <foreign-key foreignTable="user">
+            <reference local="user_id" foreign="id" />
         </foreign-key>
     </table>
 

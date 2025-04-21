@@ -6,10 +6,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Generator\Builder\Om\ObjectBuilder;
+namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\ForeignKey;
+use Propel\Generator\Model\Table;
 use Propel\Runtime\Collection\ObjectCombinationCollection;
 
 /**
@@ -18,7 +19,7 @@ use Propel\Runtime\Collection\ObjectCombinationCollection;
  * additional data is required along with the element of the opposite table to
  * produce entries in the middle table.
  */
-class CrossRelationPartial extends AbstractCrossRelationCodeProducer
+class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
 {
     /**
      * @var string
@@ -163,7 +164,7 @@ class CrossRelationPartial extends AbstractCrossRelationCodeProducer
      */
     protected function addGetters(string &$script): void
     {
-        $objectCollectionType = $this->resolveObjectCollectorType();
+        [$objectCollectionClassName, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
         $sourceIdentifierSingular = $this->names->getSourceIdentifier(false);
         $crossRefTableName = $this->crossRelation->getMiddleTable()->getName();
 
@@ -194,7 +195,7 @@ class CrossRelationPartial extends AbstractCrossRelationCodeProducer
      *
      * @return $objectCollectionType
      */
-    public function get{$targetIdentifierPlural}(?Criteria \$criteria = null, ?ConnectionInterface \$con = null): ObjectCombinationCollection
+    public function get{$targetIdentifierPlural}(?Criteria \$criteria = null, ?ConnectionInterface \$con = null): $objectCollectionClassName
     {
         \$partial = \$this->$attributeIsPartialName && !\$this->isNew();
         if (\$this->$attributeName !== null && !\$partial && !\$criteria) {
@@ -282,6 +283,7 @@ class CrossRelationPartial extends AbstractCrossRelationCodeProducer
         $relatedObjectClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $relationFk->getForeignTable());
 
         [$argumentDeclaration, $functionParameters, $phpDoc] = $this->collectSignature($relationFk, null, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
+        [$_, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType($relationFk->getForeignTable());
 
         $script .= "
     /**
@@ -292,7 +294,7 @@ class CrossRelationPartial extends AbstractCrossRelationCodeProducer
      * @param \Propel\Runtime\ActiveQuery\Criteria|null \$criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con
      *
-     * @return \Propel\Runtime\Collection\ObjectCollection<$relatedObjectClassName>
+     * @return $objectCollectionType
      */
     public function get{$relationIdentifier}($argumentDeclaration, ?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
     {
@@ -310,13 +312,21 @@ class CrossRelationPartial extends AbstractCrossRelationCodeProducer
     }
 
     /**
-     * @return string
+     * @param \Propel\Generator\Model\Table|null $table
+     *
+     * @return array{string, string}
      */
-    protected function resolveObjectCollectorType(): string
+    protected function resolveObjectCollectionClassNameAndType(?Table $table = null): array
     {
-        $collectionType = $this->getCollectionType();
+        if ($table) {
+            return parent::resolveObjectCollectionClassNameAndType($table);
+        }
 
-        return '\\' . ObjectCombinationCollection::class . "<$collectionType>";
+        $className = 'ObjectCombinationCollection';
+        $collectionType = $this->getCollectionContentType();
+        $typeString = '\\' . ObjectCombinationCollection::class . "<$collectionType>";
+
+        return [$className, $typeString];
     }
 
     /**

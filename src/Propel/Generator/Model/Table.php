@@ -17,6 +17,7 @@ use Propel\Generator\Exception\InvalidArgumentException;
 use Propel\Generator\Exception\LogicException;
 use Propel\Generator\Platform\MysqlPlatform;
 use Propel\Generator\Platform\PlatformInterface;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Exception\RuntimeException;
 use Propel\Runtime\Util\UuidConverter;
 
@@ -892,7 +893,7 @@ class Table extends ScopedMappingModel implements IdMethod
      *
      * @return array<\Propel\Generator\Model\CrossRelation>
      */
-    public function getCrossFks(): array
+    public function getCrossRelations(): array
     {
         $crossFks = [];
         foreach ($this->referrers as $relationToThis) {
@@ -2167,7 +2168,7 @@ class Table extends ScopedMappingModel implements IdMethod
      */
     public function hasCrossForeignKeys(): bool
     {
-        return count($this->getCrossFks()) !== 0;
+        return count($this->getCrossRelations()) !== 0;
     }
 
     /**
@@ -2324,5 +2325,52 @@ class Table extends ScopedMappingModel implements IdMethod
         $value = $this->getAttribute('bulk-load') ?? 'false';
 
         return strtolower($value) !== 'false';
+    }
+
+    /**
+     * Check if the table should generate its own collection class.
+     *
+     * @return bool
+     */
+    public function useGeneratedCollectionClass(): bool
+    {
+        $value = $this->getAttribute('generate-collection')
+            ?? $this->getDatabase()->getAttribute('generate-collection')
+            ?? 'true';
+
+        return strtolower($value) !== 'false';
+    }
+
+    /**
+     * Collection class name used by this table, fully qualified.
+     *
+     * @return class-string
+     */
+    public function getCollectionClassNameFq(): string
+    {
+        return $this->getAttribute('collection-class')
+            ?? $this->getDatabase()->getAttribute('collection-class')
+            ?? '\\' . ObjectCollection::class;
+    }
+
+    /**
+     * Check if a collection class is requested.
+     *
+     * @return bool
+     */
+    public function hasCollectionClassAttribute(): bool
+    {
+        return $this->getAttribute('collection-class')
+            || $this->getDatabase()->getAttribute('collection-class');
+    }
+
+    /**
+     * @param string $classNameFq
+     *
+     * @return void
+     */
+    public function setCollectionClass(string $classNameFq): void
+    {
+        $this->attributes['collection-class'] = $classNameFq;
     }
 }

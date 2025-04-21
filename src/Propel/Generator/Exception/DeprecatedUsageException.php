@@ -6,10 +6,8 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Tests\Bookstore;
+namespace Propel\Generator\Exception;
 
-use Propel\Runtime\Collection\ObjectCollection;
-
-class AuthorCollection extends ObjectCollection
+class DeprecatedUsageException extends RuntimeException implements ExceptionInterface
 {
 }

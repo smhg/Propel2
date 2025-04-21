@@ -279,7 +279,7 @@ class Behavior extends MappingModel
     }
 
     /**
-     * Defines when this behavior must execute its modifyTable() method
+     * Defines when this behavior must execute its {@see static::modifyTable()} method
      * relative to other behaviors. The bigger the value is, the later the
      * behavior is executed.
      *
@@ -343,6 +343,8 @@ class Behavior extends MappingModel
      * This method is automatically called on table behaviors when the database
      * model is finished. Override this method to add columns to the current
      * table.
+     *
+     * @see Database::doFinalInitialization()
      *
      * @return void
      */
@@ -474,6 +476,8 @@ class Behavior extends MappingModel
      *
      * The current object is returned by default.
      *
+     * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
+     *
      * @return $this
      */
     public function getObjectBuilderModifier()
@@ -485,6 +489,8 @@ class Behavior extends MappingModel
      * Returns the query builder modifier object.
      *
      * The current object is returned by default.
+     *
+     * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
      *
      * @return $this
      */
@@ -498,9 +504,23 @@ class Behavior extends MappingModel
      *
      * The current object is returned by default.
      *
+     * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
+     *
      * @return $this
      */
     public function getTableMapBuilderModifier()
+    {
+        return $this;
+    }
+
+    /**
+     * Returns the object collection builder modifier object.
+     *
+     * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
+     *
+     * @return $this
+     */
+    public function getObjectCollectionBuilderModifier()
     {
         return $this;
     }

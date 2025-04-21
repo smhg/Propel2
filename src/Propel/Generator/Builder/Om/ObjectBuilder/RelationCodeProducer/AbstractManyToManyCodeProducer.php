@@ -6,10 +6,8 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Generator\Builder\Om\ObjectBuilder;
+namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
-use LogicException;
-use Propel\Generator\Builder\DataModelBuilder;
 use Propel\Generator\Builder\Om\ObjectBuilder;
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Config\GeneratorConfigInterface;
@@ -20,7 +18,7 @@ use Propel\Generator\Model\Table;
 /**
  * Generates a database loader file, which is used to register all table maps with the DatabaseMap.
  */
-abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
+abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProducer
 {
     /**
      * @var string
@@ -33,24 +31,18 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
     protected $crossRelation;
 
     /**
-     * @var \Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationNames
+     * @var \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\CrossRelationNames
      */
     protected $names;
 
     /**
      * @param \Propel\Generator\Model\CrossRelation $crossRelation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $parentBuilder
-     *
-     * @throws \LogicException
      */
     protected function __construct(CrossRelation $crossRelation, ObjectBuilder $parentBuilder)
     {
-        parent::__construct($crossRelation->getTable(), $parentBuilder->referencedClasses);
         $this->crossRelation = $crossRelation;
-        if (!$parentBuilder->getGeneratorConfig()) {
-            throw new LogicException('CrossFkCodeProducer should not be created before GeneratorConfig is available.');
-        }
-        $this->init($this->getTable(), $parentBuilder->getGeneratorConfig());
+        parent::__construct($crossRelation->getTable(), $parentBuilder);
     }
 
     /**
@@ -77,13 +69,13 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
      * @param \Propel\Generator\Model\CrossRelation $crossRelation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $builder
      *
-     * @return \Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationSatisfied|\Propel\Generator\Builder\Om\ObjectBuilder\CrossRelationPartial
+     * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\ManyToManyRelationCodeProducer|\Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\TernaryRelationCodeProducer
      */
     public static function create(CrossRelation $crossRelation, ObjectBuilder $builder): self
     {
         return $crossRelation->isMultiModel()
-            ? new CrossRelationPartial($crossRelation, $builder)
-            : new CrossRelationSatisfied($crossRelation, $builder);
+            ? new TernaryRelationCodeProducer($crossRelation, $builder)
+            : new ManyToManyRelationCodeProducer($crossRelation, $builder);
     }
 
     /**
@@ -144,11 +136,6 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
     abstract protected function setterItemIsArray(): bool;
 
     /**
-     * @return string
-     */
-    abstract protected function resolveObjectCollectorType(): string;
-
-    /**
      * @param string $script
      *
      * @return void
@@ -193,7 +180,7 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
      *
      * @param \Propel\Generator\Model\ForeignKey $firstFk
      *
-     * @return \Propel\Generator\Builder\Om\ObjectBuilder\FunctionArgumentSignatureCollector
+     * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\FunctionArgumentSignatureCollector
      */
     protected function collectSignatureWithFirstArgument(ForeignKey $firstFk): FunctionArgumentSignatureCollector
     {
@@ -211,10 +198,10 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
      * Collect signature from keys.
      *
      * @param \Propel\Generator\Model\ForeignKey|null $fkToIgnore
-     * @param \Propel\Generator\Builder\Om\ObjectBuilder\FunctionArgumentSignatureCollector|null $collector
+     * @param \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\FunctionArgumentSignatureCollector|null $collector
      * @param string|null $withDefaultValue Set to {@see FunctionArgumentSignatureCollector::USE_COLUMN_DEFAULT} or {@see FunctionArgumentSignatureCollector::USE_DEFAULT_NULL} to add default values to argument declarations.
      *
-     * @return \Propel\Generator\Builder\Om\ObjectBuilder\FunctionArgumentSignatureCollector
+     * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\FunctionArgumentSignatureCollector
      */
     protected function collectSignature(
         ?ForeignKey $fkToIgnore = null,
@@ -305,11 +292,11 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
         $attributeName = '$' . $this->names->getAttributeWithCollectionName();
         $attributePartialName = '$' . $this->names->getAttributeIsPartialName();
         $relationIdentifier = $this->names->getTargetIdentifier(false);
-        $collectionType = $this->resolveObjectCollectorType();
+        [$_, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
 
         $script .= "
     /**
-     * @var $collectionType Objects in $relationIdentifier relation.
+     * @var $objectCollectionType Objects in $relationIdentifier relation.
      */
     protected $attributeName;
 
@@ -328,7 +315,7 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
     {
         $attributeName = $this->names->getAttributeScheduledForDeletionName();
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
-        $objectCollectionType = $this->resolveObjectCollectorType();
+        [$_, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
 
         $script .= "
     /**
@@ -358,8 +345,6 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
      * This does not modify the database; however, it will remove any associated objects, causing
      * them to be refetched by subsequent calls to accessor method.
      *
-     * @see static::add{$targetIdentifierPlural}()
-     *
      * @return void
      */
     public function clear{$targetIdentifierPlural}(): void
@@ -379,11 +364,11 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
         $varName = $this->names->getAttributeWithCollectionName();
 
         $script .= "
-            if (\$this->$varName) {
-                foreach (\$this->$varName as \$o) {
-                    \$o->clearAllReferences(\$deep);
-                }
-            }";
+        if (\$this->$varName) {
+            foreach (\$this->$varName as \$o) {
+                \$o->clearAllReferences(\$deep);
+            }
+        }";
 
         return $varName;
     }
@@ -469,7 +454,7 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
     /**
      * @return string
      */
-    protected function getCollectionType(): string
+    protected function getCollectionContentType(): string
     {
         return $this->collectSignature()->buildCombinedType();
     }
@@ -486,8 +471,9 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
         $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
 
-        $collectionVar = lcfirst($targetIdentifierPlural);
-        $collectionType = $this->getCollectionType();
+        $inputCollectionVar = '$' . lcfirst($targetIdentifierPlural);
+        $collectionContentType = $this->getCollectionContentType();
+        [$targetCollectionType, $_] = $this->resolveObjectCollectionClassNameAndType();
         $foreachItem = lcfirst($targetIdentifierSingular);
         $crossRefTableName = $this->crossRelation->getMiddleTable()->getName();
         $attributeName = $this->names->getAttributeWithCollectionName();
@@ -501,30 +487,31 @@ abstract class AbstractCrossRelationCodeProducer extends DataModelBuilder
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<$collectionType> \${$collectionVar} A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<$collectionContentType> $inputCollectionVar A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con Optional connection object
      *
      * @return \$this
      */
-    public function set{$targetIdentifierPlural}(Collection \${$collectionVar}, ?ConnectionInterface \$con = null): static
+    public function set{$targetIdentifierPlural}(Collection $inputCollectionVar, ?ConnectionInterface \$con = null): static
     {
         \$this->clear{$targetIdentifierPlural}();
         \$current{$targetIdentifierPlural} = \$this->get{$targetIdentifierPlural}();
 
-        \${$attributeScheduledForDeletionVarName} = \$current{$targetIdentifierPlural}->diff(\${$collectionVar});
+        \${$attributeScheduledForDeletionVarName} = \$current{$targetIdentifierPlural}->diff($inputCollectionVar);
 
         foreach (\${$attributeScheduledForDeletionVarName} as \$toDelete) {
             \$this->remove{$targetIdentifierSingular}($spreader\$toDelete);
         }
 
-        foreach (\${$collectionVar} as \${$foreachItem}) {
+        foreach ($inputCollectionVar as \${$foreachItem}) {
             if (!\$current{$targetIdentifierPlural}->contains(\${$foreachItem})) {
                 \$this->doAdd{$targetIdentifierSingular}($spreader\${$foreachItem});
             }
         }
 
         \$this->{$attributeIsPartialName} = false;
-        \$this->$attributeName = \${$collectionVar};
+        \$this->$attributeName = $inputCollectionVar instanceof $targetCollectionType
+            ? $inputCollectionVar : new $targetCollectionType({$inputCollectionVar}->getData());
 
         return \$this;
     }

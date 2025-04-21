@@ -11,6 +11,7 @@ namespace Propel\Generator\Builder\BuilderFactory;
 use Propel\Generator\Builder\Om\AbstractObjectBuilder;
 use Propel\Generator\Builder\Om\AbstractOMBuilder;
 use Propel\Generator\Builder\Om\ObjectBuilder;
+use Propel\Generator\Builder\Om\ObjectCollectionBuilder;
 use Propel\Generator\Builder\Om\QueryBuilder;
 use Propel\Generator\Builder\Om\TableMapBuilder;
 use Propel\Generator\Config\GeneratorConfig;
@@ -95,6 +96,19 @@ class BuilderFactory
     {
         /** @var \Propel\Generator\Builder\Om\QueryBuilder $builder */
         $builder = $this->createBuilderForTable($table, GeneratorConfig::KEY_QUERY_BASE);
+
+        return $builder;
+    }
+
+    /**
+     * @param \Propel\Generator\Model\Table $table
+     *
+     * @return \Propel\Generator\Builder\Om\ObjectCollectionBuilder
+     */
+    public function createObjectCollectionBuilder(Table $table): ObjectCollectionBuilder
+    {
+        /** @var \Propel\Generator\Builder\Om\ObjectCollectionBuilder $builder */
+        $builder = $this->createBuilderForTable($table, GeneratorConfig::KEY_COLLECTION);
 
         return $builder;
     }

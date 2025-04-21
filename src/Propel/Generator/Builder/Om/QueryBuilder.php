@@ -89,8 +89,9 @@ class QueryBuilder extends AbstractOMBuilder
     protected function addClassOpen(string &$script): void
     {
         $table = $this->getTable();
+        $collectionBuilder = $this->builderFactory->createObjectCollectionBuilder($this->getTable());
 
-        $vars = [
+        $script .= $this->renderTemplate('baseQueryClassHeader.php', [
             'tableName' => $table->getName(),
             'tableDesc' => $table->getDescription(),
             'queryClass' => $this->getQueryClassName(),
@@ -106,15 +107,9 @@ class QueryBuilder extends AbstractOMBuilder
 
             'relationNames' => $this->getRelationNames(),
             'relatedTableQueryClassNames' => $this->getRelatedTableQueryClassNames(),
-        ];
 
-        $templatePath = $this->getTemplatePath(__DIR__);
-
-        $template = new PropelTemplate();
-        $filePath = $templatePath . 'baseQueryClassHeader.php';
-        $template->setTemplateFile($filePath);
-
-        $script .= $template->render($vars);
+            'objectCollectionType' => $collectionBuilder->resolveTableCollectionClassType(),
+        ]);
     }
 
     /**
@@ -211,7 +206,7 @@ class QueryBuilder extends AbstractOMBuilder
             $this->addJoinRefFk($script, $refFK);
             $this->addUseRefFKQuery($script, $refFK);
         }
-        foreach ($this->getTable()->getCrossFks() as $crossFKs) {
+        foreach ($this->getTable()->getCrossRelations() as $crossFKs) {
             $this->addFilterByCrossFK($script, $crossFKs);
         }
         $this->addPrune($script);

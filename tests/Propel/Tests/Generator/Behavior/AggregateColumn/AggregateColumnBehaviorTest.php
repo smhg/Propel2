@@ -248,8 +248,8 @@ class AggregateColumnBehaviorTest extends BookstoreTestBase
         $this->assertNull($post2->getNbComments());
         $comment->setAggregatePost($post2);
         $comment->save($this->con);
-        $this->assertEquals(0, $post1->getNbComments(), 'Replacing a relation changes the related object aggregate column');
-        $this->assertEquals(1, $post2->getNbComments(), 'Replacing a relation changes the related object aggregate column');
+        $this->assertEquals(1, $post2->getNbComments(), 'Comment added to new post');
+        $this->assertEquals(0, $post1->getNbComments(), 'Comment removed from old post');
     }
 
     protected function populatePoll()

@@ -6,10 +6,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Generator\Builder\Om\ObjectBuilder;
+namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\ForeignKey;
+use Propel\Generator\Model\Table;
 
 /**
  * Produces code for cross/many-to-many relations that requires only an element
@@ -17,7 +18,7 @@ use Propel\Generator\Model\ForeignKey;
  * cross relations where the middle table is a ternary relation or its primary
  * key contains additional non-null columns).
  */
-class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
+class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
 {
     /**
      * @return \Propel\Generator\Model\ForeignKey
@@ -25,6 +26,16 @@ class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
     protected function getFkToTarget(): ForeignKey
     {
         return $this->crossRelation->getCrossForeignKeys()[0]; // fixed shape has only ever one fk.
+    }
+
+    /**
+     * @param \Propel\Generator\Model\Table|null $table
+     *
+     * @return array{string, string}
+     */
+    protected function resolveObjectCollectionClassNameAndType(?Table $table = null): array
+    {
+        return parent::resolveObjectCollectionClassNameAndType($table ?? $this->getFkToTarget()->getForeignTable());
     }
 
     /**
@@ -57,7 +68,7 @@ class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
             true,
         );
 
-        $foreignTableMapName = $this->resolveClassNameForTable(GeneratorConfig::KEY_TABLEMAP, $fk->getTable());
+        $foreignTableMapName = $this->resolveClassNameForTable(GeneratorConfig::KEY_TABLEMAP, $fk->getForeignTable());
 
         $script .= $this->buildInitCode(null, $foreignTableMapName, $relatedObjectClassName);
     }
@@ -104,7 +115,8 @@ class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
 
         $attributeName = $this->names->getAttributeWithCollectionName();
         $attributeIsPartialName = $this->names->getAttributeIsPartialName();
-        $objectCollectionType = $this->resolveObjectCollectorType();
+
+        [$objectCollectionClass, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType($this->getFkToTarget()->getForeignTable());
 
         $script .= "
     /**
@@ -117,12 +129,12 @@ class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
      * If this " . $this->ownClassIdentifier() . " is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
-     * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Optional query object to filter the query
+     * @param \Propel\Runtime\ActiveQuery\Criteria|null \$criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con Optional connection object
      *
      * @return $objectCollectionType
      */
-    public function get{$targetIdentifierPlural}(?Criteria \$criteria = null, ?ConnectionInterface \$con = null): ObjectCollection
+    public function get{$targetIdentifierPlural}(?Criteria \$criteria = null, ?ConnectionInterface \$con = null): $objectCollectionClass
     {
         \$partial = \$this->{$attributeIsPartialName} && !\$this->isNew();
         if (\$this->$attributeName === null || \$criteria !== null || \$partial) {
@@ -165,16 +177,6 @@ class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
     protected function setterItemIsArray(): bool
     {
         return false;
-    }
-
-    /**
-     * @return string
-     */
-    protected function resolveObjectCollectorType(): string
-    {
-        $collectionType = $this->getCollectionType();
-
-        return "ObjectCollection<$collectionType>"; // TODO get collection class from tablemap
     }
 
     /**
@@ -268,6 +270,8 @@ class CrossRelationSatisfied extends AbstractCrossRelationCodeProducer
 
         $script .= "
     /**{$phpDoc}
+     *
+     * @return void
      */
     protected function doAdd{$targetIdentifierSingular}($parameterDeclaration): void
     {
