@@ -421,32 +421,31 @@ abstract class AbstractOMBuilder extends DataModelBuilder
      * Checks whether any registered behavior on that table has a modifier for a hook
      *
      * @param string $hookName The name of the hook as called from one of this class methods, e.g. "preSave"
-     * @param string $modifier The name of the modifier object providing the method in the behavior
+     * @param string $modifierId The name of the modifier object providing the method in the behavior
      * @param string $script The script will be modified in this method.
      * @param string $tab
      *
      * @return void
      */
-    public function applyBehaviorModifierBase(string $hookName, string $modifier, string &$script, string $tab = '        '): void
+    public function applyBehaviorModifierBase(string $hookName, string $modifierId, string &$script, string $tab = '        '): void
     {
-        $modifierGetter = 'get' . $modifier;
+        $modifierGetter = "get$modifierId";
         foreach ($this->getTable()->getBehaviors() as $behavior) {
             $modifier = $behavior->$modifierGetter();
-            if (method_exists($modifier, $hookName)) {
-                if (strpos($hookName, 'Filter') !== false) {
-                    // filter hook: the script string will be modified by the behavior
-                    $modifier->$hookName($script, $this);
-                } else {
-                    // regular hook: the behavior returns a string to append to the script string
-                    $addedScript = $modifier->$hookName($this);
-                    if (!$addedScript) {
-                        continue;
-                    }
-                    $script .= "
-" . $tab . '// ' . $behavior->getId() . " behavior
-";
-                    $script .= preg_replace('/^/m', $tab, $addedScript);
+            if (!method_exists($modifier, $hookName)) {
+                continue;
+            }
+            if (strpos($hookName, 'Filter') !== false) {
+                // filter hook: the script string will be modified by the behavior
+                $modifier->$hookName($script, $this);
+            } else {
+                // regular hook: the behavior returns a string to append to the script string
+                $addedScript = $modifier->$hookName($this);
+                if (!$addedScript) {
+                    continue;
                 }
+                $script .= "\n" . $tab . '// ' . $behavior->getId() . " behavior\n";
+                $script .= preg_replace('/^/m', $tab, $addedScript);
             }
         }
     }

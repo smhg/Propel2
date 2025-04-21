@@ -344,6 +344,8 @@ class Behavior extends MappingModel
      * model is finished. Override this method to add columns to the current
      * table.
      *
+     * @see Database::doFinalInitialization()
+     *
      * @return void
      */
     public function modifyTable(): void
@@ -474,6 +476,8 @@ class Behavior extends MappingModel
      *
      * The current object is returned by default.
      *
+     * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
+     *
      * @return $this
      */
     public function getObjectBuilderModifier()
@@ -486,6 +490,8 @@ class Behavior extends MappingModel
      *
      * The current object is returned by default.
      *
+     * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
+     *
      * @return $this
      */
     public function getQueryBuilderModifier()
@@ -497,6 +503,8 @@ class Behavior extends MappingModel
      * Returns the table map builder modifier object.
      *
      * The current object is returned by default.
+     *
+     * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
      *
      * @return $this
      */
