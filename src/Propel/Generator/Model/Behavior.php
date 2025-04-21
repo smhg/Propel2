@@ -279,7 +279,7 @@ class Behavior extends MappingModel
     }
 
     /**
-     * Defines when this behavior must execute its modifyTable() method
+     * Defines when this behavior must execute its {@see static::modifyTable()} method
      * relative to other behaviors. The bigger the value is, the later the
      * behavior is executed.
      *
@@ -509,6 +509,18 @@ class Behavior extends MappingModel
      * @return $this
      */
     public function getTableMapBuilderModifier()
+    {
+        return $this;
+    }
+
+    /**
+     * Returns the object collection builder modifier object.
+     *
+     * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
+     *
+     * @return $this
+     */
+    public function getObjectCollectionBuilderModifier()
     {
         return $this;
     }

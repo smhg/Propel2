@@ -19,6 +19,13 @@ use Propel\Runtime\Formatter\ObjectFormatter;
 class ObjectCollectionBuilder extends AbstractOMBuilder
 {
     /**
+     * Used in {@see AbstractOMBuilder::applyBehaviorModifierBase()} to call {@see \Propel\Generator\Model\Behavior::getObjectCollectionBuilderModifier()}.
+     *
+     * @var string
+     */
+    public const MODIFIER_ID = 'ObjectCollectionBuilderModifier';
+
+    /**
      * @var array<array{relationIdentifier: string, relationIdentifierInMethod: string, collectionClassType: string, collectionClassNameFq: string, collectionClassName: string}>|null
      */
     protected $relationCollectionMapping;
@@ -125,6 +132,8 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
             'parentType' => $this->resolveParentCollectionType(),
             'modelClassNameFq' => $this->codeBuilderStore->getStubObjectBuilder()->getFullyQualifiedClassName(),
         ]);
+
+        $this->applyBehaviorModifier('addObjectCollectionMethods', $script);
     }
 
     /**
@@ -236,7 +245,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
         $collectionBuilder = $table === $this->getTable() ? $this : $this->builderFactory->createBuilderForTable($table, GeneratorConfig::KEY_COLLECTION);
 
         return $collectionBuilder->skip()
-            ? '\\' . ObjectCollection::class
+            ? $table->getCollectionClassNameFq()
             : $this->referencedClasses->getInternalNameOfBuilderResultClass($collectionBuilder, true);
     }
 
@@ -267,5 +276,17 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
         $needsSlashesAtStart = $className[0] !== '\\' && strpos('\\', $className) !== false;
 
         return $needsSlashesAtStart ? "\\$className" : $className;
+    }
+
+    /**
+     * @param string $hookName The name of the hook as called from one of this class methods, e.g. "preSave"
+     * @param string $script The script will be modified in this method.
+     * @param string $tab
+     *
+     * @return void
+     */
+    public function applyBehaviorModifier(string $hookName, string &$script, string $tab = '        '): void
+    {
+        $this->applyBehaviorModifierBase($hookName, static::MODIFIER_ID, $script, $tab);
     }
 }

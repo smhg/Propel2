@@ -2334,7 +2334,7 @@ class Table extends ScopedMappingModel implements IdMethod
      */
     public function useGeneratedCollectionClass(): bool
     {
-        $value = $this->getAttribute('generate-collection') 
+        $value = $this->getAttribute('generate-collection')
             ?? $this->getDatabase()->getAttribute('generate-collection')
             ?? 'true';
 
@@ -2344,12 +2344,33 @@ class Table extends ScopedMappingModel implements IdMethod
     /**
      * Collection class name used by this table, fully qualified.
      *
-     * @return bool
+     * @return string
      */
     public function getCollectionClassNameFq(): string
     {
         return $this->getAttribute('collection-class')
-            ?? $this->getDatabase()->getAttribute('collection-class') 
+            ?? $this->getDatabase()->getAttribute('collection-class')
             ?? '\\' . ObjectCollection::class;
+    }
+
+    /**
+     * Check if a collection class is requested.
+     *
+     * @return bool
+     */
+    public function hasCollectionClassAttribute(): bool
+    {
+        return $this->getAttribute('collection-class')
+            || $this->getDatabase()->getAttribute('collection-class');
+    }
+
+    /**
+     * @param string $classNameFq
+     *
+     * @return void
+     */
+    public function setCollectionClass(string $classNameFq): void
+    {
+        $this->attributes['collection-class'] = $classNameFq;
     }
 }
