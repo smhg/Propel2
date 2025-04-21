@@ -68,7 +68,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
 
         $namespaceMap = $this->getBuildProperty('generator.objectModel.namespaceCollection');
         if (!$namespaceMap) {
-            return $namespace . 'Base\\Collection';
+            return $namespace . '\\Base\\Collection';
         }
 
         return "$namespace\\$namespaceMap";
