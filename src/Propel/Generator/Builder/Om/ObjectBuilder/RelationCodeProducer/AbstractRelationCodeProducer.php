@@ -8,6 +8,7 @@
 
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
+use LogicException;
 use Propel\Generator\Builder\DataModelBuilder;
 use Propel\Generator\Builder\Om\ObjectBuilder;
 use Propel\Generator\Model\Table;
@@ -18,12 +19,12 @@ use Propel\Generator\Model\Table;
 abstract class AbstractRelationCodeProducer extends DataModelBuilder
 {
     /**
-     * @var \Propel\Generator\Builder\Om\ObjectBuilder 
+     * @var \Propel\Generator\Builder\Om\ObjectBuilder
      */
     protected $objectBuilder;
 
     /**
-     * @param \Propel\Generator\Model\ForeignKey $crossRelation
+     * @param \Propel\Generator\Model\Table $table
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $parentBuilder
      *
      * @throws \LogicException
@@ -33,17 +34,17 @@ abstract class AbstractRelationCodeProducer extends DataModelBuilder
         parent::__construct($table, $parentBuilder->referencedClasses);
         $this->objectBuilder = $parentBuilder;
         if (!$parentBuilder->getGeneratorConfig()) {
-            throw new \LogicException('CodeProducer should not be created before GeneratorConfig is available.');
+            throw new LogicException('CodeProducer should not be created before GeneratorConfig is available.');
         }
         $this->init($this->getTable(), $parentBuilder->getGeneratorConfig());
     }
 
     /**
-     * @param \Propel\Generator\Model\Table $table
+     * @param \Propel\Generator\Model\Table|null $table
      *
      * @return array{string, string}
      */
-    protected function resolveObjectCollectionClassNameAndType(Table $table = null): array
+    protected function resolveObjectCollectionClassNameAndType(?Table $table = null): array
     {
         $table ??= $this->getTable();
         $builder = $this->builderFactory->createObjectCollectionBuilder($table);
@@ -90,5 +91,4 @@ abstract class AbstractRelationCodeProducer extends DataModelBuilder
      * @return string
      */
     abstract public function addClearReferencesCode(string &$script): string;
-    
 }

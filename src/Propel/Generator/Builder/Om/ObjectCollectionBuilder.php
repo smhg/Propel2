@@ -26,7 +26,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
     public const MODIFIER_ID = 'ObjectCollectionBuilderModifier';
 
     /**
-     * @var array<array{relationIdentifier: string, relationIdentifierInMethod: string, collectionClassType: string, collectionClassNameFq: string, collectionClassName: string}>|null
+     * @var array<array{relationIdentifier: string, relationIdentifierInMethod: string, collectionClassType: string, collectionClassNameFq: class-string, collectionClassName: string}>|null
      */
     protected $relationCollectionMapping;
 
@@ -42,7 +42,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
     }
 
     /**
-     * @return array{collectionClassName: string, collectionClassNameFq: string, collectionClassType: string, relationIdentifier: string, relationIdentifierInMethod: array<string>|null}
+     * @return array<array{relationIdentifier: string, relationIdentifierInMethod: string, collectionClassName: string, collectionClassNameFq: class-string, collectionClassType: string}>
      */
     protected function getMapping(): array
     {
@@ -159,7 +159,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
     }
 
     /**
-     * @return array<array{relationIdentifier: string, relationIdentifierInMethod: string, collectionClassType: string, collectionClassNameFq: string, collectionClassName: string}>
+     * @return array<array{relationIdentifier: string, relationIdentifierInMethod: string, collectionClassType: string, collectionClassNameFq: class-string, collectionClassName: string}>
      */
     protected function buildCollectionMappings(): array
     {
@@ -195,7 +195,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
      * @param string $relationIdentifierInMethod
      * @param \Propel\Generator\Model\Table $table
      *
-     * @return array{collectionClassName: string, collectionClassNameFq: class-string, collectionClassType: string, relationIdentifier: string, relationIdentifierInMethod: string}
+     * @return array{relationIdentifier: string, relationIdentifierInMethod: string, collectionClassName: string, collectionClassNameFq: class-string, collectionClassType: string}
      */
     protected function builtTableCollectionMapping(string $relationIdentifier, string $relationIdentifierInMethod, Table $table): array
     {
@@ -203,7 +203,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
 
         return [
             'relationIdentifier' => $relationIdentifier,
-            'relationIdentifierInMethod' => $relationIdentifierInMethod,
+            'relationIdentifierInMethod' => $relationIdentifierInMethod === 'Relation' ? 'RelationRelation' : $relationIdentifierInMethod, // method `populateRelation()` already exists
             'collectionClassType' => $this->resolveTableCollectionClassType($table),
             'collectionClassName' => substr($collectionClassNameFq, 1 + strrpos($collectionClassNameFq, '\\')),
             'collectionClassNameFq' => $collectionClassNameFq,
@@ -215,7 +215,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
      */
     protected function resolveParentCollectionClassNameFq(): string
     {
-        return $this->getTable()->getCollectionClassNameFq() ?? ObjectCollection::class;
+        return $this->getTable()->getCollectionClassNameFq();
     }
 
     /**
@@ -242,11 +242,14 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
     public function resolveTableCollectionClassNameFq(?Table $table = null): string
     {
         $table ??= $this->getTable();
-        $collectionBuilder = $table === $this->getTable() ? $this : $this->builderFactory->createBuilderForTable($table, GeneratorConfig::KEY_COLLECTION);
+        $collectionBuilder = $table === $this->getTable() ? $this : $this->builderFactory->createObjectCollectionBuilder($table);
 
-        return $collectionBuilder->skip()
+        /** @var class-string $fqcn */
+        $fqcn = $collectionBuilder->skip()
             ? $table->getCollectionClassNameFq()
             : $this->referencedClasses->getInternalNameOfBuilderResultClass($collectionBuilder, true);
+
+        return $fqcn;
     }
 
     /**

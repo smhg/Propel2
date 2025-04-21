@@ -67,7 +67,7 @@ class TableMap
     public const TYPE_NUM = 'num';
 
     /**
-     * @var class-string<\Propel\Runtime\Collection\ObjectCollection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>
+     * @var class-string
      */
     public const DEFAULT_OBJECT_COLLECTION = ObjectCollection::class;
 
@@ -367,7 +367,7 @@ class TableMap
     /**
      * Get the Collection ClassName to this table.
      *
-     * @return class-string<\Propel\Runtime\Collection\Collection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>
+     * @return class-string
      */
     public function getCollectionClassName(): string
     {

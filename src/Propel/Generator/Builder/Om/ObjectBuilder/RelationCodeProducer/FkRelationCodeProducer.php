@@ -182,7 +182,6 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
         \$this->set{$columnName}($valueVarName);";
         }
 
-
         $script .= "
 
         \$this->$attributeName = $varName;

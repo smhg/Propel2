@@ -52,7 +52,6 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      * <code>private lastVarNameCriteria = null;</code>
      *
      * @param string $script The script will be modified in this method.
-     * @param \Propel\Generator\Model\ForeignKey $refFK
      *
      * @return void
      */
@@ -92,7 +91,6 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
             }
         }
     }\n";
-        
     }
 
     /**
@@ -342,7 +340,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
         $refFK = $this->relation;
         $table = $refFK->getTable();
         $attributeName = $this->getAttributeName();
-        
+
         $modelClassName = $this->getClassNameFromTable($table);
         $modelClassNameFqcn = $this->getClassNameFromBuilder($this->getNewStubObjectBuilder($table), true);
         $relationIdentifierPlural = $refFK->getIdentifierReversed($this->getPluralizer());
@@ -526,7 +524,6 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
 
     /**
      * @param string $script The script will be modified in this method.
-     * @param \Propel\Generator\Model\ForeignKey $refFK
      *
      * @return void
      */
@@ -634,8 +631,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
                 continue;
             }
 
-            if ($relationRelatedBySuffix && $relationRelatedBySuffix === $relationAtTarget->buildIdentifierRelatedBySuffix())
-            {
+            if ($relationRelatedBySuffix && $relationRelatedBySuffix === $relationAtTarget->buildIdentifierRelatedBySuffix()) {
                 continue;
             }
 

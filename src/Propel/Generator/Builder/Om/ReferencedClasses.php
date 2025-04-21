@@ -71,7 +71,7 @@ class ReferencedClasses
      * @param \Propel\Generator\Builder\Om\AbstractOMBuilder $builder
      * @param bool $fqcn true to return the $fqcn classname
      *
-     * @return string ClassName, Alias or FQCN
+     * @return class-string|string ClassName, Alias or FQCN
      */
     public function getInternalNameOfBuilderResultClass(AbstractOMBuilder $builder, bool $fqcn = false): string
     {

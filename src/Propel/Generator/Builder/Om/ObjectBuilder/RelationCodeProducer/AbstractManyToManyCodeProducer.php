@@ -8,7 +8,6 @@
 
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
-use LogicException;
 use Propel\Generator\Builder\Om\ObjectBuilder;
 use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Config\GeneratorConfigInterface;
@@ -39,8 +38,6 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     /**
      * @param \Propel\Generator\Model\CrossRelation $crossRelation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $parentBuilder
-     *
-     * @throws \LogicException
      */
     protected function __construct(CrossRelation $crossRelation, ObjectBuilder $parentBuilder)
     {

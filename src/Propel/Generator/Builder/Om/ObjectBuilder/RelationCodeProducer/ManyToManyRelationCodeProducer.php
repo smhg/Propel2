@@ -29,11 +29,11 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
     }
 
     /**
-     * @param \Propel\Generator\Model\Table $table
+     * @param \Propel\Generator\Model\Table|null $table
      *
      * @return array{string, string}
      */
-    protected function resolveObjectCollectionClassNameAndType(Table $table = null): array
+    protected function resolveObjectCollectionClassNameAndType(?Table $table = null): array
     {
         return parent::resolveObjectCollectionClassNameAndType($table ?? $this->getFkToTarget()->getForeignTable());
     }

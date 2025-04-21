@@ -2344,7 +2344,7 @@ class Table extends ScopedMappingModel implements IdMethod
     /**
      * Collection class name used by this table, fully qualified.
      *
-     * @return string
+     * @return class-string
      */
     public function getCollectionClassNameFq(): string
     {

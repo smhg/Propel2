@@ -10,12 +10,18 @@ namespace Propel\Generator\Builder\Om\TableMapBuilder;
 
 use Propel\Generator\Builder\Om\TableMapBuilder;
 use Propel\Generator\Exception\DeprecatedUsageException;
-use Propel\Generator\Model\Table;
 use Propel\Runtime\Collection\Collection;
 use ReflectionClass;
 
 class TableMapBuilderValidation
 {
+    /**
+     * @param \Propel\Generator\Builder\Om\TableMapBuilder $builder
+     *
+     * @throws \Propel\Generator\Exception\DeprecatedUsageException
+     *
+     * @return void
+     */
     public static function validate(TableMapBuilder $builder): void
     {
         $userModelBuilder = $builder->getStubObjectBuilder();
@@ -30,7 +36,7 @@ class TableMapBuilderValidation
             return;
         }
 
-        $filePath = (new ReflectionClass($collectionClassName)) ->getFileName();
+        $filePath = (new ReflectionClass($collectionClassName))->getFileName();
 
         $message = "Implicit coupling of model and collection is deprecated.\nFound collection associated by class name:\n"
         . " - model class:      $modelClassName \n"

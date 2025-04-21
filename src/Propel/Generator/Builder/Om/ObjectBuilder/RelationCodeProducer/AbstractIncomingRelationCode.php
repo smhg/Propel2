@@ -8,27 +8,24 @@
 
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
-use LogicException;
 use Propel\Common\Pluralizer\PluralizerInterface;
 use Propel\Generator\Builder\Om\ObjectBuilder;
 use Propel\Generator\Model\ForeignKey;
 
 /**
- * An incoming relation  ("refFK"), to a single row (incoming one-to-one)
+ * An incoming relation ("refFK"), to a single row (incoming one-to-one)
  * or one-to-many.
  */
 abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
 {
     /**
-     * @var ForeignKey
+     * @var \Propel\Generator\Model\ForeignKey
      */
     protected $relation;
 
     /**
-     * @param \Propel\Generator\Model\ForeignKey $crossRelation
+     * @param \Propel\Generator\Model\ForeignKey $relation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $parentBuilder
-     *
-     * @throws \LogicException
      */
     protected function __construct(ForeignKey $relation, ObjectBuilder $parentBuilder)
     {
@@ -36,7 +33,13 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
         parent::__construct($relation->getForeignTable(), $parentBuilder);
     }
 
-    public static function create(ForeignKey $relation, ObjectBuilder $parentBuilder): AbstractIncomingRelationCode
+    /**
+     * @param \Propel\Generator\Model\ForeignKey $relation
+     * @param \Propel\Generator\Builder\Om\ObjectBuilder $parentBuilder
+     *
+     * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\OneToManyRelationCodeProducer|\Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\RelationFromOneCodeProducer
+     */
+    public static function create(ForeignKey $relation, ObjectBuilder $parentBuilder): self
     {
         return $relation->isLocalPrimaryKey()
             ? new RelationFromOneCodeProducer($relation, $parentBuilder)
@@ -69,12 +72,11 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
         $targetTable = $this->relation->getTable();
         $this->declareClassFromBuilder($this->getNewStubObjectBuilder($targetTable), 'Child');
         $this->declareClassFromBuilder($this->getNewStubQueryBuilder($targetTable));
-        
     }
 
     /**
      * @param string $script
-     * @param array<ForeignKey> $referrers
+     * @param array<\Propel\Generator\Model\ForeignKey> $referrers
      * @param \Propel\Common\Pluralizer\PluralizerInterface $pluralizer
      *
      * @return void
@@ -97,7 +99,7 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
             if ($refFK->isLocalPrimaryKey()) {
                 continue;
             }
-            
+
             $relationIdentifierSingular = $refFK->getIdentifierReversed();
             $relationIdentifierPlural = $refFK->getIdentifierReversed($pluralizer);
 

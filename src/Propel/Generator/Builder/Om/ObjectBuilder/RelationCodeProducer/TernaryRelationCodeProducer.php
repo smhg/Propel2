@@ -312,11 +312,11 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
     }
 
     /**
-     * @param \Propel\Generator\Model\Table $table
+     * @param \Propel\Generator\Model\Table|null $table
      *
      * @return array{string, string}
      */
-    protected function resolveObjectCollectionClassNameAndType(Table $table = null): array
+    protected function resolveObjectCollectionClassNameAndType(?Table $table = null): array
     {
         if ($table) {
             return parent::resolveObjectCollectionClassNameAndType($table);
@@ -324,7 +324,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
 
         $className = 'ObjectCombinationCollection';
         $collectionType = $this->getCollectionContentType();
-        $typeString =  '\\' . ObjectCombinationCollection::class . "<$collectionType>";
+        $typeString = '\\' . ObjectCombinationCollection::class . "<$collectionType>";
 
         return [$className, $typeString];
     }

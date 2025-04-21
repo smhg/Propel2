@@ -9,21 +9,16 @@
 namespace Propel\Tests\Generator\Builder\Om;
 
 use Propel\Generator\Builder\Om\TableMapBuilder;
-use Propel\Generator\Builder\Util\SchemaReader;
 use Propel\Generator\Config\GeneratorConfig;
-use Propel\Generator\Config\QuickGeneratorConfig;
 use Propel\Generator\Exception\DeprecatedUsageException;
-use Propel\Generator\Model\Table;
 use Propel\Generator\Util\QuickBuilder;
 use Propel\Runtime\Collection\ObjectCollection;
-use Propel\Runtime\Map\RelationMap;
 use Propel\Runtime\Propel;
-use Propel\Tests\Bookstore\Behavior\Map\Table1TableMap;
-use Propel\Tests\Helpers\Bookstore\BookstoreTestBase;
+use Propel\Tests\TestCase;
 
 /**
  */
-class DeprecateCollectionCouplingTest extends BookstoreTestBase
+class DeprecateCollectionCouplingTest extends TestCase
 {
     /**
      * @return void

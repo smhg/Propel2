@@ -31,8 +31,6 @@ class TableMapBuilder extends AbstractOMBuilder
     }
 
     /**
-     * @throws \Propel\Generator\Exception\DeprecatedUsageException
-     *
      * @return void
      */
     protected function disallowImplicitCollectionReplacement(): void

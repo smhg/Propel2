@@ -1,9 +1,9 @@
- <?php 
+ <?php
  /*
-    Should be same as method in ObjectCollectionWithOutputGroups.php 
- 
+    Should be same as method in ObjectCollectionWithOutputGroups.php
+
  */
-?>
+    ?>
     /**
      * Turn collection objects into arrays with values specified by output group.
      *

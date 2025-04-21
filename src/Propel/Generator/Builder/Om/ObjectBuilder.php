@@ -11,9 +11,9 @@ namespace Propel\Generator\Builder\Om;
 use DateTime;
 use Exception;
 use Propel\Common\Util\SetColumnConverter;
+use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\AbstractIncomingRelationCode;
 use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\AbstractManyToManyCodeProducer;
 use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\FkRelationCodeProducer;
-use Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\AbstractIncomingRelationCode;
 use Propel\Generator\Config\GeneratorConfigInterface;
 use Propel\Generator\Exception\EngineException;
 use Propel\Generator\Model\Column;
@@ -4035,7 +4035,6 @@ abstract class " . $this->getUnqualifiedClassName() . $parentClass . ' implement
     {
         return 'single' . $this->getRefFKPhpNameAffix($fk, false);
     }
-
 
     /**
      * Adds the workhourse doSave() method.

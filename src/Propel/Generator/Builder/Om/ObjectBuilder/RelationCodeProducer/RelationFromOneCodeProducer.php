@@ -42,14 +42,12 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
      * <code>private lastVarNameCriteria = null;</code>
      *
      * @param string $script The script will be modified in this method.
-     * @param \Propel\Generator\Model\ForeignKey $refFK
      *
      * @return void
      */
     public function addAttributes(string &$script): void
     {
-        $refFK = $this->relation;
-        $className = $this->getClassNameFromTable($refFK->getTable());
+        $className = $this->getClassNameFromTable($this->relation->getTable());
 
         $script .= "
     /**
@@ -87,7 +85,7 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
         if (\$this->$varName) {
             \$this->{$varName}->clearAllReferences(\$deep);
         }";
-        
+
         return $varName;
     }
 
