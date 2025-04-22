@@ -23,6 +23,14 @@ use Propel\Tests\TestCaseFixtures;
  */
 class DatabaseMapTest extends TestCaseFixtures
 {
+    /**
+     * @var string
+     */
+    protected $databaseName;
+
+    /**
+     * @var DatabaseMap
+     */
     protected $databaseMap;
 
     /**

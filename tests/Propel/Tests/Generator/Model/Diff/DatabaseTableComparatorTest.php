@@ -24,6 +24,11 @@ use Propel\Tests\TestCase;
 class DatabaseTableComparatorTest extends TestCase
 {
     /**
+     * @var \Propel\Generator\Platform\MysqlPlatform
+     */
+    protected $platform;
+
+    /**
      * @return void
      */
     public function setUp(): void

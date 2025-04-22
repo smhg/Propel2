@@ -41,6 +41,21 @@ class ColumnMapTest extends TestCaseFixtures
     protected $databaseMap;
 
     /**
+     * @var DatabaseMap 
+     */
+    protected $dmap;
+
+    /**
+     * @var TableMap 
+     */
+    protected $tmap;
+
+    /**
+     * @var ColumnMap 
+     */
+    protected $cmap;
+
+    /**
      * @return void
      */
     protected function setUp(): void

@@ -26,6 +26,11 @@ use Propel\Generator\Model\Table;
 class ConcreteInheritanceBehavior extends Behavior
 {
     /**
+     * @var string
+     */
+    protected const ATTRIBUTE_IS_PARENT_CHILD = 'is-parent-child';
+
+    /**
      * @var \Propel\Generator\Builder\Om\ObjectBuilder
      */
     protected $builder;
@@ -80,6 +85,8 @@ class ConcreteInheritanceBehavior extends Behavior
             $table->addColumn($copiedColumn);
             if ($column->isPrimaryKey() && $this->isCopyData()) {
                 $fk = new ForeignKey();
+                $table->addForeignKey($fk);
+                $fk->loadMapping([static::ATTRIBUTE_IS_PARENT_CHILD => true]);
                 $fk->setForeignTableCommonName($column->getTable()->getCommonName());
                 if ($table->guessSchemaName() != $column->getTable()->guessSchemaName()) {
                     $fk->setForeignSchemaName($column->getTable()->guessSchemaName());
@@ -87,8 +94,6 @@ class ConcreteInheritanceBehavior extends Behavior
                 $fk->setOnDelete('CASCADE');
                 $fk->setOnUpdate(null);
                 $fk->addReference($copiedColumn, $column);
-                $fk->isParentChild = true;
-                $table->addForeignKey($fk);
             }
         }
 
@@ -365,8 +370,6 @@ public function getParentOrCreate(?ConnectionInterface \$con = null)
     protected function addObjectGetSyncParent(string &$script): void
     {
         $parentTable = $this->getParentTable();
-        $pkeys = $parentTable->getPrimaryKey();
-        $cptype = $pkeys[0]->getPhpType();
         $script .= "
 /**
  * Create or Update the parent " . $parentTable->getPhpName() . " object.
@@ -385,7 +388,7 @@ public function getSyncParent(?ConnectionInterface \$con = null)
     \$parent->set{$phpName}(\$this->get{$phpName}());";
         }
         foreach ($parentTable->getForeignKeys() as $fk) {
-            if (isset($fk->isParentChild) && $fk->isParentChild) {
+            if ($fk->getAttribute(static::ATTRIBUTE_IS_PARENT_CHILD, false)) {
                 continue;
             }
             $refPhpName = $this->builder->getFKPhpNameAffix($fk, false);

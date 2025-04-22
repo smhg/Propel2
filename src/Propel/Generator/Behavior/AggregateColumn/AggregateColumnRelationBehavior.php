@@ -193,6 +193,24 @@ protected \$old{$relationName}{$aggregateName};
      *
      * @return string
      */
+    public function queryAttributes(AbstractOMBuilder $builder): string
+    {
+        $relationName = $this->getRelationName($builder);
+        $variableName = '$' . lcfirst($relationName . $this->getParameter('aggregate_name'));
+        $script = "
+/**
+ * @var Collection
+ */
+protected {$variableName}s;\n\n";
+
+        return $script;
+    }
+
+    /**
+     * @param \Propel\Generator\Builder\Om\AbstractOMBuilder $builder
+     *
+     * @return string
+     */
     public function queryMethods(AbstractOMBuilder $builder): string
     {
         $script = $this->addQueryFindRelated($builder);

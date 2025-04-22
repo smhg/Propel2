@@ -22,6 +22,11 @@ class SelectQuerySqlBuilderTest extends TestCaseFixtures
     protected $configLoaded = false;
 
     /**
+     * @var bool
+     */
+    protected $setupWasExecuted = false;
+
+    /**
      * @return void
      */
     protected function loadConfig(): void

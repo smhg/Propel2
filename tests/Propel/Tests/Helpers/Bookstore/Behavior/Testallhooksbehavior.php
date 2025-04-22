@@ -73,7 +73,10 @@ class TestAllHooksObjectBuilderModifier
      */
     public function objectAttributes($builder)
     {
-        return 'public $customAttribute = 1;';
+        return '
+        public $customAttribute = 1;
+        public $flagDump = [];
+        ';
     }
 
     /**
@@ -83,7 +86,10 @@ class TestAllHooksObjectBuilderModifier
      */
     public function preSave($builder)
     {
-        return '$this->preSave = 1;$this->preSaveIsAfterSave = isset($affectedRows);$this->preSaveBuilder="' . get_class($builder) . '";';
+        return '
+            $this->flagDump["preSave"] = 1;
+            $this->flagDump["preSaveIsAfterSave"] = isset($affectedRows);
+            $this->flagDump["preSaveBuilder"]="' . get_class($builder) . '";';
     }
 
     /**
@@ -93,7 +99,10 @@ class TestAllHooksObjectBuilderModifier
      */
     public function postSave($builder)
     {
-        return '$this->postSave = 1;$this->postSaveIsAfterSave = isset($affectedRows);$this->postSaveBuilder="' . get_class($builder) . '";';
+        return '
+        $this->flagDump["postSave"] = 1;
+        $this->flagDump["postSaveIsAfterSave"] = isset($affectedRows);
+        $this->flagDump["postSaveBuilder"]="' . get_class($builder) . '";';
     }
 
     /**
@@ -103,7 +112,10 @@ class TestAllHooksObjectBuilderModifier
      */
     public function preInsert($builder)
     {
-        return '$this->preInsert = 1;$this->preInsertIsAfterSave = isset($affectedRows);$this->preInsertBuilder="' . get_class($builder) . '";';
+        return '
+        $this->flagDump["preInsert"] = 1;
+        $this->flagDump["preInsertIsAfterSave"] = isset($affectedRows);
+        $this->flagDump["preInsertBuilder"]="' . get_class($builder) . '";';
     }
 
     /**
@@ -113,7 +125,10 @@ class TestAllHooksObjectBuilderModifier
      */
     public function postInsert($builder)
     {
-        return '$this->postInsert = 1;$this->postInsertIsAfterSave = isset($affectedRows);$this->postInsertBuilder="' . get_class($builder) . '";';
+        return '
+        $this->flagDump["postInsert"] = 1;
+        $this->flagDump["postInsertIsAfterSave"] = isset($affectedRows);
+        $this->flagDump["postInsertBuilder"]="' . get_class($builder) . '";';
     }
 
     /**
@@ -123,7 +138,10 @@ class TestAllHooksObjectBuilderModifier
      */
     public function preUpdate($builder)
     {
-        return '$this->preUpdate = 1;$this->preUpdateIsAfterSave = isset($affectedRows);$this->preUpdateBuilder="' . get_class($builder) . '";';
+        return '
+        $this->flagDump["preUpdate"] = 1;
+        $this->flagDump["preUpdateIsAfterSave"] = isset($affectedRows);
+        $this->flagDump["preUpdateBuilder"]="' . get_class($builder) . '";';
     }
 
     /**
@@ -133,7 +151,10 @@ class TestAllHooksObjectBuilderModifier
      */
     public function postUpdate($builder)
     {
-        return '$this->postUpdate = 1;$this->postUpdateIsAfterSave = isset($affectedRows);$this->postUpdateBuilder="' . get_class($builder) . '";';
+        return '
+        $this->flagDump["postUpdate"] = 1;
+        $this->flagDump["postUpdateIsAfterSave"] = isset($affectedRows);
+        $this->flagDump["postUpdateBuilder"]="' . get_class($builder) . '";';
     }
 
     /**
@@ -143,7 +164,10 @@ class TestAllHooksObjectBuilderModifier
      */
     public function preDelete($builder)
     {
-        return '$this->preDelete = 1;$this->preDeleteIsBeforeDelete = isset(Table3TableMap::$instances[$this->id]);$this->preDeleteBuilder="' . get_class($builder) . '";';
+        return '
+        $this->flagDump["preDelete"] = 1;
+        $this->flagDump["preDeleteIsBeforeDelete"] = isset(Table3TableMap::$instances[$this->id]);
+        $this->flagDump["preDeleteBuilder"]="' . get_class($builder) . '";';
     }
 
     /**
@@ -153,7 +177,10 @@ class TestAllHooksObjectBuilderModifier
      */
     public function postDelete($builder)
     {
-        return '$this->postDelete = 1;$this->postDeleteIsBeforeDelete = isset(Table3TableMap::$instances[$this->id]);$this->postDeleteBuilder="' . get_class($builder) . '";';
+        return '
+        $this->flagDump["postDelete"] = 1;
+        $this->flagDump["postDeleteIsBeforeDelete"] = isset(Table3TableMap::$instances[$this->id]);
+        $this->flagDump["postDeleteBuilder"]="' . get_class($builder) . '";';
     }
 
     /**

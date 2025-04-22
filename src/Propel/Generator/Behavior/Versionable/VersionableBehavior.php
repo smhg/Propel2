@@ -68,6 +68,13 @@ class VersionableBehavior extends SyncedTableBehavior
     protected $tableModificationOrder = 80;
 
     /**
+     * Track added version tables.
+     *
+     * @var array
+     */
+    protected $versionTables = [];
+
+    /**
      * @see \Propel\Generator\Behavior\SyncedTable\SyncedTableBehavior::getDefaultParameters()
      *
      * @return array
@@ -110,7 +117,7 @@ class VersionableBehavior extends SyncedTableBehavior
      */
     protected function addBehaviorToTable(Table $table): void
     {
-        if (property_exists($table, 'isVersionTable')) {
+        if (in_array($table, $this->versionTables)) {
             // don't add the behavior to version tables
             return;
         }
@@ -182,7 +189,7 @@ class VersionableBehavior extends SyncedTableBehavior
         if ($tableExistsInSchema) {
             return;
         }
-        $syncedTable->isVersionTable = true;
+        $this->versionTables[] = $syncedTable;
 
         // add the version column to the primary key
         $versionColumn = $syncedTable->getColumn($this->getParameter('version_column'));

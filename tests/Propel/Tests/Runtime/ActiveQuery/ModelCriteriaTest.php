@@ -2646,7 +2646,6 @@ class ModelCriteriaTest extends BookstoreTestBase
     public function testUseQuery()
     {
         $c = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book', 'b');
-        $c->thisIsMe = true;
         $c->where('b.Title = ?', 'foo');
         $c->setOffset(10);
         $c->leftJoin('b.Author');
@@ -2657,10 +2656,12 @@ class ModelCriteriaTest extends BookstoreTestBase
         $c2->where('Author.FirstName = ?', 'john');
         $c2->limit(5);
 
-        $c = $c2->endUse();
-        $this->assertTrue($c->thisIsMe, 'endUse() returns the Primary Criteria');
+        $ret = $c2->endUse();
+        
+        $this->assertSame($ret, $c, 'endUse() returns the Primary Criteria');
         $this->assertEquals('Propel\Tests\Bookstore\Book', $c->getModelName(), 'endUse() returns the Primary Criteria');
-
+        $c = $ret;
+    
         $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
         $c->find($con);
 
@@ -2679,7 +2680,6 @@ class ModelCriteriaTest extends BookstoreTestBase
     public function testUseQueryAlias()
     {
         $c = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book', 'b');
-        $c->thisIsMe = true;
         $c->where('b.Title = ?', 'foo');
         $c->setOffset(10);
         $c->leftJoin('b.Author a');
@@ -2691,9 +2691,10 @@ class ModelCriteriaTest extends BookstoreTestBase
         $c2->where('a.FirstName = ?', 'john');
         $c2->limit(5);
 
-        $c = $c2->endUse();
-        $this->assertTrue($c->thisIsMe, 'endUse() returns the Primary Criteria');
+        $ret = $c2->endUse();
+        $this->assertSame($c, $ret, 'endUse() returns the Primary Criteria');
         $this->assertEquals('Propel\Tests\Bookstore\Book', $c->getModelName(), 'endUse() returns the Primary Criteria');
+        $c = $ret;
 
         $con = Propel::getServiceContainer()->getConnection(BookTableMap::DATABASE_NAME);
         $c->find($con);
@@ -2713,7 +2714,6 @@ class ModelCriteriaTest extends BookstoreTestBase
     public function testUseQueryCustomClass()
     {
         $c = new ModelCriteria('bookstore', 'Propel\Tests\Bookstore\Book', 'b');
-        $c->thisIsMe = true;
         $c->where('b.Title = ?', 'foo');
         $c->setLimit(10);
         $c->leftJoin('b.Author a');
