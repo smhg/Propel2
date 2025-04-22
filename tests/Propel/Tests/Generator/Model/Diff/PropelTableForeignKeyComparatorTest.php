@@ -23,6 +23,11 @@ use Propel\Tests\TestCase;
 class PropelTableForeignKeyComparatorTest extends TestCase
 {
     /**
+     * @var \Propel\Generator\Platform\MysqlPlatform
+     */
+    protected $platform;
+
+    /**
      * @return void
      */
     public function setUp(): void

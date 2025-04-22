@@ -46,15 +46,15 @@ class ObjectBehaviorTest extends BookstoreTestBase
     public function testPreSave()
     {
         $t = new Table3();
-        $t->preSave = 0;
+        $t->flagDump['preSave'] = 0;
         $t->save();
-        $this->assertEquals($t->preSave, 1, 'preSave hook is called on object insertion');
-        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->preSaveBuilder, 'preSave hook is called with the object builder as parameter');
-        $this->assertFalse($t->preSaveIsAfterSave, 'preSave hook is called before save');
-        $t->preSave = 0;
+        $this->assertEquals($t->flagDump['preSave'], 1, 'preSave hook is called on object insertion');
+        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->flagDump['preSaveBuilder'], 'preSave hook is called with the object builder as parameter');
+        $this->assertFalse($t->flagDump['preSaveIsAfterSave'], 'preSave hook is called before save');
+        $t->flagDump['preSave'] = 0;
         $t->setTitle('foo');
         $t->save();
-        $this->assertEquals($t->preSave, 1, 'preSave hook is called on object modification');
+        $this->assertEquals($t->flagDump['preSave'], 1, 'preSave hook is called on object modification');
     }
 
     /**
@@ -63,15 +63,15 @@ class ObjectBehaviorTest extends BookstoreTestBase
     public function testPostSave()
     {
         $t = new Table3();
-        $t->postSave = 0;
+        $t->flagDump['postSave'] = 0;
         $t->save();
-        $this->assertEquals($t->postSave, 1, 'postSave hook is called on object insertion');
-        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->postSaveBuilder, 'postSave hook is called with the object builder as parameter');
-        $this->assertTrue($t->postSaveIsAfterSave, 'postSave hook is called after save');
-        $t->postSave = 0;
+        $this->assertEquals($t->flagDump['postSave'], 1, 'postSave hook is called on object insertion');
+        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->flagDump['postSaveBuilder'], 'postSave hook is called with the object builder as parameter');
+        $this->assertTrue($t->flagDump['postSaveIsAfterSave'], 'postSave hook is called after save');
+        $t->flagDump['postSave'] = 0;
         $t->setTitle('foo');
         $t->save();
-        $this->assertEquals($t->postSave, 1, 'postSave hook is called on object modification');
+        $this->assertEquals($t->flagDump['postSave'], 1, 'postSave hook is called on object modification');
     }
 
     /**
@@ -80,15 +80,15 @@ class ObjectBehaviorTest extends BookstoreTestBase
     public function testObjectBuilderPreInsert()
     {
         $t = new Table3();
-        $t->preInsert = 0;
+        $t->flagDump['preInsert'] = 0;
         $t->save();
-        $this->assertEquals($t->preInsert, 1, 'preInsert hook is called on object insertion');
-        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->preInsertBuilder, 'preInsert hook is called with the object builder as parameter');
-        $this->assertFalse($t->preInsertIsAfterSave, 'preInsert hook is called before save');
-        $t->preInsert = 0;
+        $this->assertEquals($t->flagDump['preInsert'], 1, 'preInsert hook is called on object insertion');
+        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->flagDump['preInsertBuilder'], 'preInsert hook is called with the object builder as parameter');
+        $this->assertFalse($t->flagDump['preInsertIsAfterSave'], 'preInsert hook is called before save');
+        $t->flagDump['preInsert'] = 0;
         $t->setTitle('foo');
         $t->save();
-        $this->assertEquals($t->preInsert, 0, 'preInsert hook is not called on object modification');
+        $this->assertEquals($t->flagDump['preInsert'], 0, 'preInsert hook is not called on object modification');
     }
 
     /**
@@ -97,15 +97,15 @@ class ObjectBehaviorTest extends BookstoreTestBase
     public function testPostInsert()
     {
         $t = new Table3();
-        $t->postInsert = 0;
+        $t->flagDump['postInsert'] = 0;
         $t->save();
-        $this->assertEquals($t->postInsert, 1, 'postInsert hook is called on object insertion');
-        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->postInsertBuilder, 'postInsert hook is called with the object builder as parameter');
-        $this->assertTrue($t->postInsertIsAfterSave, 'postInsert hook is called after save');
-        $t->postInsert = 0;
+        $this->assertEquals($t->flagDump['postInsert'], 1, 'postInsert hook is called on object insertion');
+        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->flagDump['postInsertBuilder'], 'postInsert hook is called with the object builder as parameter');
+        $this->assertTrue($t->flagDump['postInsertIsAfterSave'], 'postInsert hook is called after save');
+        $t->flagDump['postInsert'] = 0;
         $t->setTitle('foo');
         $t->save();
-        $this->assertEquals($t->postInsert, 0, 'postInsert hook is not called on object modification');
+        $this->assertEquals($t->flagDump['postInsert'], 0, 'postInsert hook is not called on object modification');
     }
 
     /**
@@ -114,15 +114,15 @@ class ObjectBehaviorTest extends BookstoreTestBase
     public function testPreUpdate()
     {
         $t = new Table3();
-        $t->preUpdate = 0;
+        $t->flagDump['preUpdate'] = 0;
         $t->save();
-        $this->assertEquals($t->preUpdate, 0, 'preUpdate hook is not called on object insertion');
-        $t->preUpdate = 0;
+        $this->assertEquals($t->flagDump['preUpdate'], 0, 'preUpdate hook is not called on object insertion');
+        $t->flagDump['preUpdate'] = 0;
         $t->setTitle('foo');
         $t->save();
-        $this->assertEquals($t->preUpdate, 1, 'preUpdate hook is called on object modification');
-        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->preUpdateBuilder, 'preUpdate hook is called with the object builder as parameter');
-        $this->assertFalse($t->preUpdateIsAfterSave, 'preUpdate hook is called before save');
+        $this->assertEquals($t->flagDump['preUpdate'], 1, 'preUpdate hook is called on object modification');
+        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->flagDump['preUpdateBuilder'], 'preUpdate hook is called with the object builder as parameter');
+        $this->assertFalse($t->flagDump['preUpdateIsAfterSave'], 'preUpdate hook is called before save');
     }
 
     /**
@@ -131,15 +131,15 @@ class ObjectBehaviorTest extends BookstoreTestBase
     public function testPostUpdate()
     {
         $t = new Table3();
-        $t->postUpdate = 0;
+        $t->flagDump['postUpdate'] = 0;
         $t->save();
-        $this->assertEquals($t->postUpdate, 0, 'postUpdate hook is not called on object insertion');
-        $t->postUpdate = 0;
+        $this->assertEquals($t->flagDump['postUpdate'], 0, 'postUpdate hook is not called on object insertion');
+        $t->flagDump['postUpdate'] = 0;
         $t->setTitle('foo');
         $t->save();
-        $this->assertEquals($t->postUpdate, 1, 'postUpdate hook is called on object modification');
-        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->postUpdateBuilder, 'postUpdate hook is called with the object builder as parameter');
-        $this->assertTrue($t->postUpdateIsAfterSave, 'postUpdate hook is called after save');
+        $this->assertEquals($t->flagDump['postUpdate'], 1, 'postUpdate hook is called on object modification');
+        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->flagDump['postUpdateBuilder'], 'postUpdate hook is called with the object builder as parameter');
+        $this->assertTrue($t->flagDump['postUpdateIsAfterSave'], 'postUpdate hook is called after save');
     }
 
     /**
@@ -149,11 +149,11 @@ class ObjectBehaviorTest extends BookstoreTestBase
     {
         $t = new Table3();
         $t->save();
-        $this->preDelete = 0;
+        $t->flagDump['preDelete'] = 0;
         $t->delete();
-        $this->assertEquals($t->preDelete, 1, 'preDelete hook is called on object deletion');
-        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->preDeleteBuilder, 'preDelete hook is called with the object builder as parameter');
-        $this->assertTrue($t->preDeleteIsBeforeDelete, 'preDelete hook is called before deletion');
+        $this->assertEquals($t->flagDump['preDelete'], 1, 'preDelete hook is called on object deletion');
+        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->flagDump['preDeleteBuilder'], 'preDelete hook is called with the object builder as parameter');
+        $this->assertTrue($t->flagDump['preDeleteIsBeforeDelete'], 'preDelete hook is called before deletion');
     }
 
     /**
@@ -163,11 +163,11 @@ class ObjectBehaviorTest extends BookstoreTestBase
     {
         $t = new Table3();
         $t->save();
-        $this->postDelete = 0;
+        $t->flagDump['postDelete'] = 0;
         $t->delete();
-        $this->assertEquals($t->postDelete, 1, 'postDelete hook is called on object deletion');
-        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->postDeleteBuilder, 'postDelete hook is called with the object builder as parameter');
-        $this->assertFalse($t->postDeleteIsBeforeDelete, 'postDelete hook is called before deletion');
+        $this->assertEquals($t->flagDump['postDelete'], 1, 'postDelete hook is called on object deletion');
+        $this->assertEquals('Propel\Generator\Builder\Om\ObjectBuilder', $t->flagDump['postDeleteBuilder'], 'postDelete hook is called with the object builder as parameter');
+        $this->assertFalse($t->flagDump['postDeleteIsBeforeDelete'], 'postDelete hook is called before deletion');
     }
 
     /**

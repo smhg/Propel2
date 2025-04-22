@@ -22,6 +22,11 @@ use Propel\Tests\TestCase;
 class PropelTablePkColumnComparatorTest extends TestCase
 {
     /**
+     * @var \Propel\Generator\Platform\MysqlPlatform
+     */
+    protected $platform;
+
+    /**
      * @return void
      */
     public function setUp(): void

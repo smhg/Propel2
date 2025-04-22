@@ -21,6 +21,11 @@ use Propel\Tests\TestCase;
 class Issue733Test extends TestCase
 {
     /**
+     * @var \Propel\Runtime\Connection\ConnectionWrapper
+     */
+    protected $con;
+
+    /**
      * @return void
      */
     public function setUp(): void

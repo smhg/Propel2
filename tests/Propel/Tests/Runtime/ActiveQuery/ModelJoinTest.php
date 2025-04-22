@@ -32,7 +32,6 @@ class ModelJoinTest extends TestCaseFixtures
         $this->assertNull($join->getTableMap(), 'getTableMap() returns null as long as no table map is set');
 
         $tmap = new TableMap();
-        $tmap->foo = 'bar';
 
         $join->setTableMap($tmap);
         $this->assertEquals($tmap, $join->getTableMap(), 'getTableMap() returns the TableMap previously set by setTableMap()');

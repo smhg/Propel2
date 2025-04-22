@@ -190,14 +190,11 @@ class ModelCriteriaFormatterTest extends BookstoreTestBase
     public function testCloneCopiesFormatter()
     {
         $formatter1 = new ArrayFormatter();
-        $formatter1->test = false;
         $bookQuery1 = BookQuery::create();
         $bookQuery1->setFormatter($formatter1);
         $bookQuery2 = clone $bookQuery1;
         $formatter2 = $bookQuery2->getFormatter();
-        $this->assertFalse($formatter2->test);
-        $formatter2->test = true;
-        $this->assertFalse($formatter1->test);
+        $this->assertNotSame($formatter1, $formatter2);
     }
 
     /**
