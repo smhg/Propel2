@@ -78,6 +78,8 @@ class BookQuery extends BaseBookQuery
 ```
 This cannot be added automatically for existing classes. While IDEs seem to figure it out without the declaration, phpstan or psalm will (correctly) see the return type as `null` and report errors. Add the declaration in the child class to fix it.
 
+Generating collection classes for models can be configured in schema.xml, (see [#47](https://github.com/mringler/perpl/pull/47) for details)
+
 ## Code cleanup and improved performance
 
 These changes mostly improve internal readability/soundness of core Propel code. They mostly allow for easier and safe maintenance, but occasionally lead to performance improvements, for example when repetitive operations on strings are replaced by proper data structures.
