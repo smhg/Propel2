@@ -106,11 +106,9 @@ class TimestampableBehavior extends Behavior
         if ($this->withUpdatedAt()) {
             $updateColumn = $this->getTable()->getColumn($this->getParameter('update_column'));
 
-            $dateTimeClass = DateTime::class;
-
-            if ($builder instanceof ObjectBuilder) {
-                $dateTimeClass = $builder->getDateTimeClass($updateColumn);
-            }
+            $dateTimeClass = $builder instanceof ObjectBuilder
+                ? $builder->getDateTimeClass($updateColumn)
+                : DateTime::class;
 
             $valueSource = strtoupper($updateColumn->getType()) === 'INTEGER'
                 ? 'time()'
@@ -139,11 +137,9 @@ $mtime = PropelDateTime::formatMicrotime(microtime(true));';
         if ($this->withCreatedAt()) {
             $createColumn = $this->getTable()->getColumn($this->getParameter('create_column'));
 
-            $dateTimeClass = DateTime::class;
-
-            if ($builder instanceof ObjectBuilder) {
-                $dateTimeClass = $builder->getDateTimeClass($createColumn);
-            }
+            $dateTimeClass = $builder instanceof ObjectBuilder
+                ? $builder->getDateTimeClass($createColumn)
+                : DateTime::class;
 
             $script .= "
 \$highPrecisionCreate = PropelDateTime::createHighPrecision(\$mtime, '$dateTimeClass');";
@@ -160,11 +156,9 @@ if (!\$this->isColumnModified(" . $this->getColumnConstant('create_column', $bui
         if ($this->withUpdatedAt()) {
             $updateColumn = $this->getTable()->getColumn($this->getParameter('update_column'));
 
-            $dateTimeClass = DateTime::class;
-
-            if ($builder instanceof ObjectBuilder) {
-                $dateTimeClass = $builder->getDateTimeClass($updateColumn);
-            }
+            $dateTimeClass = $builder instanceof ObjectBuilder
+                ? $builder->getDateTimeClass($updateColumn)
+                : DateTime::class;
 
             $script .= "
 \$highPrecisionUpdate = PropelDateTime::createHighPrecision(\$mtime, '$dateTimeClass');";
