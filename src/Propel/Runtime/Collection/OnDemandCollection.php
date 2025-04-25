@@ -144,8 +144,7 @@ class OnDemandCollection extends Collection
      *
      * @return mixed
      */
-    #[\Override]
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function &offsetGet($offset)
     {
         throw new PropelException('The On Demand Collection does not allow access by offset');
@@ -185,8 +184,7 @@ class OnDemandCollection extends Collection
      *
      * @return string
      */
-    #[\Override]
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function serialize(): string
     {
         throw new PropelException('The On Demand Collection cannot be serialized');
@@ -199,8 +197,7 @@ class OnDemandCollection extends Collection
      *
      * @return void
      */
-    #[\Override]
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function unserialize($data): void
     {
         throw new PropelException('The On Demand Collection cannot be serialized');

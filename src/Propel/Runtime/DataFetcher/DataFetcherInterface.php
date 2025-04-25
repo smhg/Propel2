@@ -43,8 +43,7 @@ interface DataFetcherInterface extends Iterator, Countable
      *
      * @return mixed Can return any type.
      */
-    #[\Override]
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function current();
 
     /**
@@ -66,8 +65,7 @@ interface DataFetcherInterface extends Iterator, Countable
      *
      * @return mixed scalar on success, or null on failure.
      */
-    #[\Override]
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function key();
 
     /**

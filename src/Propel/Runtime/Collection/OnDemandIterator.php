@@ -101,8 +101,7 @@ class OnDemandIterator implements IteratorInterface
      *
      * @return RowFormat
      */
-    #[\Override]
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function current(): ActiveRecordInterface
     {
         if (!is_array($this->currentRow)) {
@@ -119,8 +118,7 @@ class OnDemandIterator implements IteratorInterface
      *
      * @return int
      */
-    #[\Override]
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function key(): int
     {
         return $this->currentKey;

@@ -61,8 +61,7 @@ class NestedSetRecursiveIterator implements RecursiveIterator
      *
      * @return mixed
      */
-    #[\Override]
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function current()
     {
         return $this->curNode;
@@ -73,8 +72,7 @@ class NestedSetRecursiveIterator implements RecursiveIterator
      *
      * @return string
      */
-    #[\Override]
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function key(): string
     {
         $method = method_exists($this->curNode, 'getPath') ? 'getPath' : 'getAncestors';
