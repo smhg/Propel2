@@ -465,7 +465,7 @@ class Behavior extends MappingModel
      *
      * The current object is returned by default.
      *
-     * @return $this
+     * @return mixed
      */
     public function getTableModifier()
     {
@@ -479,7 +479,7 @@ class Behavior extends MappingModel
      *
      * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
      *
-     * @return $this
+     * @return mixed
      */
     public function getObjectBuilderModifier()
     {
@@ -493,7 +493,7 @@ class Behavior extends MappingModel
      *
      * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
      *
-     * @return $this
+     * @return mixed
      */
     public function getQueryBuilderModifier()
     {
@@ -507,7 +507,7 @@ class Behavior extends MappingModel
      *
      * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
      *
-     * @return $this
+     * @return mixed
      */
     public function getTableMapBuilderModifier()
     {
@@ -519,7 +519,7 @@ class Behavior extends MappingModel
      *
      * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
      *
-     * @return $this
+     * @return mixed
      */
     public function getObjectCollectionBuilderModifier()
     {

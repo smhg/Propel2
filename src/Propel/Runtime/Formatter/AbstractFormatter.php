@@ -278,7 +278,7 @@ abstract class AbstractFormatter
     /**
      * @param \Propel\Runtime\DataFetcher\DataFetcherInterface|null $dataFetcher
      *
-     * @return RowFormat
+     * @return RowFormat|null
      */
     abstract public function formatOne(?DataFetcherInterface $dataFetcher = null);
 

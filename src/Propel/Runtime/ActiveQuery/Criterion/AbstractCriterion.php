@@ -13,6 +13,7 @@ use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\FilterExpression\ClauseList;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
 use Propel\Runtime\Adapter\AdapterInterface;
+use Propel\Runtime\Adapter\SqlAdapterInterface;
 use Propel\Runtime\Map\ColumnMap;
 use Propel\Runtime\Propel;
 
@@ -67,7 +68,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      * The DBAdapter which might be used to get db specific
      * variations of sql.
      *
-     * @var \Propel\Runtime\Adapter\AdapterInterface
+     * @var \Propel\Runtime\Adapter\SqlAdapterInterface
      */
     protected $db;
 
@@ -249,9 +250,9 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      * The AdapterInterface which might be used to get db specific
      * variations of sql.
      *
-     * @return \Propel\Runtime\Adapter\AdapterInterface value of db.
+     * @return \Propel\Runtime\Adapter\SqlAdapterInterface value of db.
      */
-    public function getAdapter(): AdapterInterface
+    public function getAdapter(): SqlAdapterInterface
     {
         return $this->db;
     }

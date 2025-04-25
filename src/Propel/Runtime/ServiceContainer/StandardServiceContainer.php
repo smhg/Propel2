@@ -214,6 +214,7 @@ class StandardServiceContainer implements ServiceContainerInterface
      *
      * @return void
      */
+    #[\Override]
     public function setAdapter(string $name, AdapterInterface $adapter): void
     {
         $this->adapters[$name] = $adapter;
@@ -487,6 +488,7 @@ class StandardServiceContainer implements ServiceContainerInterface
      *
      * @return void
      */
+    #[\Override]
     public function setConnection(string $name, ConnectionInterface $connection): void
     {
         $manager = new ConnectionManagerSingle($name);

@@ -112,7 +112,7 @@ class PgsqlPlatform extends DefaultPlatform
     }
 
     /**
-     * @param mixed $value
+     * @param string|int|bool $value
      *
      * @return string
      */

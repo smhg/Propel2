@@ -247,9 +247,9 @@ class QuickBuilder
      *
      * @param string $schema
      *
-     * @return \Propel\Generator\Model\Database
+     * @return \Propel\Generator\Model\Database|null
      */
-    public static function parseSchema(string $schema): Database
+    public static function parseSchema(string $schema): ?Database
     {
         $builder = new self();
         $builder->setSchema($schema);

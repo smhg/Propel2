@@ -117,9 +117,9 @@ interface StatementInterface
     /**
      * Fetch the SQLSTATE associated with the last operation on the statement handle.
      *
-     * @return string
+     * @return string|null
      */
-    public function errorCode(): string;
+    public function errorCode(): ?string;
 
     /**
      * Fetch extended error information associated with the last operation on the statement handle.

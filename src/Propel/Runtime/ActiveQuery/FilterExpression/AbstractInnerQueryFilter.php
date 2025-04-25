@@ -30,7 +30,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
     protected $queryColumn;
 
     /**
-     * @var string|null The sql operator expression, i.e. "IN" or "NOT IN".
+     * @var string The sql operator expression, i.e. "IN" or "NOT IN".
      */
     protected $sqlOperator;
 

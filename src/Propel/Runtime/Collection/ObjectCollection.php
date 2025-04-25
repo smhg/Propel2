@@ -148,11 +148,16 @@ class ObjectCollection extends Collection
      *
      * @param array<RowFormat> $arr
      *
+     * @throws \Propel\Runtime\Exception\RuntimeException
+     *
      * @return void
      */
     public function fromArray(array $arr): void
     {
         $class = $this->getFullyQualifiedModel();
+        if (!$class) {
+            throw new RuntimeException('Object collection has no model class.');
+        }
         foreach ($arr as $element) {
             /** @var RowFormat $obj */
             $obj = new $class();
@@ -468,7 +473,7 @@ class ObjectCollection extends Collection
     }
 
     /**
-     * @param mixed $element
+     * @param RowFormat $element
      *
      * @return void
      */

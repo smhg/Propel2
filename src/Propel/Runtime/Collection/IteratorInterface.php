@@ -12,7 +12,8 @@ use Countable;
 use Iterator;
 
 /**
- * @extends \Iterator<(int|string), mixed>
+ * @template RowFormat
+ * @extends \Iterator<(int|string), RowFormat>
  */
 interface IteratorInterface extends Iterator, Countable
 {

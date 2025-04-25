@@ -13,6 +13,7 @@
      * Has specified column been modified?
      *
      * @param string $col column fully qualified name (TableMap::TYPE_COLNAME), e.g. Book::AUTHOR_ID
+     *
      * @return bool True if $col has been modified.
      */
     public function isColumnModified(string $col): bool
@@ -22,6 +23,7 @@
 
     /**
      * Get the columns that have been modified in this object.
+     *
      * @return array<string> A unique list of the modified column names for this object.
      */
     public function getModifiedColumns(): array
@@ -46,6 +48,8 @@
      * by Propel-generated children and objects.
      *
      * @param bool $b the state of the object.
+     *
+     * @return void
      */
     public function setNew(bool $b): void
     {
@@ -54,6 +58,7 @@
 
     /**
      * Whether this object has been deleted.
+     *
      * @return bool The deleted state of this object.
      */
     public function isDeleted(): bool
@@ -63,7 +68,9 @@
 
     /**
      * Specify whether this object has been deleted.
+     *
      * @param bool $b The deleted state of this object.
+     *
      * @return void
      */
     public function setDeleted(bool $b): void
@@ -73,7 +80,9 @@
 
     /**
      * Sets the modified state for the object to be false.
+     *
      * @param string $col If supplied, only the specified column is reset.
+     *
      * @return void
      */
     public function resetModified(?string $col = null): void
@@ -91,6 +100,7 @@
      * <code>equals(<?php echo $className ?>)</code>.  Otherwise, returns <code>false</code>.
      *
      * @param mixed $obj The object to compare to.
+     *
      * @return bool Whether equal to the object specified.
      */
     public function equals($obj): bool
@@ -124,6 +134,7 @@
      * Checks the existence of a virtual column in this object
      *
      * @param string $name The virtual column name
+     *
      * @return bool
      */
     public function hasVirtualColumn(string $name): bool
@@ -135,6 +146,7 @@
      * Get the value of a virtual column in this object
      *
      * @param string $name The virtual column name
+     *
      * @return mixed
      *
      * @throws \Propel\Runtime\Exception\PropelException
@@ -168,6 +180,7 @@
      *
      * @param string $msg
      * @param int $priority One of the Propel::LOG_* logging levels
+     *
      * @return void
      */
     protected function log(string $msg, int $priority = Propel::LOG_INFO): void
@@ -186,6 +199,7 @@
      * @param \Propel\Runtime\Parser\AbstractParser|string $parser An AbstractParser instance, or a format name ('XML', 'YAML', 'JSON', 'CSV')
      * @param bool $includeLazyLoadColumns (optional) Whether to include lazy load(ed) columns. Defaults to TRUE.
      * @param string $keyType (optional) One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME, TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM. Defaults to TableMap::TYPE_PHPNAME.
+     * 
      * @return string The exported data
      */
     public function exportTo($parser, bool $includeLazyLoadColumns = true, string $keyType = TableMap::TYPE_PHPNAME): string

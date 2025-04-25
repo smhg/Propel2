@@ -63,7 +63,7 @@ interface DataFetcherInterface extends Iterator, Countable
      *
      * @link http://php.net/manual/en/iterator.key.php
      *
-     * @return mixed scalar on success, or null on failure.
+     * @return string|int|null scalar on success, or null on failure.
      */
     #[\Override, \ReturnTypeWillChange]
     public function key();

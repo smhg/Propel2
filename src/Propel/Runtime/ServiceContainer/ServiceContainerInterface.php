@@ -78,6 +78,16 @@ interface ServiceContainerInterface
     public function getAdapterClass(?string $name = null): string;
 
     /**
+     * Set the adapter for a given datasource.
+     *
+     * @param string $name The datasource name
+     * @param \Propel\Runtime\Adapter\AdapterInterface $adapter
+     *
+     * @return void
+     */
+    public function setAdapter(string $name, AdapterInterface $adapter): void;
+
+    /**
      * Get the database map for a given datasource.
      *
      * The database maps are "registered" by the generated map builder classes.
@@ -124,6 +134,16 @@ interface ServiceContainerInterface
      * @return \Propel\Runtime\Connection\ConnectionInterface A database connection
      */
     public function getConnection(?string $name = null, string $mode = self::CONNECTION_WRITE): ConnectionInterface;
+
+    /**
+     * Shortcut to define a single connection for a datasource.
+     *
+     * @param string $name The datasource name
+     * @param \Propel\Runtime\Connection\ConnectionInterface $connection A database connection
+     *
+     * @return void
+     */
+    public function setConnection(string $name, ConnectionInterface $connection): void;
 
     /**
      * Get a write connection for a given datasource.

@@ -231,13 +231,15 @@ class StatementWrapper implements StatementInterface, IteratorAggregate
      */
     public function getExecutedQueryString(?array $inputParameters = null): string
     {
-        return preg_replace_callback('/:p\d++\b/', function (array $matches) use ($inputParameters): string {
+        $resolveParameterValue = function (array $matches) use ($inputParameters): string {
             $pos = $matches[0];
 
             return $this->boundValues[$pos]
                 ?? $inputParameters[$pos]
                 ?? $pos;
-        }, $this->statement->queryString);
+        };
+
+        return preg_replace_callback('/:p\d++\b/', $resolveParameterValue, $this->statement->queryString);
     }
 
     /**
@@ -312,7 +314,7 @@ class StatementWrapper implements StatementInterface, IteratorAggregate
     /**
      * Return the internal statement, which is traversable
      *
-     * @return \Traversable
+     * @return \Traversable<int|string, mixed>
      */
     #[\Override]
     public function getIterator(): Traversable
@@ -376,7 +378,7 @@ class StatementWrapper implements StatementInterface, IteratorAggregate
      * @inheritDoc
      */
     #[\Override]
-    public function errorCode(): string
+    public function errorCode(): ?string
     {
         return $this->statement->errorCode();
     }
