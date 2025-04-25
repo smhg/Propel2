@@ -370,7 +370,7 @@ class ModelCriteria extends BaseModelCriteria
         if ($class == $this->getModelAliasOrName()) {
             // column of the Criteria's model
             $tableMap = $this->getTableMap();
-        } elseif (isset($this->joins[$class])) {
+        } elseif (isset($this->joins[$class]) && $this->joins[$class] instanceof ModelJoin) {
             // column of a relations's model
             $tableMap = $this->joins[$class]->getTableMap();
         } else {
@@ -538,10 +538,10 @@ class ModelCriteria extends BaseModelCriteria
             if ($leftName === $this->getModelAliasOrName() || $leftName === $this->getModelShortName()) {
                 $previousJoin = $this->getPreviousJoin();
                 $tableMap = $this->getTableMap();
-            } elseif (isset($this->joins[$leftName])) {
+            } elseif (isset($this->joins[$leftName]) && $this->joins[$leftName] instanceof ModelJoin) {
                 $previousJoin = $this->joins[$leftName];
                 $tableMap = $previousJoin->getTableMap();
-            } elseif (isset($this->joins[$shortLeftName])) {
+            } elseif (isset($this->joins[$shortLeftName]) && $this->joins[$shortLeftName] instanceof ModelJoin) {
                 $previousJoin = $this->joins[$shortLeftName];
                 $tableMap = $previousJoin->getTableMap();
             } else {

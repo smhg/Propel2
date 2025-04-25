@@ -13,13 +13,15 @@ use Propel\Runtime\DataFetcher\DataFetcherInterface;
 use Propel\Runtime\Exception\LogicException;
 
 /**
+ * @deprecated class is not type-safe.
+ *
  * Array formatter for Propel select query
  * format() returns a ArrayCollection of associative arrays, a string,
  * or an array
  *
  * @author Benjamin Runnels
  *
- * @extends \Propel\Runtime\Formatter\AbstractFormatter<array<string, mixed>, \Propel\Runtime\Collection\ArrayCollection>
+ * @extends \Propel\Runtime\Formatter\AbstractFormatter<array<string, mixed>|string, \Propel\Runtime\Collection\ArrayCollection>
  */
 class SimpleArrayFormatter extends AbstractFormatter
 {
@@ -74,7 +76,7 @@ class SimpleArrayFormatter extends AbstractFormatter
      *
      * @throws \Propel\Runtime\Exception\LogicException
      *
-     * @return array<string, mixed>
+     * @return array<string, mixed>|string|null
      */
     #[\Override]
     public function formatOne(?DataFetcherInterface $dataFetcher = null)
@@ -130,7 +132,7 @@ class SimpleArrayFormatter extends AbstractFormatter
     /**
      * @param array $row
      *
-     * @return array<string, mixed>
+     * @return array<string, mixed>|string
      */
     public function getStructuredArrayFromRow(array $row)
     {

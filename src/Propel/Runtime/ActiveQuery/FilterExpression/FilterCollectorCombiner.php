@@ -72,7 +72,8 @@ class FilterCollectorCombiner extends FilterCollector
         if (!$this->combiner || $this->combiner->isEmpty()) {
             return $target;
         }
-        $combinerFilters = $this->combiner->mergeCombiner($this->combiner->columnFilters);
+        /** @var non-empty-array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface> $combinerFilters */
+        $combinerFilters = $this->combiner->mergeCombiner($this->combiner->columnFilters); // recurse
         $firstFilter = array_shift($combinerFilters);
         foreach ($combinerFilters as $filter) {
             $firstFilter->addAnd($filter);
