@@ -62,6 +62,7 @@ class ColumnFilter extends AbstractColumnFilter
      *
      * @return string
      */
+    #[\Override]
     protected function buildFilterClause(array &$paramCollector): string
     {
         $field = $this->queryColumn->getColumnExpressionInQuery(true);

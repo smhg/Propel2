@@ -30,6 +30,7 @@ class YamlFileLoader extends FileLoader
      *
      * @return array
      */
+    #[\Override]
     public function load($resource, $type = null): array
     {
         $path = $this->locator->locate($resource);
@@ -66,6 +67,7 @@ class YamlFileLoader extends FileLoader
      *
      * @return bool true if this class supports the given resource, false otherwise
      */
+    #[\Override]
     public function supports($resource, $type = null): bool
     {
         return static::checkSupports(['yaml', 'yml'], $resource);

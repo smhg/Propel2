@@ -73,6 +73,7 @@ class DeprecatedCriteriaMethods extends Criteria
     /**
      * @return \Propel\Runtime\ActiveQuery\Criteria
      */
+    #[\Override]
     public function clear()
     {
         $this->namedCriterions = [];
@@ -87,6 +88,7 @@ class DeprecatedCriteriaMethods extends Criteria
      *
      * @return void
      */
+    #[\Override]
     public function __clone()
     {
         $this->namedCriterions = array_map(fn ($c) => clone $c, $this->namedCriterions);

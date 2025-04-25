@@ -91,6 +91,7 @@ class AggregateMultipleColumnsBehavior extends Behavior
      *
      * @return bool
      */
+    #[\Override]
     public function allowMultiple(): bool
     {
         return true;
@@ -143,6 +144,7 @@ class AggregateMultipleColumnsBehavior extends Behavior
      *
      * @return void
      */
+    #[\Override]
     public function modifyTable(): void
     {
         $this->validateColumnParameter();

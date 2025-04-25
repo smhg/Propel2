@@ -19,6 +19,7 @@ abstract class BehaviorWithParameterAccess extends Behavior
      *
      * @return string|null
      */
+    #[\Override]
     public function getParameter(string $name, ?string $defaultValue = null): ?string
     {
         $val = $this->parameters[$name] ?? null;

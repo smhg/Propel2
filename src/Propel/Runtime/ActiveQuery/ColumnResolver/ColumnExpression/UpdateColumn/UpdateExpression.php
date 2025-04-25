@@ -117,6 +117,7 @@ class UpdateExpression extends AbstractUpdateColumn
      *
      * @return string
      */
+    #[\Override]
     public function buildExpression(int &$positionIndex): string
     {
         return preg_replace_callback('/\?/', function (array $match) use (&$positionIndex) {
@@ -131,6 +132,7 @@ class UpdateExpression extends AbstractUpdateColumn
      *
      * @return void
      */
+    #[\Override]
     public function collectParam(array &$paramCollector): void
     {
         foreach ($this->value as $index => $value) {

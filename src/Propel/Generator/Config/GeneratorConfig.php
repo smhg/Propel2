@@ -92,6 +92,7 @@ class GeneratorConfig extends ConfigurationManager implements GeneratorConfigInt
      *
      * @throws \Propel\Generator\Exception\ClassNotFoundException
      */
+    #[\Override]
     public function getConfiguredPlatform(?ConnectionInterface $con = null, ?string $database = null): ?PlatformInterface
     {
         $platform = $this->get()['generator']['platformClass'];
@@ -140,6 +141,7 @@ class GeneratorConfig extends ConfigurationManager implements GeneratorConfigInt
      *
      * @throws \Propel\Generator\Exception\ClassNotFoundException
      */
+    #[\Override]
     public function getConfiguredSchemaParser(?ConnectionInterface $con = null, $database = null): ?SchemaParserInterface
     {
         $reverse = $this->get()['migrations']['parserClass'];
@@ -200,6 +202,7 @@ class GeneratorConfig extends ConfigurationManager implements GeneratorConfigInt
      *
      * @return \Propel\Generator\Builder\Om\AbstractOMBuilder
      */
+    #[\Override]
     public function getConfiguredBuilder(Table $table, string $type): AbstractOMBuilder
     {
         $configProperty = 'generator.objectModel.builders.' . $type;
@@ -220,6 +223,7 @@ class GeneratorConfig extends ConfigurationManager implements GeneratorConfigInt
      *
      * @return \Propel\Common\Pluralizer\PluralizerInterface
      */
+    #[\Override]
     public function getConfiguredPluralizer(): PluralizerInterface
     {
         $classname = $this->get()['generator']['objectModel']['pluralizerClass'];
@@ -313,6 +317,7 @@ class GeneratorConfig extends ConfigurationManager implements GeneratorConfigInt
     /**
      * @return \Propel\Generator\Util\BehaviorLocator
      */
+    #[\Override]
     public function getBehaviorLocator(): BehaviorLocator
     {
         if ($this->behaviorLocator === null) {

@@ -215,6 +215,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @return void
      */
+    #[\Override]
     public function offsetSet($offset, $value): void
     {
         $this->collection->offsetSet($offset, $value);
@@ -227,6 +228,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @return void
      */
+    #[\Override]
     public function offsetUnset($offset): void
     {
         $this->collection->offsetUnset($offset);
@@ -239,6 +241,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @return void
      */
+    #[\Override]
     public function append($value): void
     {
         $this->collection->append($value);
@@ -251,6 +254,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @return true
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function asort(int $flags = SORT_REGULAR): bool
     {
@@ -265,6 +269,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @return true
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function ksort(int $flags = SORT_REGULAR): bool
     {
@@ -279,6 +284,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @return true
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function uasort($cmp_function): bool
     {
@@ -293,6 +299,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
      *
      * @return true
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function uksort($cmp_function): bool
     {
@@ -305,6 +312,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
     /**
      * @return true
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function natsort(): bool
     {
@@ -317,6 +325,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
     /**
      * @return true
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function natcasesort(): bool
     {

@@ -34,6 +34,7 @@ class MultiExtendObjectBuilder extends AbstractObjectBuilder
      *
      * @return string
      */
+    #[\Override]
     public function getUnprefixedClassName(): string
     {
         return $this->getChild()->getClassName();
@@ -44,6 +45,7 @@ class MultiExtendObjectBuilder extends AbstractObjectBuilder
      *
      * @return string|null
      */
+    #[\Override]
     public function getPackage(): ?string
     {
         return ($this->getChild()->getPackage() ?: parent::getPackage());
@@ -108,6 +110,7 @@ class MultiExtendObjectBuilder extends AbstractObjectBuilder
      *
      * @return void
      */
+    #[\Override]
     protected function addClassOpen(string &$script): void
     {
         if ($this->getChild()->getAncestor()) {
@@ -164,6 +167,7 @@ class " . $this->getUnqualifiedClassName() . ' extends ' . $this->getParentClass
      *
      * @return void
      */
+    #[\Override]
     protected function addClassBody(string &$script): void
     {
         $child = $this->getChild();
@@ -192,6 +196,7 @@ class " . $this->getUnqualifiedClassName() . ' extends ' . $this->getParentClass
      *
      * @return void
      */
+    #[\Override]
     protected function addClassClose(string &$script): void
     {
         $script .= "

@@ -30,6 +30,7 @@ class SimpleArrayFormatter extends AbstractFormatter
      *
      * @return \Propel\Runtime\Collection\ArrayCollection
      */
+    #[\Override]
     public function format(?DataFetcherInterface $dataFetcher = null)
     {
         $this->checkInit();
@@ -62,6 +63,7 @@ class SimpleArrayFormatter extends AbstractFormatter
     /**
      * @return class-string<\Propel\Runtime\Collection\ArrayCollection>|null
      */
+    #[\Override]
     public function getCollectionClassName(): ?string
     {
         return '\Propel\Runtime\Collection\ArrayCollection';
@@ -74,6 +76,7 @@ class SimpleArrayFormatter extends AbstractFormatter
      *
      * @return array<string, mixed>
      */
+    #[\Override]
     public function formatOne(?DataFetcherInterface $dataFetcher = null)
     {
         $this->checkInit();
@@ -109,6 +112,7 @@ class SimpleArrayFormatter extends AbstractFormatter
      *
      * @return array<string, mixed> The original record turned into an array
      */
+    #[\Override]
     public function formatRecord(?ActiveRecordInterface $record = null): array
     {
         return $record ? $record->toArray() : [];
@@ -117,6 +121,7 @@ class SimpleArrayFormatter extends AbstractFormatter
     /**
      * @return bool
      */
+    #[\Override]
     public function isObjectFormatter(): bool
     {
         return false;

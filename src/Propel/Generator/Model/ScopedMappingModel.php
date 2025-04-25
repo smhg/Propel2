@@ -68,6 +68,7 @@ abstract class ScopedMappingModel extends MappingModel
     /**
      * @return void
      */
+    #[\Override]
     protected function setupObject(): void
     {
         $this->setPackage($this->getAttribute('package', $this->package));

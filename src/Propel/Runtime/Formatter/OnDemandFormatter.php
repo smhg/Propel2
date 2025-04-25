@@ -38,6 +38,7 @@ class OnDemandFormatter extends ObjectFormatter
      *
      * @return $this
      */
+    #[\Override]
     public function init(?BaseModelCriteria $criteria = null, ?DataFetcherInterface $dataFetcher = null)
     {
         parent::init($criteria, $dataFetcher);
@@ -54,6 +55,7 @@ class OnDemandFormatter extends ObjectFormatter
      *
      * @return \Propel\Runtime\Collection\OnDemandCollection<RowFormat>
      */
+    #[\Override]
     public function format(?DataFetcherInterface $dataFetcher = null): OnDemandCollection
     {
         $this->checkInit();
@@ -78,6 +80,7 @@ class OnDemandFormatter extends ObjectFormatter
     /**
      * @return class-string<\Propel\Runtime\Collection\Collection<\Propel\Runtime\ActiveRecord\ActiveRecordInterface>>
      */
+    #[\Override]
     public function getCollectionClassName(): string
     {
         return OnDemandCollection::class;
@@ -86,6 +89,7 @@ class OnDemandFormatter extends ObjectFormatter
     /**
      * @return \Propel\Runtime\Collection\OnDemandCollection<RowFormat>
      */
+    #[\Override]
     public function getCollection(): OnDemandCollection
     {
         $class = $this->getCollectionClassName();
@@ -106,6 +110,7 @@ class OnDemandFormatter extends ObjectFormatter
      *
      * @return RowFormat
      */
+    #[\Override]
     public function getAllObjectsFromRow(array $row): ActiveRecordInterface
     {
         $col = 0;

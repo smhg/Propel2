@@ -36,6 +36,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
      *
      * @return void
      */
+    #[\Override]
     protected function init(Table $table, ?GeneratorConfigInterface $generatorConfig): void
     {
         parent::init($table, $generatorConfig);
@@ -58,6 +59,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
      *
      * @return string
      */
+    #[\Override]
     public function getPackage(): string
     {
         return parent::getPackage() . '.Base.Collection';
@@ -66,6 +68,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
     /**
      * @return string|null
      */
+    #[\Override]
     public function getNamespace(): ?string
     {
         $namespace = parent::getNamespace();
@@ -84,6 +87,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
     /**
      * @return string
      */
+    #[\Override]
     public function getUnprefixedClassName(): string
     {
         return $this->getTable()->getPhpName() . 'Collection';
@@ -119,6 +123,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
      *
      * @return void
      */
+    #[\Override]
     protected function addClassOpen(string &$script): void
     {
         $this->registerClasses(); // does not work on init
@@ -141,6 +146,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
      *
      * @return void
      */
+    #[\Override]
     protected function addClassBody(string &$script): void
     {
         $script .= $this->renderTemplate('objectCollectionClassBody', [
@@ -153,6 +159,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
      *
      * @return void
      */
+    #[\Override]
     protected function addClassClose(string &$script): void
     {
         $script .= "\n}\n";

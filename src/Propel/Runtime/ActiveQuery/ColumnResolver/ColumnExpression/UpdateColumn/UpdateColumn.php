@@ -59,6 +59,7 @@ class UpdateColumn extends AbstractUpdateColumn
      *
      * @return string
      */
+    #[\Override]
     public function buildExpression(int &$positionIndex): string
     {
         return ':p' . $positionIndex++;

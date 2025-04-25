@@ -25,6 +25,7 @@ class ArrayDataFetcher extends AbstractDataFetcher
     /**
      * @return void
      */
+    #[\Override]
     public function next(): void
     {
         if ($this->dataObject !== null) {
@@ -37,6 +38,7 @@ class ArrayDataFetcher extends AbstractDataFetcher
      *
      * @inheritDoc
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function current()
     {
@@ -46,6 +48,7 @@ class ArrayDataFetcher extends AbstractDataFetcher
     /**
      * @return array|null
      */
+    #[\Override]
     public function fetch(): ?array
     {
         $row = $this->valid() ? $this->current() : null;
@@ -59,6 +62,7 @@ class ArrayDataFetcher extends AbstractDataFetcher
      *
      * @inheritDoc
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function key()
     {
@@ -68,6 +72,7 @@ class ArrayDataFetcher extends AbstractDataFetcher
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function valid(): bool
     {
         return ($this->dataObject !== null && key($this->dataObject) !== null);
@@ -76,6 +81,7 @@ class ArrayDataFetcher extends AbstractDataFetcher
     /**
      * @return void
      */
+    #[\Override]
     public function rewind(): void
     {
         if ($this->dataObject === null) {
@@ -88,6 +94,7 @@ class ArrayDataFetcher extends AbstractDataFetcher
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function getIndexType(): string
     {
         return $this->indexType;
@@ -96,6 +103,7 @@ class ArrayDataFetcher extends AbstractDataFetcher
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function count(): int
     {
         return $this->dataObject === null ? 0 : count($this->dataObject);
@@ -116,6 +124,7 @@ class ArrayDataFetcher extends AbstractDataFetcher
     /**
      * @return void
      */
+    #[\Override]
     public function close(): void
     {
         $this->dataObject = null;

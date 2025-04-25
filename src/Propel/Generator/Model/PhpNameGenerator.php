@@ -42,6 +42,7 @@ class PhpNameGenerator implements NameGeneratorInterface
      *
      * @return string The generated name.
      */
+    #[\Override]
     public function generateName(array $inputs): string
     {
         $schemaName = (string)$inputs[0];

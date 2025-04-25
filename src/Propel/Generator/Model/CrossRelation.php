@@ -274,6 +274,7 @@ class CrossRelation
     /**
      * @return string
      */
+    #[\Override]
     public function __tostring(): string
     {
         if (!$this->crossForeignKeys) {

@@ -32,6 +32,7 @@ class SqlsrvAdapter extends MssqlAdapter implements SqlAdapterInterface
      *
      * @return void
      */
+    #[\Override]
     public function initConnection(ConnectionInterface $con, array $settings): void
     {
         $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -50,6 +51,7 @@ class SqlsrvAdapter extends MssqlAdapter implements SqlAdapterInterface
      *
      * @return void
      */
+    #[\Override]
     public function setCharset(ConnectionInterface $con, string $charset): void
     {
         switch (strtolower($charset)) {
@@ -76,6 +78,7 @@ class SqlsrvAdapter extends MssqlAdapter implements SqlAdapterInterface
      *
      * @return void
      */
+    #[\Override]
     public function cleanupSQL(string &$sql, array &$params, Criteria $values, DatabaseMap $dbMap): void
     {
         $i = 1;
@@ -107,6 +110,7 @@ class SqlsrvAdapter extends MssqlAdapter implements SqlAdapterInterface
      *
      * @return bool
      */
+    #[\Override]
     public function bindValue(StatementInterface $stmt, string $parameter, $value, ColumnMap $cMap, ?int $position = null): bool
     {
         if ($cMap->isTemporal()) {

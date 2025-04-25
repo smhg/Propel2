@@ -25,6 +25,7 @@ class DateValidator extends SymfonyDateValidator
      *
      * @return void
      */
+    #[\Override]
     public function validate($value, Constraint $constraint): void
     {
         if ($value instanceof DateTimeInterface) {

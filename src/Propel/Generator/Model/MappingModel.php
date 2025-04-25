@@ -38,6 +38,7 @@ abstract class MappingModel implements MappingModelInterface
      *
      * @return void
      */
+    #[\Override]
     public function loadMapping(array $attributes): void
     {
         $this->attributes = array_change_key_case($attributes, CASE_LOWER);

@@ -36,6 +36,7 @@ class ObjectFormatter extends AbstractFormatter
      *
      * @return ListType
      */
+    #[\Override]
     public function format(?DataFetcherInterface $dataFetcher = null)
     {
         $this->checkInit();
@@ -77,6 +78,7 @@ class ObjectFormatter extends AbstractFormatter
     /**
      * @return class-string|null
      */
+    #[\Override]
     public function getCollectionClassName(): ?string
     {
         return $this->getTableMap()->getCollectionClassName();
@@ -89,6 +91,7 @@ class ObjectFormatter extends AbstractFormatter
      *
      * @return RowFormat|null
      */
+    #[\Override]
     public function formatOne(?DataFetcherInterface $dataFetcher = null): ?ActiveRecordInterface
     {
         $this->checkInit();
@@ -114,6 +117,7 @@ class ObjectFormatter extends AbstractFormatter
     /**
      * @return bool
      */
+    #[\Override]
     public function isObjectFormatter(): bool
     {
         return true;

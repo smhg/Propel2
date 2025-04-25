@@ -18,6 +18,7 @@ class LikeColumnFilter extends ColumnFilter
      *
      * @return string
      */
+    #[\Override]
     protected function buildFilterClause(array &$paramCollector): string
     {
         $field = $this->getLocalColumnName(true);

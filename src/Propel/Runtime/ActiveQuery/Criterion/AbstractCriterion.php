@@ -152,6 +152,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      *
      * @return string|null A String with the column name.
      */
+    #[\Override]
     public function getColumnName(): ?string
     {
         return $this->column;
@@ -162,6 +163,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      *
      * @return string
      */
+    #[\Override]
     public function getLocalColumnName(bool $useQuoteIfEnable): string
     {
         return $useQuoteIfEnable
@@ -196,6 +198,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      *
      * @return string|null A String with the table name.
      */
+    #[\Override]
     public function getTableAlias(): ?string
     {
         return $this->table;
@@ -214,6 +217,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
     /**
      * @return string A String with the comparison.
      */
+    #[\Override]
     public function getOperator(): string
     {
         return $this->comparison;
@@ -224,6 +228,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      *
      * @return mixed An Object with the value.
      */
+    #[\Override]
     public function getValue()
     {
         return $this->value;
@@ -232,6 +237,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
     /**
      * @return bool
      */
+    #[\Override]
     public function hasValue(): bool
     {
         return $this->value !== null;
@@ -259,6 +265,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      *
      * @return void
      */
+    #[\Override]
     public function setAdapter(AdapterInterface $adapter): void
     {
         $this->db = $adapter;
@@ -272,6 +279,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      *
      * @return string
      */
+    #[\Override]
     public function buildStatement(array &$paramCollector): string
     {
         $rawExpression = $this->buildCriterionExpression($paramCollector);
@@ -296,6 +304,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      *
      * @return void
      */
+    #[\Override]
     public function collectParameters(array &$paramCollector): void
     {
         $this->buildStatement($paramCollector);
@@ -363,6 +372,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      *
      * @return bool
      */
+    #[\Override]
     public function equals(?object $filter): bool
     {
         if ($this === $filter) {
@@ -400,6 +410,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      *
      * @return array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
      */
+    #[\Override]
     public function getAttachedFilter(): array
     {
         $criterions = parent::getAttachedFilter();
@@ -413,6 +424,7 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      *
      * @return bool
      */
+    #[\Override]
     public function containsCriterion(): bool
     {
         return true;

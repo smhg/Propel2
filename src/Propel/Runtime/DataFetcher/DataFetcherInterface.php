@@ -43,6 +43,7 @@ interface DataFetcherInterface extends Iterator, Countable
      *
      * @return mixed Can return any type.
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function current();
 
@@ -53,6 +54,7 @@ interface DataFetcherInterface extends Iterator, Countable
      *
      * @return void Any returned value is ignored.
      */
+    #[\Override]
     public function next(): void;
 
     /**
@@ -64,6 +66,7 @@ interface DataFetcherInterface extends Iterator, Countable
      *
      * @return mixed scalar on success, or null on failure.
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function key();
 
@@ -75,6 +78,7 @@ interface DataFetcherInterface extends Iterator, Countable
      * @return bool The return value will be casted to boolean and then evaluated.
      * Returns true on success or false on failure.
      */
+    #[\Override]
     public function valid(): bool;
 
     /**
@@ -84,6 +88,7 @@ interface DataFetcherInterface extends Iterator, Countable
      *
      * @return void Any returned value is ignored.
      */
+    #[\Override]
     public function rewind(): void;
 
     /**
@@ -116,6 +121,7 @@ interface DataFetcherInterface extends Iterator, Countable
      *
      * @return int
      */
+    #[\Override]
     public function count(): int;
 
     /**

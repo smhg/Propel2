@@ -43,6 +43,7 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
     /**
      * @return mixed
      */
+    #[\Override]
     public function getValue()
     {
         return $this->value;
@@ -51,6 +52,7 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
     /**
      * @return bool
      */
+    #[\Override]
     public function hasValue(): bool
     {
         return $this->value !== null;
@@ -81,6 +83,7 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
      *
      * @return void
      */
+    #[\Override]
     public function setAdapter(AdapterInterface $adapter): void
     {
         $this->adapter = $adapter;
@@ -112,6 +115,7 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
      *
      * @return string
      */
+    #[\Override]
     final public function buildStatement(array &$paramCollector): string
     {
         $this->resolveUnresolved();
@@ -164,6 +168,7 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
      *
      * @return void
      */
+    #[\Override]
     public function collectParameters(array &$paramCollector): void
     {
         $this->buildFilterClause($paramCollector);
@@ -193,6 +198,7 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
      *
      * @return bool
      */
+    #[\Override]
     public function equals(?object $filter): bool
     {
         if ($this === $filter) {
@@ -216,6 +222,7 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
      *
      * @return array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
      */
+    #[\Override]
     public function getAttachedFilter(): array
     {
         $criterions = parent::getAttachedFilter();

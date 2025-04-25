@@ -109,6 +109,7 @@ class Domain extends MappingModel
     /**
      * @return void
      */
+    #[\Override]
     protected function setupObject(): void
     {
         $schemaType = !$this->getAttribute('type')

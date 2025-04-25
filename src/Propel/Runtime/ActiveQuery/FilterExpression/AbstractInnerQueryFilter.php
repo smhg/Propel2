@@ -70,6 +70,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
      *
      * @return string
      */
+    #[\Override]
     public function getLocalColumnName(bool $useQuoteIfEnable): string
     {
         return $this->queryColumn ? $this->queryColumn->getColumnExpressionInQuery($useQuoteIfEnable) : '';
@@ -78,6 +79,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
     /**
      * @return string|null
      */
+    #[\Override]
     public function getColumnName(): ?string
     {
         return $this->queryColumn ? $this->queryColumn->getColumnName() : null;
@@ -86,6 +88,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
     /**
      * @return string
      */
+    #[\Override]
     public function getOperator(): string
     {
         return $this->sqlOperator;
@@ -94,6 +97,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
     /**
      * @return string|null
      */
+    #[\Override]
     public function getTableAlias(): ?string
     {
         return $this->queryColumn ? $this->queryColumn->getTableAlias() : null;
@@ -104,6 +108,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
      *
      * @return void
      */
+    #[\Override]
     protected function resolveUnresolved(): void
     {
         if ($this->queryColumn instanceof UnresolvedColumnExpression) {
@@ -163,6 +168,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
      *
      * @return string
      */
+    #[\Override]
     protected function buildFilterClause(array &$paramCollector): string
     {
         $leftHandOperator = '';

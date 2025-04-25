@@ -296,6 +296,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
      *
      * @return string|null
      */
+    #[\Override]
     public function getTableForAlias(string $alias): ?string
     {
         if ($this->modelAlias === $alias) {
@@ -324,6 +325,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
      *
      * @return \Propel\Runtime\Map\TableMap|null
      */
+    #[\Override]
     public function getTableMap(): ?TableMap
     {
         return $this->tableMap;
@@ -336,6 +338,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
      *
      * @return string|null
      */
+    #[\Override]
     public function getTableNameInQuery(): ?string
     {
         if ($this->useAliasInSQL && $this->modelAlias) {
@@ -353,6 +356,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
      *
      * @return bool
      */
+    #[\Override]
     public function isIdentifiedBy(string $identifier): bool
     {
         return $identifier === $this->getModelAliasOrName()
@@ -371,6 +375,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
      *
      * @return \Traversable
      */
+    #[\Override]
     public function getIterator(): Traversable
     {
         $res = $this->find(null); // use the default connection

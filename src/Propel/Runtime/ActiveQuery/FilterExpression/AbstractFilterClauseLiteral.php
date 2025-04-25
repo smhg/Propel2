@@ -67,6 +67,7 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
      *
      * @return string
      */
+    #[\Override]
     public function getLocalColumnName(bool $useQuoteIfEnable): string
     {
         return $this->resolvedColumns ? $this->resolvedColumns[0]->getColumnExpressionInQuery($useQuoteIfEnable) : '';
@@ -79,6 +80,7 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
      *
      * @return string|null
      */
+    #[\Override]
     public function getColumnName(): ?string
     {
         return $this->resolvedColumns ? $this->resolvedColumns[0]->getColumnName() : null;
@@ -99,6 +101,7 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
      *
      * @return void
      */
+    #[\Override]
     protected function resolveUnresolved(): void
     {
         if ($this->hasUnresolvedColumns()) {
@@ -113,6 +116,7 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
 
      * @return string
      */
+    #[\Override]
     protected function buildFilterClause(array &$paramCollector): string
     {
         $numberOfPlaceholders = substr_count($this->clause, '?');
@@ -162,6 +166,7 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
     /**
      * @return string
      */
+    #[\Override]
     public function getOperator(): string
     {
         return $this->clause;
@@ -170,6 +175,7 @@ abstract class AbstractFilterClauseLiteral extends AbstractFilter
     /**
      * @return string|null
      */
+    #[\Override]
     public function getTableAlias(): ?string
     {
         return $this->resolvedColumns ? $this->resolvedColumns[0]->getTableAlias() : null;

@@ -66,6 +66,7 @@ class ProfilerConnectionWrapper extends ConnectionWrapper
      *
      * @return bool
      */
+    #[\Override]
     public function setAttribute($attribute, $value): bool
     {
         switch ($attribute) {
@@ -83,6 +84,7 @@ class ProfilerConnectionWrapper extends ConnectionWrapper
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function prepare(string $statement, array $driverOptions = [])
     {
         $this->getProfiler()->start();
@@ -93,6 +95,7 @@ class ProfilerConnectionWrapper extends ConnectionWrapper
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function exec($statement): int
     {
         $this->getProfiler()->start();
@@ -103,6 +106,7 @@ class ProfilerConnectionWrapper extends ConnectionWrapper
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function query($statement = '', ...$args): DataFetcherInterface
     {
         $this->getProfiler()->start();
@@ -113,6 +117,7 @@ class ProfilerConnectionWrapper extends ConnectionWrapper
     /**
      * @inheritDoc
      */
+    #[\Override]
     protected function createStatementWrapper($sql): StatementWrapper
     {
         return new ProfilerStatementWrapper($sql, $this);
@@ -121,6 +126,7 @@ class ProfilerConnectionWrapper extends ConnectionWrapper
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function log($msg): void
     {
         if ($this->isSlowOnly && !$this->getProfiler()->isSlow()) {

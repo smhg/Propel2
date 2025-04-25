@@ -51,6 +51,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
      *
      * @return void
      */
+    #[\Override]
     protected function init(Table $table, ?GeneratorConfigInterface $generatorConfig): void
     {
         parent::init($table, $generatorConfig);
@@ -91,6 +92,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
      *
      * @return void
      */
+    #[\Override]
     public function addMethods(string &$script): void
     {
         $this->registerTargetClasses();
@@ -140,6 +142,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
      *
      * @return void
      */
+    #[\Override]
     abstract public function addDeleteScheduledItemsCode(string &$script): void;
 
     /**
@@ -287,6 +290,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
      *
      * @return void
      */
+    #[\Override]
     public function addAttributes(string &$script): void
     {
         $attributeName = '$' . $this->names->getAttributeWithCollectionName();
@@ -359,6 +363,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
      *
      * @return string
      */
+    #[\Override]
     public function addClearReferencesCode(string &$script): string
     {
         $varName = $this->names->getAttributeWithCollectionName();
@@ -523,6 +528,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
      *
      * @return void
      */
+    #[\Override]
     public function addOnReloadCode(string &$script): void
     {
         $attributeName = $this->names->getAttributeWithCollectionName();

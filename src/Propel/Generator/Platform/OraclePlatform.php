@@ -33,6 +33,7 @@ class OraclePlatform extends DefaultPlatform
      *
      * @return void
      */
+    #[\Override]
     protected function initializeTypeMap(): void
     {
         parent::initializeTypeMap();
@@ -67,6 +68,7 @@ class OraclePlatform extends DefaultPlatform
     /**
      * @return int
      */
+    #[\Override]
     public function getMaxColumnNameLength(): int
     {
         return 30;
@@ -75,6 +77,7 @@ class OraclePlatform extends DefaultPlatform
     /**
      * @return string
      */
+    #[\Override]
     public function getNativeIdMethod(): string
     {
         return PlatformInterface::SEQUENCE;
@@ -83,6 +86,7 @@ class OraclePlatform extends DefaultPlatform
     /**
      * @return string
      */
+    #[\Override]
     public function getAutoIncrement(): string
     {
         return '';
@@ -91,6 +95,7 @@ class OraclePlatform extends DefaultPlatform
     /**
      * @return bool
      */
+    #[\Override]
     public function supportsNativeDeleteTrigger(): bool
     {
         return true;
@@ -99,6 +104,7 @@ class OraclePlatform extends DefaultPlatform
     /**
      * @return string
      */
+    #[\Override]
     public function getBeginDDL(): string
     {
         return "
@@ -112,6 +118,7 @@ ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS';
      *
      * @return string
      */
+    #[\Override]
     public function getAddTablesDDL(Database $database): string
     {
         $ret = $this->getBeginDDL();
@@ -138,6 +145,7 @@ ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS';
      *
      * @return string
      */
+    #[\Override]
     public function getAddTableDDL(Table $table): string
     {
         $tableDescription = $table->hasDescription() ? $this->getCommentLineDDL($table->getDescription()) : '';
@@ -180,6 +188,7 @@ ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS';
      *
      * @return string
      */
+    #[\Override]
     public function getAddPrimaryKeyDDL(Table $table): string
     {
         if (is_array($table->getPrimaryKey()) && count($table->getPrimaryKey())) {
@@ -216,6 +225,7 @@ CREATE SEQUENCE %s
      *
      * @return string
      */
+    #[\Override]
     public function getDropTableDDL(Table $table): string
     {
         $ret = "
@@ -235,6 +245,7 @@ DROP SEQUENCE " . $this->quoteIdentifier($this->getSequenceName($table)) . ";
      *
      * @return string
      */
+    #[\Override]
     public function getPrimaryKeyName(Table $table): string
     {
         $tableName = $table->getName();
@@ -249,6 +260,7 @@ DROP SEQUENCE " . $this->quoteIdentifier($this->getSequenceName($table)) . ";
      *
      * @return string
      */
+    #[\Override]
     public function getPrimaryKeyDDL(Table $table): string
     {
         if ($table->hasPrimaryKey()) {
@@ -270,6 +282,7 @@ DROP SEQUENCE " . $this->quoteIdentifier($this->getSequenceName($table)) . ";
      *
      * @return string
      */
+    #[\Override]
     public function getUniqueDDL(Unique $unique): string
     {
         return sprintf(
@@ -284,6 +297,7 @@ DROP SEQUENCE " . $this->quoteIdentifier($this->getSequenceName($table)) . ";
      *
      * @return string
      */
+    #[\Override]
     public function getForeignKeyDDL(ForeignKey $fk): string
     {
         if ($fk->isSkipSql() || $fk->isPolymorphic()) {
@@ -312,6 +326,7 @@ DROP SEQUENCE " . $this->quoteIdentifier($this->getSequenceName($table)) . ";
      *
      * @return bool
      */
+    #[\Override]
     public function hasStreamBlobImpl(): bool
     {
         return true;
@@ -320,6 +335,7 @@ DROP SEQUENCE " . $this->quoteIdentifier($this->getSequenceName($table)) . ";
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function doQuoting(string $text): string
     {
         return $text;
@@ -328,6 +344,7 @@ DROP SEQUENCE " . $this->quoteIdentifier($this->getSequenceName($table)) . ";
     /**
      * @return string
      */
+    #[\Override]
     public function getTimestampFormatter(): string
     {
         return 'Y-m-d H:i:s';
@@ -342,6 +359,7 @@ DROP SEQUENCE " . $this->quoteIdentifier($this->getSequenceName($table)) . ";
      *
      * @return bool
      */
+    #[\Override]
     public function supportsSchemas(): bool
     {
         return false;
@@ -413,6 +431,7 @@ USING INDEX
      *
      * @return string
      */
+    #[\Override]
     public function getAddIndexDDL(Index $index): string
     {
         // don't create index form primary key
@@ -446,6 +465,7 @@ CREATE %sINDEX %s ON %s (%s)%s;
      *
      * @return string
      */
+    #[\Override]
     public function getColumnBindingPHP(Column $column, string $identifier, string $columnValueAccessor, string $tab = '            '): string
     {
         if ($column->getType() === PropelTypes::CLOB_EMU) {
@@ -478,6 +498,7 @@ CREATE %sINDEX %s ON %s (%s)%s;
      *
      * @return string
      */
+    #[\Override]
     public function getIdentifierPhp(
         string $columnValueMutator,
         string $connectionVariableName = '$con',

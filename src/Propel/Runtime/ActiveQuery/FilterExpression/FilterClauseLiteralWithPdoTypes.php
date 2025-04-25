@@ -47,6 +47,7 @@ class FilterClauseLiteralWithPdoTypes extends AbstractFilterClauseLiteral
      *
      * @return array{table: null, type: int, value: mixed}
      */
+    #[\Override]
     protected function buildParameterByPosition(int $position, $value): array
     {
         $typeIndex = count($this->pdoTypes) === 1 ? 0 : $position;

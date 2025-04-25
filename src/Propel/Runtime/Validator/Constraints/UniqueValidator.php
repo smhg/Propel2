@@ -20,6 +20,7 @@ class UniqueValidator extends ConstraintValidator
      *
      * @return void
      */
+    #[\Override]
     public function validate($value, Constraint $constraint): void
     {
         if ($value === null) {

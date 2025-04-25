@@ -194,6 +194,7 @@ class PropelDateTime extends DateTime
      *
      * @return void
      */
+    #[\Override]
     public function __wakeup(): void
     {
         // @TODO I don't think we can call the constructor from within this method

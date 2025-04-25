@@ -25,6 +25,7 @@ class MssqlPropelPDO extends PropelPDO
      *
      * @return bool
      */
+    #[\Override]
     public function beginTransaction(): bool
     {
         $return = true;
@@ -51,6 +52,7 @@ class MssqlPropelPDO extends PropelPDO
      *
      * @return bool
      */
+    #[\Override]
     public function commit(): bool
     {
         $return = true;
@@ -80,6 +82,7 @@ class MssqlPropelPDO extends PropelPDO
      *
      * @return bool
      */
+    #[\Override]
     public function rollBack(): bool
     {
         $return = true;
@@ -108,6 +111,7 @@ class MssqlPropelPDO extends PropelPDO
      *
      * @return bool
      */
+    #[\Override]
     public function forceRollBack(): bool
     {
         $return = true;
@@ -134,6 +138,7 @@ class MssqlPropelPDO extends PropelPDO
      *
      * @return int
      */
+    #[\Override]
     public function lastInsertId(?string $name = null): int
     {
         $result = $this->query('SELECT SCOPE_IDENTITY()');

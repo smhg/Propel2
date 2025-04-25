@@ -57,6 +57,7 @@ class ArchivableBehavior extends SyncedTableBehavior
      *
      * @return array
      */
+    #[\Override]
     protected function getDefaultParameters(): array
     {
         return [
@@ -83,6 +84,7 @@ class ArchivableBehavior extends SyncedTableBehavior
      *
      * @return void
      */
+    #[\Override]
     public function modifyTable(): void
     {
         if ($this->getParameter('archive_class') && $this->getParameter(static::PARAMETER_KEY_SYNCED_TABLE)) {
@@ -99,6 +101,7 @@ class ArchivableBehavior extends SyncedTableBehavior
      *
      * @return void
      */
+    #[\Override]
     public function addTableElements(Table $syncedTable, $tableExistsInSchema): void
     {
         parent::addTableElements($syncedTable, $tableExistsInSchema);
@@ -197,6 +200,7 @@ class ArchivableBehavior extends SyncedTableBehavior
     /**
      * @return $this|\Propel\Generator\Behavior\Archivable\ArchivableBehaviorObjectBuilderModifier
      */
+    #[\Override]
     public function getObjectBuilderModifier()
     {
         if ($this->objectBuilderModifier === null) {
@@ -209,6 +213,7 @@ class ArchivableBehavior extends SyncedTableBehavior
     /**
      * @return $this|\Propel\Generator\Behavior\Archivable\ArchivableBehaviorQueryBuilderModifier
      */
+    #[\Override]
     public function getQueryBuilderModifier()
     {
         if ($this->queryBuilderModifier === null) {

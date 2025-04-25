@@ -18,6 +18,7 @@ class InColumnFilter extends AbstractColumnFilter
      *
      * @return string
      */
+    #[\Override]
     protected function buildFilterClause(array &$paramCollector): string
     {
         $values = ($this->value instanceof Traversable) ? iterator_to_array($this->value) : (array)$this->value;

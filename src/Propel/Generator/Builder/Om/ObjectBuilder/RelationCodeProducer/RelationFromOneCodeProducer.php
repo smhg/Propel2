@@ -18,6 +18,7 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
      *
      * @return string
      */
+    #[\Override]
     public function getAttributeName(): string
     {
         return 'single' . $this->relation->getIdentifierReversed();
@@ -28,6 +29,7 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
      *
      * @return void
      */
+    #[\Override]
     public function addMethods(string &$script): void
     {
         $this->registerTargetClasses();
@@ -45,6 +47,7 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
      *
      * @return void
      */
+    #[\Override]
     public function addAttributes(string &$script): void
     {
         $className = $this->getClassNameFromTable($this->relation->getTable());
@@ -62,6 +65,7 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
      *
      * @return void
      */
+    #[\Override]
     public function addDeleteScheduledItemsCode(string &$script): void
     {
         $varName = $this->getAttributeName();
@@ -78,6 +82,7 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
      *
      * @return string
      */
+    #[\Override]
     public function addClearReferencesCode(string &$script): string
     {
         $varName = $this->getAttributeName();

@@ -39,6 +39,7 @@ class LocalColumnExpression extends AbstractColumnExpression
     /**
      * @return \Propel\Runtime\Map\ColumnMap|null
      */
+    #[\Override]
     public function getColumnMap(): ?ColumnMap
     {
         return $this->columnMap;
@@ -49,6 +50,7 @@ class LocalColumnExpression extends AbstractColumnExpression
      *
      * @return bool
      */
+    #[\Override]
     public function equals(AbstractColumnExpression $otherColumn): bool
     {
         return $otherColumn instanceof static
@@ -59,6 +61,7 @@ class LocalColumnExpression extends AbstractColumnExpression
     /**
      * @return bool
      */
+    #[\Override]
     public function hasColumnMap(): bool
     {
         return true;
@@ -71,6 +74,7 @@ class LocalColumnExpression extends AbstractColumnExpression
      *
      * @return array{table: ?string, column: string, value: mixed}
      */
+    #[\Override]
     public function buildPdoParam($value): array
     {
         return [

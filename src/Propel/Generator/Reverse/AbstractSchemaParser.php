@@ -90,6 +90,7 @@ abstract class AbstractSchemaParser implements SchemaParserInterface
      *
      * @return void
      */
+    #[\Override]
     public function setConnection(ConnectionInterface $dbh): void
     {
         $this->dbh = $dbh;
@@ -100,6 +101,7 @@ abstract class AbstractSchemaParser implements SchemaParserInterface
      *
      * @return \Propel\Runtime\Connection\ConnectionInterface
      */
+    #[\Override]
     public function getConnection(): ConnectionInterface
     {
         return $this->dbh;
@@ -144,6 +146,7 @@ abstract class AbstractSchemaParser implements SchemaParserInterface
      *
      * @return array<string>
      */
+    #[\Override]
     public function getWarnings(): array
     {
         return $this->warnings;
@@ -156,6 +159,7 @@ abstract class AbstractSchemaParser implements SchemaParserInterface
      *
      * @return void
      */
+    #[\Override]
     public function setGeneratorConfig(GeneratorConfigInterface $config): void
     {
         $this->generatorConfig = $config;
@@ -232,6 +236,7 @@ abstract class AbstractSchemaParser implements SchemaParserInterface
      *
      * @return void
      */
+    #[\Override]
     public function setPlatform(PlatformInterface $platform): void
     {
         $this->platform = $platform;
@@ -252,6 +257,7 @@ abstract class AbstractSchemaParser implements SchemaParserInterface
      *
      * @return \Propel\Generator\Platform\PlatformInterface
      */
+    #[\Override]
     public function getPlatform(): PlatformInterface
     {
         if ($this->platform === null) {

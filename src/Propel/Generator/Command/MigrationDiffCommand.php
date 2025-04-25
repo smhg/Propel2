@@ -28,6 +28,7 @@ class MigrationDiffCommand extends AbstractCommand
     /**
      * @inheritDoc
      */
+    #[\Override]
     protected function configure()
     {
         parent::configure();
@@ -54,6 +55,7 @@ class MigrationDiffCommand extends AbstractCommand
      *
      * @throws \Propel\Generator\Exception\RuntimeException
      */
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $configOptions = [];

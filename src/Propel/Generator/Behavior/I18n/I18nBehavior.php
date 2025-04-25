@@ -69,6 +69,7 @@ class I18nBehavior extends Behavior
     /**
      * @return void
      */
+    #[\Override]
     public function modifyDatabase(): void
     {
         foreach ($this->getDatabase()->getTables() as $table) {
@@ -172,6 +173,7 @@ class I18nBehavior extends Behavior
     /**
      * @return $this|\Propel\Generator\Behavior\I18n\I18nBehaviorObjectBuilderModifier
      */
+    #[\Override]
     public function getObjectBuilderModifier()
     {
         if ($this->objectBuilderModifier === null) {
@@ -184,6 +186,7 @@ class I18nBehavior extends Behavior
     /**
      * @return $this|\Propel\Generator\Behavior\I18n\I18nBehaviorQueryBuilderModifier
      */
+    #[\Override]
     public function getQueryBuilderModifier()
     {
         if ($this->queryBuilderModifier === null) {
@@ -208,6 +211,7 @@ class I18nBehavior extends Behavior
     /**
      * @return void
      */
+    #[\Override]
     public function modifyTable(): void
     {
         $this->addI18nTable();

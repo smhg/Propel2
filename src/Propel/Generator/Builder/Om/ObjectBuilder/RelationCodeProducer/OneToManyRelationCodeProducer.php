@@ -20,6 +20,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      *
      * @return string
      */
+    #[\Override]
     public function getAttributeName(): string
     {
         return 'coll' . $this->relation->getIdentifierReversed($this->getPluralizer());
@@ -30,6 +31,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      *
      * @return void
      */
+    #[\Override]
     public function addMethods(string &$script): void
     {
         $this->registerTargetClasses();
@@ -55,6 +57,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      *
      * @return void
      */
+    #[\Override]
     public function addAttributes(string &$script): void
     {
         $className = $this->getClassNameFromTable($this->relation->getTable());
@@ -78,6 +81,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      *
      * @return void
      */
+    #[\Override]
     public function addDeleteScheduledItemsCode(string &$script): void
     {
         $this->addScheduledForDeletion($script);
@@ -135,6 +139,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      *
      * @return string
      */
+    #[\Override]
     public function addClearReferencesCode(string &$script): string
     {
         $attributeName = $this->getAttributeName();

@@ -38,6 +38,7 @@ class DatabaseReverseCommand extends AbstractCommand
     /**
      * @inheritDoc
      */
+    #[\Override]
     protected function configure()
     {
         parent::configure();
@@ -61,6 +62,7 @@ class DatabaseReverseCommand extends AbstractCommand
     /**
      * @inheritDoc
      */
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $configOptions = [];

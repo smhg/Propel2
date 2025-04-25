@@ -83,6 +83,7 @@ class OnDemandIterator implements IteratorInterface
      *
      * @return int Number of results
      */
+    #[\Override]
     public function count(): int
     {
         return $this->dataFetcher->count();
@@ -100,6 +101,7 @@ class OnDemandIterator implements IteratorInterface
      *
      * @return RowFormat
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function current(): ActiveRecordInterface
     {
@@ -117,6 +119,7 @@ class OnDemandIterator implements IteratorInterface
      *
      * @return int
      */
+    #[\Override]
     #[\ReturnTypeWillChange]
     public function key(): int
     {
@@ -129,6 +132,7 @@ class OnDemandIterator implements IteratorInterface
      *
      * @return void
      */
+    #[\Override]
     public function next(): void
     {
         $this->currentRow = $this->dataFetcher->fetch();
@@ -147,6 +151,7 @@ class OnDemandIterator implements IteratorInterface
      *
      * @return void
      */
+    #[\Override]
     public function rewind(): void
     {
         // check that the hydration can begin
@@ -167,6 +172,7 @@ class OnDemandIterator implements IteratorInterface
     /**
      * @return bool
      */
+    #[\Override]
     public function valid(): bool
     {
         return $this->isValid;

@@ -32,6 +32,7 @@ class ExistsFilter extends AbstractInnerQueryFilter
      *
      * @return void
      */
+    #[\Override]
     protected function initForRelation(ModelCriteria $outerQuery, RelationMap $relation): void
     {
         $joinCondition = $this->buildJoinCondition($outerQuery, $relation, true);
@@ -45,6 +46,7 @@ class ExistsFilter extends AbstractInnerQueryFilter
      *
      * @return string
      */
+    #[\Override]
     protected function resolveOperator(?string $operatorDeclaration): string
     {
         return ($operatorDeclaration === static::TYPE_NOT_EXISTS) ? static::TYPE_NOT_EXISTS : static::TYPE_EXISTS;
@@ -56,6 +58,7 @@ class ExistsFilter extends AbstractInnerQueryFilter
      *
      * @return \Propel\Runtime\ActiveQuery\Criteria
      */
+    #[\Override]
     protected function processInnerQuery(): Criteria
     {
         return $this->innerQuery

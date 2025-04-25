@@ -20,6 +20,7 @@ class Application extends SymfonyApplication
      *
      * @return int
      */
+    #[\Override]
     public function doRun(InputInterface $input, OutputInterface $output): int
     {
         if (extension_loaded('xdebug')) {

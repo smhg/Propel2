@@ -118,6 +118,7 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
      *
      * @return void
      */
+    #[\Override]
     public function addOnReloadCode(string &$script): void
     {
         $attributeName = $this->getAttributeName();
