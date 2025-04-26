@@ -8,6 +8,8 @@
 
 namespace Propel\Generator\Model;
 
+use LogicException;
+
 /**
  * A class for information regarding possible objects representing a table.
  *
@@ -101,10 +103,16 @@ class Inheritance extends MappingModel
     /**
      * Returns the class name.
      *
-     * @return string|null
+     * @throws \LogicException
+     *
+     * @return string
      */
-    public function getClassName(): ?string
+    public function getClassName(): string
     {
+        if (!$this->className) {
+            throw new LogicException('Inheritance was not setup correctly, className is missing.');
+        }
+
         return $this->className;
     }
 

@@ -8,6 +8,8 @@
 
 namespace Propel\Generator\Builder\Om;
 
+use LogicException;
+
 /**
  * Generates the empty stub interface for user object model (OM).
  *
@@ -21,12 +23,19 @@ class InterfaceBuilder extends AbstractObjectBuilder
     /**
      * Returns the name of the current class being built.
      *
+     * @throws \LogicException
+     *
      * @return string
      */
     #[\Override]
     public function getUnprefixedClassName(): string
     {
-        return ClassTools::classname($this->getInterface());
+        $interface = $this->getInterface();
+        if ($interface === null) {
+            throw new LogicException('No interface set.');
+        }
+
+        return ClassTools::classname($interface);
     }
 
     /**

@@ -20,6 +20,8 @@ class ClassTools
     /**
      * Gets just classname, given a dot-path to class.
      *
+     * @psalm-return ($qualifiedName is string ? string : null)
+     *
      * @param string|null $qualifiedName
      *
      * @return string|null
@@ -27,7 +29,7 @@ class ClassTools
     public static function classname(?string $qualifiedName): ?string
     {
         if ($qualifiedName === null) {
-            return null;
+            return $qualifiedName; // CS screws up return type on `return null`
         }
 
         $pos = strrpos($qualifiedName, '.');

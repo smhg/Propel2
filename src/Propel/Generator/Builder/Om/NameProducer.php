@@ -76,9 +76,9 @@ class NameProducer
      * @param \Propel\Generator\Model\ForeignKey $fk The referrer FK that we need a name for.
      * @param bool $plural Whether the php name should be plural (e.g. initRelatedObjs() vs. addRelatedObj()
      *
-     * @return string|null
+     * @return string
      */
-    public function buildForeignKeyBackReferenceNameAffix(ForeignKey $fk, bool $plural = false): ?string
+    public function buildForeignKeyBackReferenceNameAffix(ForeignKey $fk, bool $plural = false): string
     {
         return $fk->getIdentifierReversed($plural ? $this->pluralizer : null);
     }

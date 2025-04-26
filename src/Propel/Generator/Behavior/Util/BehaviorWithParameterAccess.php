@@ -14,12 +14,12 @@ use Propel\Generator\Model\Behavior;
 abstract class BehaviorWithParameterAccess extends Behavior
 {
     /**
-     * @template ReturnType of string|null
+     * @psalm-return ($defaultValue is string ? string : string|null)
      *
      * @param string $name
-     * @param ReturnType|string|null $defaultValue
+     * @param string|null $defaultValue
      *
-     * @return ReturnType|string|null
+     * @return string|null
      */
     #[\Override]
     public function getParameter(string $name, ?string $defaultValue = null): ?string
@@ -30,12 +30,12 @@ abstract class BehaviorWithParameterAccess extends Behavior
     }
 
     /**
-     * @template ReturnType of bool|null
+     * @psalm-return ($defaultValue is bool ? bool : bool|null)
      *
      * @param string $parameterName
-     * @param ReturnType|bool|null $defaultValue
+     * @param bool|null $defaultValue
      *
-     * @return ReturnType|bool|null
+     * @return bool|null
      */
     public function getParameterBool(string $parameterName, ?bool $defaultValue = null): ?bool
     {
@@ -45,14 +45,14 @@ abstract class BehaviorWithParameterAccess extends Behavior
     }
 
     /**
-     * @template ReturnType of int|null
+     * @psalm-return ($defaultValue is int ? int : int|null)
      *
      * @param string $parameterName
-     * @param ReturnType|int|null $defaultValue
+     * @param int|null $defaultValue
      *
      * @throws \Propel\Generator\Exception\SchemaException
      *
-     * @return ReturnType|int|null
+     * @return int|null
      */
     public function getParameterInt(string $parameterName, ?int $defaultValue = null): ?int
     {
@@ -68,13 +68,13 @@ abstract class BehaviorWithParameterAccess extends Behavior
     }
 
     /**
-     * @template ReturnType of array|null
+     * @psalm-return ($defaultValue is array ? array : array|null)
      *
      * @param string $parameterName
-     * @param ReturnType|array|null $defaultValue
+     * @param array|null $defaultValue
      * @param callable|null $mapper
      *
-     * @return ReturnType|array|null
+     * @return array|null
      */
     public function getParameterCsv(string $parameterName, ?array $defaultValue = [], ?callable $mapper = null): ?array
     {
@@ -102,13 +102,13 @@ abstract class BehaviorWithParameterAccess extends Behavior
     }
 
     /**
-     * @template ReturnType of array|null
+     * @psalm-return ($defaultValue is array ? array|true : array|true|null)
      *
      * @param string $parameterName
-     * @param ReturnType|array|null $defaultValue
+     * @param array|null $defaultValue
      * @param callable|null $mapper
      *
-     * @return ReturnType|array|true
+     * @return array|true|null
      */
     public function getParameterTrueOrCsv(string $parameterName, ?array $defaultValue = null, $mapper = null)
     {

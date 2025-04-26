@@ -15,6 +15,7 @@ use Propel\Generator\Exception\BuildException;
 use Propel\Generator\Exception\EngineException;
 use Propel\Generator\Exception\InvalidArgumentException;
 use Propel\Generator\Exception\LogicException;
+use Propel\Generator\Exception\SchemaException;
 use Propel\Generator\Platform\MysqlPlatform;
 use Propel\Generator\Platform\PlatformInterface;
 use Propel\Runtime\Collection\ObjectCollection;
@@ -195,6 +196,8 @@ class Table extends ScopedMappingModel implements IdMethod
     }
 
     /**
+     * @throws \Propel\Generator\Exception\SchemaException
+     *
      * @return void
      */
     #[\Override]
@@ -203,6 +206,9 @@ class Table extends ScopedMappingModel implements IdMethod
         parent::setupObject();
 
         $this->commonName = $this->originCommonName = $this->getAttribute('name');
+        if (!$this->commonName) {
+            throw new SchemaException("Attribute 'name' missing on table.");
+        }
 
         // retrieves the method for converting from specified name to a PHP name.
         $this->phpNamingMethod = $this->getAttribute('phpNamingMethod', $this->database->getDefaultPhpNamingMethod());
@@ -1306,10 +1312,16 @@ class Table extends ScopedMappingModel implements IdMethod
     /**
      * Returns the common name (without schema name), but with table prefix if defined.
      *
+     * @throws \Propel\Generator\Exception\LogicException
+     *
      * @return string
      */
     public function getCommonName(): string
     {
+        if ($this->commonName === null) {
+            throw new LogicException("Accessing Table property 'commonName' before setupObject() was called.");
+        }
+
         return $this->commonName;
     }
 

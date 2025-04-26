@@ -11,6 +11,7 @@ namespace Propel\Generator\Manager;
 use Closure;
 use DOMDocument;
 use Exception;
+use LogicException;
 use Propel\Generator\Builder\Util\SchemaReader;
 use Propel\Generator\Config\GeneratorConfigInterface;
 use Propel\Generator\Exception\BuildException;
@@ -438,13 +439,18 @@ abstract class AbstractManager
      * We need to join the datamodels in this case to allow for foreign keys
      * that point to tables in different packages.
      *
-     * @param array $schemas
+     * @param array<\Propel\Generator\Model\Schema> $schemas
+     *
+     * @throws \LogicException
      *
      * @return \Propel\Generator\Model\Schema
      */
     protected function joinDataModels(array $schemas): Schema
     {
         $mainSchema = array_shift($schemas);
+        if (!$mainSchema) {
+            throw new LogicException('Cannot join data models of empty schemas');
+        }
         $mainSchema->joinSchemas($schemas);
 
         return $mainSchema;

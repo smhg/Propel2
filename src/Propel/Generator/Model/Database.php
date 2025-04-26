@@ -795,11 +795,7 @@ class Database extends ScopedMappingModel
      */
     public function getDomain(string $name): ?Domain
     {
-        if (isset($this->domainMap[$name])) {
-            return $this->domainMap[$name];
-        }
-
-        return null;
+        return $this->domainMap[$name] ?? null;
     }
 
     /**

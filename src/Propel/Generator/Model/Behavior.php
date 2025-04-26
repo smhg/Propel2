@@ -435,11 +435,18 @@ class Behavior extends MappingModel
      *
      * @param string $name
      *
-     * @return \Propel\Generator\Model\Column|null
+     * @throws \Propel\Generator\Exception\LogicException
+     *
+     * @return \Propel\Generator\Model\Column
      */
-    public function getColumnForParameter(string $name): ?Column
+    public function getColumnForParameter(string $name): Column
     {
-        return $this->table->getColumn($this->getParameter($name));
+        $column = $this->table->getColumn($this->getParameter($name));
+        if (!$column) {
+            throw new LogicException("Behavior is not associated with column '$name'.");
+        }
+
+        return $column;
     }
 
     /**
