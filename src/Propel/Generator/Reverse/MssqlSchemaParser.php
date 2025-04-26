@@ -78,6 +78,7 @@ class MssqlSchemaParser extends AbstractSchemaParser
      *
      * @return array<string>
      */
+    #[\Override]
     protected function getTypeMapping(): array
     {
         return self::$mssqlTypeMap;
@@ -91,6 +92,7 @@ class MssqlSchemaParser extends AbstractSchemaParser
      *
      * @return int
      */
+    #[\Override]
     public function parse(Database $database, array $additionalTables = []): int
     {
         $dataFetcher = $this->dbh->query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME <> 'dtproperties'");

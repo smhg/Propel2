@@ -27,6 +27,7 @@ class ObjectCombinationCollection extends ObjectCollection
      *
      * @return array The list of the primary keys of the collection
      */
+    #[\Override]
     public function getPrimaryKeys(bool $usePrefix = true): array
     {
         $ret = [];
@@ -48,6 +49,7 @@ class ObjectCombinationCollection extends ObjectCollection
      *
      * @return void
      */
+    #[\Override]
     public function push($value): void
     {
         if (func_num_args() > 1) { // previous version used type-breaking variadic args
@@ -79,6 +81,7 @@ class ObjectCombinationCollection extends ObjectCollection
      *
      * @return string|int|false
      */
+    #[\Override]
     public function search($element)
     {
         if (func_num_args() > 1) { // previous version used type-breaking variadic args
@@ -114,6 +117,7 @@ class ObjectCombinationCollection extends ObjectCollection
      *
      * @return void
      */
+    #[\Override]
     public function removeObject($element): void
     {
         if (func_num_args() > 1) { // previous version used type-breaking variadic args
@@ -131,6 +135,7 @@ class ObjectCombinationCollection extends ObjectCollection
      *
      * @return bool
      */
+    #[\Override]
     public function contains($element): bool
     {
         if (func_num_args() > 1) { // previous version used type-breaking variadic args

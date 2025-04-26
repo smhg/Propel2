@@ -37,6 +37,7 @@ class ConcreteInheritanceParentBehavior extends Behavior
     /**
      * @return void
      */
+    #[\Override]
     public function modifyTable(): void
     {
         $table = $this->getTable();

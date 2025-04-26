@@ -40,6 +40,7 @@ class AggregateColumnBehavior extends Behavior
      *
      * @return bool
      */
+    #[\Override]
     public function allowMultiple(): bool
     {
         return true;
@@ -52,6 +53,7 @@ class AggregateColumnBehavior extends Behavior
      *
      * @return void
      */
+    #[\Override]
     public function modifyTable(): void
     {
         $table = $this->getTable();

@@ -30,6 +30,7 @@ class XmlParser extends AbstractParser
      *
      * @return string Converted data, as an XML string
      */
+    #[\Override]
     public function fromArray(array $array, string $rootKey = 'data', ?string $charset = null): string
     {
         $rootNode = $this->getRootNode($rootKey);
@@ -46,6 +47,7 @@ class XmlParser extends AbstractParser
      *
      * @return string
      */
+    #[\Override]
     public function listFromArray(array $array, ?string $rootKey = 'data', ?string $charset = null): string
     {
         $rootNode = $this->getRootNode($rootKey);
@@ -155,6 +157,7 @@ class XmlParser extends AbstractParser
      *
      * @return array Converted data
      */
+    #[\Override]
     public function toArray(string $data, string $rootKey = 'data'): array
     {
         $doc = new DOMDocument('1.0', 'UTF-8');

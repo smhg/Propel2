@@ -72,7 +72,8 @@ class FilterCollectorCombiner extends FilterCollector
         if (!$this->combiner || $this->combiner->isEmpty()) {
             return $target;
         }
-        $combinerFilters = $this->combiner->mergeCombiner($this->combiner->columnFilters);
+        /** @var non-empty-array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface> $combinerFilters */
+        $combinerFilters = $this->combiner->mergeCombiner($this->combiner->columnFilters); // recurse
         $firstFilter = array_shift($combinerFilters);
         foreach ($combinerFilters as $filter) {
             $firstFilter->addAnd($filter);
@@ -90,6 +91,7 @@ class FilterCollectorCombiner extends FilterCollector
     /**
      * @return array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
      */
+    #[\Override]
     public function getColumnFilters(): array
     {
         return $this->mergeCombiner(parent::getColumnFilters());
@@ -102,6 +104,7 @@ class FilterCollectorCombiner extends FilterCollector
      *
      * @return void
      */
+    #[\Override]
     public function addFilterWithConjunction(string $andOr, ColumnFilterInterface $filter, bool $preferColumnCondition = true): void
     {
         if ($this->combiner) {
@@ -118,6 +121,7 @@ class FilterCollectorCombiner extends FilterCollector
      *
      * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|null
      */
+    #[\Override]
     public function findFilterByColumn(string $columnName): ?ColumnFilterInterface
     {
         return parent::findFilterByColumn($columnName) ?? ($this->combiner ? $this->combiner->findFilterByColumn($columnName) : null);
@@ -126,6 +130,7 @@ class FilterCollectorCombiner extends FilterCollector
     /**
      * @return bool
      */
+    #[\Override]
     public function isEmpty(): bool
     {
         return parent::isEmpty() && (!$this->combiner || $this->combiner->isEmpty());
@@ -134,6 +139,7 @@ class FilterCollectorCombiner extends FilterCollector
     /**
      * @return void
      */
+    #[\Override]
     public function clear()
     {
         parent::clear();
@@ -146,6 +152,7 @@ class FilterCollectorCombiner extends FilterCollector
      *
      * @return void
      */
+    #[\Override]
     public function merge(FilterCollector $filterCollector, bool $isOr): void
     {
         if ($this->combiner) {
@@ -159,6 +166,7 @@ class FilterCollectorCombiner extends FilterCollector
     /**
      * @return int
      */
+    #[\Override]
     public function countColumnFilters(): int
     {
         return parent::countColumnFilters() + ($this->combiner ? $this->combiner->countColumnFilters() : 0);
@@ -167,6 +175,7 @@ class FilterCollectorCombiner extends FilterCollector
     /**
      * @return array<string>
      */
+    #[\Override]
     public function getColumnExpressionsInQuery(): array
     {
         return array_merge(parent::getColumnExpressionsInQuery(), $this->combiner ? $this->combiner->getColumnExpressionsInQuery() : []);
@@ -175,6 +184,7 @@ class FilterCollectorCombiner extends FilterCollector
     /**
      * @return array<string, \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>
      */
+    #[\Override]
     public function getColumnFiltersByColumn(): array
     {
         return array_merge(parent::getColumnFiltersByColumn(), $this->combiner ? $this->combiner->getColumnFiltersByColumn() : []);
@@ -187,6 +197,7 @@ class FilterCollectorCombiner extends FilterCollector
      *
      * @return array<string|null, array<\Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface>> array(table => array(table.column1, table.column2))
      */
+    #[\Override]
     public function groupFiltersByTable(?string $defaultTableAlias): array
     {
         if ($this->combiner) {
@@ -201,6 +212,7 @@ class FilterCollectorCombiner extends FilterCollector
      *
      * @return bool
      */
+    #[\Override]
     public function equals(FilterCollector $collector): bool
     {
         if (!parent::equals($collector)) {
@@ -223,6 +235,7 @@ class FilterCollectorCombiner extends FilterCollector
     /**
      * @return void
      */
+    #[\Override]
     public function __clone()
     {
         parent::__clone();

@@ -19,6 +19,7 @@ class BinaryColumnFilter extends AbstractColumnFilter
   *
   * @return string
   */
+    #[\Override]
     protected function buildFilterClause(array &$paramCollector): string
     {
         if ($this->value === null) {

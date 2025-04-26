@@ -47,6 +47,7 @@ class RemoteTypedColumnExpression extends RemoteColumnExpression
     /**
      * @return \Propel\Runtime\Map\ColumnMap|null
      */
+    #[\Override]
     public function getColumnMap(): ?ColumnMap
     {
         return $this->columnMap;
@@ -57,6 +58,7 @@ class RemoteTypedColumnExpression extends RemoteColumnExpression
      *
      * @return bool
      */
+    #[\Override]
     public function equals(AbstractColumnExpression $otherColumn): bool
     {
         return $otherColumn instanceof static
@@ -68,6 +70,7 @@ class RemoteTypedColumnExpression extends RemoteColumnExpression
     /**
      * @return bool
      */
+    #[\Override]
     public function hasColumnMap(): bool
     {
         return (bool)$this->columnMap;
@@ -80,6 +83,7 @@ class RemoteTypedColumnExpression extends RemoteColumnExpression
      *
      * @return array{type: int, value: mixed}| array{column: string, table: string|null, value: mixed}
      */
+    #[\Override]
     public function buildPdoParam($value): array
     {
         if ($this->columnMap) {

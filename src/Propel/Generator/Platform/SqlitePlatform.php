@@ -50,6 +50,7 @@ class SqlitePlatform extends DefaultPlatform
     /**
      * @return void
      */
+    #[\Override]
     protected function initialize(): void
     {
         parent::initialize();
@@ -64,6 +65,7 @@ class SqlitePlatform extends DefaultPlatform
      *
      * @return void
      */
+    #[\Override]
     protected function initializeTypeMap(): void
     {
         parent::initializeTypeMap();
@@ -92,6 +94,7 @@ class SqlitePlatform extends DefaultPlatform
      *
      * @return string
      */
+    #[\Override]
     public function getSchemaDelimiter(): string
     {
         return '§';
@@ -100,6 +103,7 @@ class SqlitePlatform extends DefaultPlatform
     /**
      * @return array<int>
      */
+    #[\Override]
     public function getDefaultTypeSizes(): array
     {
         return [
@@ -115,6 +119,7 @@ class SqlitePlatform extends DefaultPlatform
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function setGeneratorConfig(GeneratorConfigInterface $generatorConfig): void
     {
         parent::setGeneratorConfig($generatorConfig);
@@ -136,6 +141,7 @@ class SqlitePlatform extends DefaultPlatform
      *
      * @return string
      */
+    #[\Override]
     public function getAddColumnsDDL(array $columns): string
     {
         $ret = '';
@@ -157,6 +163,7 @@ ALTER TABLE %s ADD %s;
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function getModifyTableDDL(TableDiff $tableDiff): string
     {
         $changedNotEditableThroughDirectDDL = $this->tableAlteringWorkaround && (
@@ -277,6 +284,7 @@ DROP TABLE %s;
     /**
      * @return string
      */
+    #[\Override]
     public function getBeginDDL(): string
     {
         return '
@@ -287,6 +295,7 @@ PRAGMA foreign_keys = OFF;
     /**
      * @return string
      */
+    #[\Override]
     public function getEndDDL(): string
     {
         return '
@@ -299,6 +308,7 @@ PRAGMA foreign_keys = ON;
      *
      * @return string
      */
+    #[\Override]
     public function getAddTablesDDL(Database $database): string
     {
         $ret = '';
@@ -324,6 +334,7 @@ PRAGMA foreign_keys = ON;
      *
      * @return void
      */
+    #[\Override]
     public function normalizeTable(Table $table): void
     {
         if ($table->getPrimaryKey()) {
@@ -378,6 +389,7 @@ PRAGMA foreign_keys = ON;
      *
      * @return string
      */
+    #[\Override]
     public function getPrimaryKeyDDL(Table $table): string
     {
         if ($table->hasPrimaryKey() && !$table->hasAutoIncrementPrimaryKey()) {
@@ -390,6 +402,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function getRemoveColumnDDL(Column $column): string
     {
         //not supported
@@ -399,6 +412,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function getRenameColumnDDL(Column $fromColumn, Column $toColumn): string
     {
         //not supported
@@ -408,6 +422,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function getModifyColumnDDL(ColumnDiff $columnDiff): string
     {
         //not supported
@@ -417,6 +432,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function getModifyColumnsDDL($columnDiffs): string
     {
         //not supported
@@ -426,6 +442,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function getDropPrimaryKeyDDL(Table $table): string
     {
         //not supported
@@ -435,6 +452,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function getAddPrimaryKeyDDL(Table $table): string
     {
         //not supported
@@ -444,6 +462,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function getAddForeignKeyDDL(ForeignKey $fk): string
     {
         //not supported
@@ -453,6 +472,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function getDropForeignKeyDDL(ForeignKey $fk): string
     {
         //not supported
@@ -464,6 +484,7 @@ PRAGMA foreign_keys = ON;
      *
      * @return string
      */
+    #[\Override]
     public function getAutoIncrement(): string
     {
         return 'PRIMARY KEY AUTOINCREMENT';
@@ -472,6 +493,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @return int
      */
+    #[\Override]
     public function getMaxColumnNameLength(): int
     {
         return 1024;
@@ -482,6 +504,7 @@ PRAGMA foreign_keys = ON;
      *
      * @return string
      */
+    #[\Override]
     public function getColumnDDL(Column $col): string
     {
         if ($col->isAutoIncrement()) {
@@ -509,6 +532,7 @@ PRAGMA foreign_keys = ON;
      *
      * @return string
      */
+    #[\Override]
     public function getAddTableDDL(Table $table): string
     {
         $table = clone $table;
@@ -563,6 +587,7 @@ PRAGMA foreign_keys = ON;
      *
      * @return string
      */
+    #[\Override]
     public function getForeignKeyDDL(ForeignKey $fk): string
     {
         if ($fk->isSkipSql() || !$this->foreignKeySupport || $fk->isPolymorphic()) {
@@ -595,6 +620,7 @@ PRAGMA foreign_keys = ON;
      *
      * @return bool
      */
+    #[\Override]
     public function hasSize(string $sqlType): bool
     {
         return !in_array($sqlType, [
@@ -609,6 +635,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function doQuoting(string $text): string
     {
         return '[' . strtr($text, ['.' => '].[']) . ']';
@@ -617,6 +644,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @return bool
      */
+    #[\Override]
     public function supportsSchemas(): bool
     {
         return true;
@@ -625,6 +653,7 @@ PRAGMA foreign_keys = ON;
     /**
      * @return bool
      */
+    #[\Override]
     public function supportsNativeDeleteTrigger(): bool
     {
         return true;

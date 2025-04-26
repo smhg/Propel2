@@ -29,6 +29,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
     /**
      * @return void
      */
+    #[\Override]
     public function registerTargetClasses(): void
     {
         parent::registerTargetClasses();
@@ -42,6 +43,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return void
      */
+    #[\Override]
     protected function addInit(string &$script): void
     {
         $script .= $this->buildInitCode('ObjectCombinationCollection', null, null);
@@ -52,6 +54,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return void
      */
+    #[\Override]
     protected function addCreateQuery(string &$script): void
     {
         foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
@@ -128,6 +131,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return string
      */
+    #[\Override]
     public function addClearReferencesCode(string &$script): string
     {
         $varName = $this->names->getAttributeWithCollectionName();
@@ -149,6 +153,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return array<string>
      */
+    #[\Override]
     public function reserveNamesForGetters(): array
     {
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
@@ -162,6 +167,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return void
      */
+    #[\Override]
     protected function addGetters(string &$script): void
     {
         [$objectCollectionClassName, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
@@ -306,6 +312,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
     /**
      * @return bool
      */
+    #[\Override]
     protected function setterItemIsArray(): bool
     {
         return true;
@@ -316,6 +323,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return array{string, string}
      */
+    #[\Override]
     protected function resolveObjectCollectionClassNameAndType(?Table $table = null): array
     {
         if ($table) {
@@ -334,6 +342,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return void
      */
+    #[\Override]
     public function addDeleteScheduledItemsCode(string &$script): void
     {
         $scheduledForDeletionVarName = $this->names->getAttributeScheduledForDeletionName();
@@ -414,6 +423,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
     /**
      * @return string
      */
+    #[\Override]
     protected function buildAdditionalCountMethods(): string
     {
         $methods = array_map([$this, 'buildCountRelationMethod'], $this->crossRelation->getCrossForeignKeys());
@@ -458,6 +468,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return void
      */
+    #[\Override]
     protected function buildDoAdd(string &$script): void
     {
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);

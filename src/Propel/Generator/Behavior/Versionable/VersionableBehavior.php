@@ -79,6 +79,7 @@ class VersionableBehavior extends SyncedTableBehavior
      *
      * @return array
      */
+    #[\Override]
     protected function getDefaultParameters(): array
     {
         return [
@@ -115,6 +116,7 @@ class VersionableBehavior extends SyncedTableBehavior
      *
      * @return void
      */
+    #[\Override]
     protected function addBehaviorToTable(Table $table): void
     {
         if (in_array($table, $this->versionTables)) {
@@ -127,6 +129,7 @@ class VersionableBehavior extends SyncedTableBehavior
     /**
      * @return string|null
      */
+    #[\Override]
     public function getSyncedTablePhpName(): ?string
     {
         // required for BC
@@ -136,6 +139,7 @@ class VersionableBehavior extends SyncedTableBehavior
     /**
      * @return void
      */
+    #[\Override]
     public function modifyTable(): void
     {
         $this->addColumnsToSourceTable();
@@ -182,6 +186,7 @@ class VersionableBehavior extends SyncedTableBehavior
      *
      * @return void
      */
+    #[\Override]
     public function addTableElements(Table $syncedTable, bool $tableExistsInSchema): void
     {
         parent::addTableElements($syncedTable, $tableExistsInSchema);
@@ -292,6 +297,7 @@ class VersionableBehavior extends SyncedTableBehavior
     /**
      * @return $this|\Propel\Generator\Behavior\Versionable\VersionableBehaviorObjectBuilderModifier
      */
+    #[\Override]
     public function getObjectBuilderModifier()
     {
         if ($this->objectBuilderModifier === null) {
@@ -304,6 +310,7 @@ class VersionableBehavior extends SyncedTableBehavior
     /**
      * @return $this|\Propel\Generator\Behavior\Versionable\VersionableBehaviorQueryBuilderModifier
      */
+    #[\Override]
     public function getQueryBuilderModifier()
     {
         if ($this->queryBuilderModifier === null) {

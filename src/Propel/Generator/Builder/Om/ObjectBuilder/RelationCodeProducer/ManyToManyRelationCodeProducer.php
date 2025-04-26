@@ -33,6 +33,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return array{string, string}
      */
+    #[\Override]
     protected function resolveObjectCollectionClassNameAndType(?Table $table = null): array
     {
         return parent::resolveObjectCollectionClassNameAndType($table ?? $this->getFkToTarget()->getForeignTable());
@@ -43,6 +44,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return void
      */
+    #[\Override]
     public function addScheduledForDeletionAttribute(string &$script): void
     {
         $refFK = $this->crossRelation->getIncomingForeignKey();
@@ -60,6 +62,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return void
      */
+    #[\Override]
     protected function addInit(string &$script): void
     {
         $fk = $this->getFkToTarget();
@@ -78,6 +81,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return void
      */
+    #[\Override]
     protected function addCreateQuery(string &$script): void
     {
         // no addCreateQuery.
@@ -90,6 +94,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return array<string>
      */
+    #[\Override]
     public function reserveNamesForGetters(): array
     {
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
@@ -102,6 +107,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return void
      */
+    #[\Override]
     protected function addGetters(string &$script): void
     {
         $sourceIdentifierSingular = $this->names->getSourceIdentifier(false);
@@ -174,6 +180,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
     /**
      * @return bool
      */
+    #[\Override]
     protected function setterItemIsArray(): bool
     {
         return false;
@@ -184,6 +191,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return void
      */
+    #[\Override]
     public function addDeleteScheduledItemsCode(string &$script): void
     {
         $scheduledForDeletionVarName = $this->names->getAttributeScheduledForDeletionName();
@@ -242,6 +250,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
     /**
      * @return string
      */
+    #[\Override]
     protected function buildAdditionalCountMethods(): string
     {
         return '';
@@ -252,6 +261,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return void
      */
+    #[\Override]
     protected function buildDoAdd(string &$script): void
     {
         $middleTableModelClass = $this->names->getMiddleTableModelClass();

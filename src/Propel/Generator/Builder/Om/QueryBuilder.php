@@ -32,6 +32,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @return string
      */
+    #[\Override]
     public function getPackage(): string
     {
         return parent::getPackage() . '.Base';
@@ -42,6 +43,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @return string|null
      */
+    #[\Override]
     public function getNamespace(): ?string
     {
         $namespace = parent::getNamespace();
@@ -54,6 +56,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @return string
      */
+    #[\Override]
     public function getUnprefixedClassName(): string
     {
         return $this->getStubQueryBuilder()->getUnprefixedClassName();
@@ -86,6 +89,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @return void
      */
+    #[\Override]
     protected function addClassOpen(string &$script): void
     {
         $table = $this->getTable();
@@ -153,6 +157,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @return void
      */
+    #[\Override]
     protected function addClassBody(string &$script): void
     {
         $table = $this->getTable();
@@ -315,6 +320,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @return void
      */
+    #[\Override]
     protected function addClassClose(string &$script): void
     {
         $script .= "
@@ -1973,6 +1979,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @return bool
      */
+    #[\Override]
     public function hasBehaviorModifier(string $hookName, string $modifier = ''): bool
     {
         return parent::hasBehaviorModifier($hookName, 'QueryBuilderModifier');

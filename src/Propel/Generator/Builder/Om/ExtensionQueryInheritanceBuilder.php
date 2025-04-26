@@ -33,6 +33,7 @@ class ExtensionQueryInheritanceBuilder extends AbstractOMBuilder
      *
      * @return string
      */
+    #[\Override]
     public function getUnprefixedClassName(): string
     {
         return $this->getChild()->getClassName() . 'Query';
@@ -43,6 +44,7 @@ class ExtensionQueryInheritanceBuilder extends AbstractOMBuilder
      *
      * @return string|null
      */
+    #[\Override]
     public function getPackage(): ?string
     {
         return ($this->getChild()->getPackage() ?: parent::getPackage());
@@ -83,6 +85,7 @@ class ExtensionQueryInheritanceBuilder extends AbstractOMBuilder
      *
      * @return void
      */
+    #[\Override]
     protected function addClassOpen(string &$script): void
     {
         $table = $this->getTable();
@@ -132,6 +135,7 @@ class " . $this->getUnqualifiedClassName() . ' extends ' . $baseClassName . "
      *
      * @return void
      */
+    #[\Override]
     protected function addClassBody(string &$script): void
     {
     }
@@ -143,6 +147,7 @@ class " . $this->getUnqualifiedClassName() . ' extends ' . $baseClassName . "
      *
      * @return void
      */
+    #[\Override]
     protected function addClassClose(string &$script): void
     {
         $script .= "

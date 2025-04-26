@@ -110,6 +110,7 @@ class FilterClauseLiteralWithColumns extends AbstractFilterClauseLiteral
      *
      * @return array
      */
+    #[\Override]
     protected function buildParameterByPosition(int $position, $value): array
     {
         $columnIndex = count($this->resolvedColumns) === 1 ? 0 : $position;

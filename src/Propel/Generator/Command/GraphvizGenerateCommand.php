@@ -26,6 +26,7 @@ class GraphvizGenerateCommand extends AbstractCommand
     /**
      * @inheritDoc
      */
+    #[\Override]
     protected function configure()
     {
         parent::configure();
@@ -41,6 +42,7 @@ class GraphvizGenerateCommand extends AbstractCommand
     /**
      * @inheritDoc
      */
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $configOptions = [];

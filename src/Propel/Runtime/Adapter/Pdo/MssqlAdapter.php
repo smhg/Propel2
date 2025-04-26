@@ -34,6 +34,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return void
      */
+    #[\Override]
     public function setCharset(ConnectionInterface $con, string $charset): void
     {
     }
@@ -46,6 +47,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function concatString(string $s1, string $s2): string
     {
         return '(' . $s1 . ' + ' . $s2 . ')';
@@ -60,6 +62,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function subString(string $s, int $pos, int $len): string
     {
         return 'SUBSTRING(' . $s . ', ' . $pos . ', ' . $len . ')';
@@ -72,6 +75,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function strLength(string $s): string
     {
         return 'LEN(' . $s . ')';
@@ -80,6 +84,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function compareRegex($left, $right): string
     {
         return sprintf('dbo.RegexMatch(%s, %s', $left, $right);
@@ -92,6 +97,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function quoteIdentifier(string $text): string
     {
         return '[' . $text . ']';
@@ -104,6 +110,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function quoteIdentifierTable(string $table): string
     {
         // e.g. 'database.table alias' should be escaped as '[database].[table] [alias]'
@@ -117,6 +124,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function random(?string $seed = null): string
     {
         return 'RAND(' . ((int)$seed) . ')';
@@ -142,6 +150,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return void
      */
+    #[\Override]
     public function applyLimit(string &$sql, int $offset, int $limit, ?Criteria $criteria = null): void
     {
         // split the select and from clauses out of the original query
@@ -292,6 +301,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return void
      */
+    #[\Override]
     public function cleanupSQL(string &$sql, array &$params, Criteria $values, DatabaseMap $dbMap): void
     {
         $i = 1;
@@ -340,6 +350,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return void
      */
+    #[\Override]
     public function applyLock(string &$sql, Lock $lock): void
     {
     }
@@ -349,6 +360,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function getTimestampFormatter(): string
     {
         return 'Y-m-d H:i:s:000';
@@ -359,6 +371,7 @@ class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function getTimeFormatter(): string
     {
         return 'H:i:s:000';

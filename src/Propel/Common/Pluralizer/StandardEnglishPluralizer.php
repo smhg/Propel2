@@ -121,6 +121,7 @@ class StandardEnglishPluralizer implements PluralizerInterface
      *
      * @return string The plural form of $root (e.g. Authors).
      */
+    #[\Override]
     public function getPluralForm(string $root): string
     {
         // save some time in the case that singular and plural are the same

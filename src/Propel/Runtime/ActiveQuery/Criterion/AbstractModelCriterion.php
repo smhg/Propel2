@@ -59,6 +59,7 @@ abstract class AbstractModelCriterion extends AbstractCriterion
      *
      * @return bool
      */
+    #[\Override]
     public function equals(?object $filter): bool
     {
         return parent::equals($filter)

@@ -23,6 +23,7 @@ class JsonParser extends AbstractParser
      *
      * @return string Converted data, as a JSON string
      */
+    #[\Override]
     public function fromArray(array $array, ?string $rootKey = null): string
     {
         return json_encode($rootKey === null ? $array : [$rootKey => $array], JSON_THROW_ON_ERROR);
@@ -49,6 +50,7 @@ class JsonParser extends AbstractParser
      *
      * @return array Converted data
      */
+    #[\Override]
     public function toArray(string $data, ?string $rootKey = null): array
     {
         $data = json_decode($data, true);

@@ -55,6 +55,7 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
      *
      * @return void
      */
+    #[\Override]
     public function addMethods(string &$script): void
     {
         $this->registerTargetClasses();
@@ -70,6 +71,7 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
      *
      * @return void
      */
+    #[\Override]
     public function addAttributes(string &$script): void
     {
         $className = $this->getClassNameFromTable($this->relation->getForeignTable());
@@ -88,6 +90,7 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
      *
      * @return void
      */
+    #[\Override]
     public function addOnReloadCode(string &$script): void
     {
         $varName = $this->getAttributeName();
@@ -100,6 +103,7 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
      *
      * @return void
      */
+    #[\Override]
     public function addDeleteScheduledItemsCode(string &$script): void
     {
         $attributeName = $this->getAttributeName();
@@ -120,6 +124,7 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
      *
      * @return string
      */
+    #[\Override]
     public function addClearReferencesCode(string &$script): string
     {
         $varName = $this->getAttributeName();

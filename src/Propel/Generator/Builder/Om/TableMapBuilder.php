@@ -24,6 +24,7 @@ class TableMapBuilder extends AbstractOMBuilder
  /**
   * @return void
   */
+    #[\Override]
     protected function validateModel(): void
     {
         parent::validateModel();
@@ -43,6 +44,7 @@ class TableMapBuilder extends AbstractOMBuilder
      *
      * @return string
      */
+    #[\Override]
     public function getPackage(): string
     {
         return parent::getPackage() . '.Map';
@@ -51,6 +53,7 @@ class TableMapBuilder extends AbstractOMBuilder
     /**
      * @return string|null
      */
+    #[\Override]
     public function getNamespace(): ?string
     {
         $namespace = parent::getNamespace();
@@ -79,6 +82,7 @@ class TableMapBuilder extends AbstractOMBuilder
      *
      * @return string
      */
+    #[\Override]
     public function getUnprefixedClassName(): string
     {
         return $this->getTable()->getPhpName() . 'TableMap';
@@ -91,6 +95,7 @@ class TableMapBuilder extends AbstractOMBuilder
      *
      * @return void
      */
+    #[\Override]
     protected function addClassOpen(string &$script): void
     {
         $table = $this->getTable();
@@ -133,6 +138,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      *
      * @return void
      */
+    #[\Override]
     protected function addClassBody(string &$script): void
     {
         $table = $this->getTable();
@@ -523,6 +529,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      *
      * @return void
      */
+    #[\Override]
     protected function addClassClose(string &$script): void
     {
         $script .= "
@@ -879,6 +886,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      *
      * @return bool
      */
+    #[\Override]
     public function hasBehaviorModifier(string $hookName, string $modifier = ''): bool
     {
         return parent::hasBehaviorModifier($hookName, 'TableMapBuilderModifier');

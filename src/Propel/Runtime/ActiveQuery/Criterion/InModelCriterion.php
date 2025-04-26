@@ -24,6 +24,7 @@ class InModelCriterion extends AbstractModelCriterion
      *
      * @return void
      */
+    #[\Override]
     protected function appendPsForUniqueClauseTo(string &$sb, array &$params): void
     {
         $bindParams = []; // the param names used in query building

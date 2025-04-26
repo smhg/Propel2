@@ -18,6 +18,7 @@ abstract class ConfigOperationBehavior extends Behavior
      *
      * @return bool
      */
+    #[\Override]
     public function allowMultiple(): bool
     {
         return true;
@@ -31,6 +32,7 @@ abstract class ConfigOperationBehavior extends Behavior
      /**
       * @return void
       */
+    #[\Override]
     public function modifyDatabase(): void
     {
         $this->apply($this->database);
@@ -39,6 +41,7 @@ abstract class ConfigOperationBehavior extends Behavior
     /**
      * @return void
      */
+    #[\Override]
     public function modifyTable(): void
     {
         $this->apply($this->table);

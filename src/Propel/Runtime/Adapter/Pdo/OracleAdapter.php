@@ -43,6 +43,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return void
      */
+    #[\Override]
     public function initConnection(ConnectionInterface $con, array $settings): void
     {
         $con->exec("ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD'");
@@ -64,6 +65,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function concatString(string $s1, string $s2): string
     {
         return "CONCAT($s1, $s2)";
@@ -72,6 +74,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function compareRegex($left, $right): string
     {
         return sprintf('REGEXP_LIKE(%s, %s)', $left, $right);
@@ -86,6 +89,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function subString(string $s, int $pos, int $len): string
     {
         return "SUBSTR($s, $pos, $len)";
@@ -98,6 +102,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function strLength(string $s): string
     {
         return "LENGTH($s)";
@@ -113,6 +118,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return void
      */
+    #[\Override]
     public function applyLimit(string &$sql, int $offset, int $limit, ?Criteria $criteria = null): void
     {
         $params = [];
@@ -138,6 +144,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
     /**
      * @return int
      */
+    #[\Override]
     protected function getIdMethod(): int
     {
         return AdapterInterface::ID_METHOD_SEQUENCE;
@@ -152,6 +159,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return int
      */
+    #[\Override]
     public function getId(ConnectionInterface $con, ?string $name = null): int
     {
         if ($name === null) {
@@ -171,6 +179,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return string
      */
+    #[\Override]
     public function random(?string $seed = null): string
     {
         return 'dbms_random.value';
@@ -186,6 +195,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return \Propel\Runtime\ActiveQuery\Criteria The input, with Select columns replaced by aliases
      */
+    #[\Override]
     public function turnSelectColumnsToAliases(Criteria $criteria): Criteria
     {
         $selectColumns = $criteria->getSelectColumns();
@@ -227,6 +237,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return bool
      */
+    #[\Override]
     public function bindValue(StatementInterface $stmt, string $parameter, $value, ColumnMap $cMap, ?int $position = null): bool
     {
         if ($cMap->getType() === PropelTypes::CLOB_EMU) {
@@ -251,6 +262,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return array
      */
+    #[\Override]
     protected function prepareParams(array $params): array
     {
         if (isset($params['dsn'])) {
@@ -268,6 +280,7 @@ class OracleAdapter extends PdoAdapter implements SqlAdapterInterface
      *
      * @return void
      */
+    #[\Override]
     public function applyLock(string &$sql, Lock $lock): void
     {
         $type = $lock->getType();

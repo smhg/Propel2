@@ -69,6 +69,7 @@ class BasicCriterion extends AbstractCriterion
      *
      * @return void
      */
+    #[\Override]
     protected function appendPsForUniqueClauseTo(string &$sb, array &$params): void
     {
         $field = ($this->table === null) ? $this->column : $this->table . '.' . $this->column;

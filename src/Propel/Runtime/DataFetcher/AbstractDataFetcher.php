@@ -31,6 +31,7 @@ abstract class AbstractDataFetcher implements DataFetcherInterface
      *
      * @return void
      */
+    #[\Override]
     public function setDataObject($dataObject): void
     {
         $this->dataObject = $dataObject;
@@ -39,6 +40,7 @@ abstract class AbstractDataFetcher implements DataFetcherInterface
     /**
      * @return mixed|null
      */
+    #[\Override]
     public function getDataObject()
     {
         return $this->dataObject;
@@ -47,6 +49,7 @@ abstract class AbstractDataFetcher implements DataFetcherInterface
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function fetchColumn($index = null)
     {
         /** @var array|null $next */

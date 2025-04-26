@@ -159,6 +159,7 @@ class VendorInfo extends MappingModel
     /**
      * @return void
      */
+    #[\Override]
     protected function setupObject(): void
     {
         $this->type = $this->getAttribute('type');

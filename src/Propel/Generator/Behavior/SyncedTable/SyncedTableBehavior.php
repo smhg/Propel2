@@ -45,6 +45,7 @@ class SyncedTableBehavior extends SyncedTableBehaviorDeclaration
     /**
      * @return void
      */
+    #[\Override]
     protected function setupObject(): void
     {
         parent::setupObject();
@@ -64,6 +65,7 @@ class SyncedTableBehavior extends SyncedTableBehaviorDeclaration
     /**
      * @return string
      */
+    #[\Override]
     public function resolveSyncedTableName(): string
     {
         return $this->getSyncedTableName()
@@ -75,6 +77,7 @@ class SyncedTableBehavior extends SyncedTableBehaviorDeclaration
      *
      * @return void
      */
+    #[\Override]
     public function modifyDatabase(): void
     {
         foreach ($this->getDatabase()->getTables() as $table) {
@@ -104,6 +107,7 @@ class SyncedTableBehavior extends SyncedTableBehaviorDeclaration
      *
      * @return void
      */
+    #[\Override]
     public function modifyTable(): void
     {
         if ($this->omitOnSkipSql() && $this->table->isSkipSql()) {
@@ -153,6 +157,7 @@ class SyncedTableBehavior extends SyncedTableBehaviorDeclaration
      *
      * @return void
      */
+    #[\Override]
     public function addTableElements(Table $syncedTable, bool $tableExistsInSchema): void
     {
         // base implementation does nothing
@@ -203,6 +208,7 @@ class SyncedTableBehavior extends SyncedTableBehaviorDeclaration
     /**
      * @return string
      */
+    #[\Override]
     public function getColumnPrefix(): string
     {
         $val = $this->useColumnPrefix();

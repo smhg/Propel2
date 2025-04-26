@@ -370,7 +370,7 @@ class ModelCriteria extends BaseModelCriteria
         if ($class == $this->getModelAliasOrName()) {
             // column of the Criteria's model
             $tableMap = $this->getTableMap();
-        } elseif (isset($this->joins[$class])) {
+        } elseif (isset($this->joins[$class]) && $this->joins[$class] instanceof ModelJoin) {
             // column of a relations's model
             $tableMap = $this->joins[$class]->getTableMap();
         } else {
@@ -465,6 +465,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return bool
      */
+    #[\Override]
     public function hasSelectClause(): bool
     {
         return (bool)$this->select || parent::hasSelectClause();
@@ -537,10 +538,10 @@ class ModelCriteria extends BaseModelCriteria
             if ($leftName === $this->getModelAliasOrName() || $leftName === $this->getModelShortName()) {
                 $previousJoin = $this->getPreviousJoin();
                 $tableMap = $this->getTableMap();
-            } elseif (isset($this->joins[$leftName])) {
+            } elseif (isset($this->joins[$leftName]) && $this->joins[$leftName] instanceof ModelJoin) {
                 $previousJoin = $this->joins[$leftName];
                 $tableMap = $previousJoin->getTableMap();
-            } elseif (isset($this->joins[$shortLeftName])) {
+            } elseif (isset($this->joins[$shortLeftName]) && $this->joins[$shortLeftName] instanceof ModelJoin) {
                 $previousJoin = $this->joins[$shortLeftName];
                 $tableMap = $previousJoin->getTableMap();
             } else {
@@ -654,6 +655,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return $this
      */
+    #[\Override]
     public function addJoinObject(Join $join, ?string $name = null)
     {
         if (!in_array($join, $this->joins)) { // compare equality, NOT identity
@@ -962,6 +964,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return $this The primary criteria object
      */
+    #[\Override]
     public function mergeWith(Criteria $criteria, ?string $operator = null)
     {
         if (
@@ -992,6 +995,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return $this
      */
+    #[\Override]
     public function clear()
     {
         parent::clear();
@@ -1044,6 +1048,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return $this
      */
+    #[\Override]
     public function addSubquery(Criteria $subQuery, ?string $alias = null, bool $addAliasAndSelectColumns = true)
     {
         if (!$subQuery->hasSelectClause()) {
@@ -1728,6 +1733,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return \Propel\Runtime\DataFetcher\DataFetcherInterface
      */
+    #[\Override]
     public function doCount(?ConnectionInterface $con = null): DataFetcherInterface
     {
         $this->configureSelectColumns();
@@ -2007,6 +2013,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return int Number of updated rows
      */
+    #[\Override]
     public function doUpdate($updateValues, ConnectionInterface $con, bool $forceIndividualSaves = false): int
     {
         if ($forceIndividualSaves) {
@@ -2083,6 +2090,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return \Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression
      */
+    #[\Override]
     public function resolveColumn(string $columnIdentifier, bool $hasAccessToOutputColumns = false, bool $failSilently = true): AbstractColumnExpression
     {
         return $this->columnResolver->resolveColumn($columnIdentifier, $hasAccessToOutputColumns, $failSilently);
@@ -2095,6 +2103,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return \Propel\Runtime\DataFetcher\DataFetcherInterface A dataFetcher using the connection, ready to be fetched
      */
+    #[\Override]
     public function doSelect(?ConnectionInterface $con = null): DataFetcherInterface
     {
         $this->configureSelectColumns();
@@ -2112,6 +2121,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return string
      */
+    #[\Override]
     public function createSelectSql(array &$params): string
     {
         $this->configureSelectColumns();
@@ -2199,6 +2209,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return mixed
      */
+    #[\Override]
     public function __call(string $name, array $arguments)
     {
         // Maybe it's a magic call to one of the methods supporting it, e.g. 'findByTitle'
@@ -2270,6 +2281,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return void
      */
+    #[\Override]
     public function __clone()
     {
         parent::__clone();
@@ -2290,6 +2302,7 @@ class ModelCriteria extends BaseModelCriteria
      *
      * @return $this
      */
+    #[\Override]
     public function addSelectColumn($name)
     {
         $this->isSelfSelected = true;
@@ -2300,6 +2313,7 @@ class ModelCriteria extends BaseModelCriteria
     /**
      * @return bool
      */
+    #[\Override]
     protected function isEmpty(): bool
     {
         return parent::isEmpty() && !($this->formatter || $this->modelAlias || $this->with || $this->select);

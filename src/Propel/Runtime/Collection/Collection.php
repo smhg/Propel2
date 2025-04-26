@@ -118,6 +118,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
      *
      * @return bool
      */
+    #[\Override]
     public function offsetExists($offset): bool
     {
         return isset($this->data[$offset]);
@@ -130,7 +131,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
      *
      * @return RowFormat|null
      */
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function &offsetGet($offset)
     {
         if (isset($this->data[$offset])) {
@@ -148,6 +149,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
      *
      * @return void
      */
+    #[\Override]
     public function offsetSet($offset, $value): void
     {
         if ($offset === null) {
@@ -162,6 +164,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
      *
      * @return void
      */
+    #[\Override]
     public function offsetUnset($offset): void
     {
         unset($this->data[$offset]);
@@ -210,6 +213,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
     /**
      * @return \Propel\Runtime\Collection\CollectionIterator|\Propel\Runtime\Collection\IteratorInterface
      */
+    #[\Override]
     public function getIterator(): Traversable
     {
         return new CollectionIterator($this);
@@ -220,6 +224,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
      *
      * @return int
      */
+    #[\Override]
     public function count(): int
     {
         return count($this->data);
@@ -443,7 +448,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
     /**
      * @return string
      */
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function serialize(): string
     {
         $repr = [
@@ -460,7 +465,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
      *
      * @return void
      */
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function unserialize($data): void
     {
         $repr = unserialize($data);

@@ -32,6 +32,7 @@ class ConfigStoreBehavior extends ConfigOperationBehavior
      *
      * @return bool
      */
+    #[\Override]
     public function allowMultiple(): bool
     {
         return true;
@@ -42,6 +43,7 @@ class ConfigStoreBehavior extends ConfigOperationBehavior
      *
      * @return void
      */
+    #[\Override]
     protected function apply($behaviorable): void
     {
         if ($this->wasApplied) {
@@ -55,6 +57,7 @@ class ConfigStoreBehavior extends ConfigOperationBehavior
     /**
      * @return string
      */
+    #[\Override]
     protected function getKey(): string
     {
         return $this->getAttribute('id');

@@ -34,6 +34,7 @@ class MssqlPlatform extends DefaultPlatform
      *
      * @return void
      */
+    #[\Override]
     protected function initialize(): void
     {
         parent::initialize();
@@ -64,6 +65,7 @@ class MssqlPlatform extends DefaultPlatform
     /**
      * @return int
      */
+    #[\Override]
     public function getMaxColumnNameLength(): int
     {
         return 128;
@@ -74,6 +76,7 @@ class MssqlPlatform extends DefaultPlatform
      *
      * @return string
      */
+    #[\Override]
     public function getNullString(bool $notNull): string
     {
         return $notNull ? 'NOT NULL' : 'NULL';
@@ -82,6 +85,7 @@ class MssqlPlatform extends DefaultPlatform
     /**
      * @return bool
      */
+    #[\Override]
     public function supportsNativeDeleteTrigger(): bool
     {
         return true;
@@ -90,6 +94,7 @@ class MssqlPlatform extends DefaultPlatform
     /**
      * @return bool
      */
+    #[\Override]
     public function supportsInsertNullPk(): bool
     {
         return false;
@@ -105,6 +110,7 @@ class MssqlPlatform extends DefaultPlatform
      *
      * @return string
      */
+    #[\Override]
     public function getAddTablesDDL(Database $database): string
     {
         $ret = $this->getBeginDDL();
@@ -130,6 +136,7 @@ class MssqlPlatform extends DefaultPlatform
      *
      * @return string
      */
+    #[\Override]
     public function getDropTableDDL(Table $table): string
     {
         $ret = '';
@@ -177,6 +184,7 @@ END
      *
      * @return string
      */
+    #[\Override]
     public function getPrimaryKeyDDL(Table $table): string
     {
         if ($table->hasPrimaryKey()) {
@@ -197,6 +205,7 @@ END
      *
      * @return string
      */
+    #[\Override]
     public function getAddForeignKeyDDL(ForeignKey $fk): string
     {
         if ($fk->isSkipSql() || $fk->isPolymorphic()) {
@@ -224,6 +233,7 @@ END
      *
      * @return string
      */
+    #[\Override]
     public function getUniqueDDL(Unique $unique): string
     {
         $pattern = 'CONSTRAINT %s UNIQUE NONCLUSTERED (%s) ON [PRIMARY]';
@@ -240,6 +250,7 @@ END
      *
      * @return string
      */
+    #[\Override]
     public function getForeignKeyDDL(ForeignKey $fk): string
     {
         if ($fk->isSkipSql() || $fk->isPolymorphic()) {
@@ -269,6 +280,7 @@ END
      *
      * @return bool
      */
+    #[\Override]
     public function supportsSchemas(): bool
     {
         return true;
@@ -279,6 +291,7 @@ END
      *
      * @return bool
      */
+    #[\Override]
     public function hasSize(string $sqlType): bool
     {
         $nosize = ['INT', 'TEXT', 'GEOMETRY', 'VARCHAR(MAX)', 'VARBINARY(MAX)', 'SMALLINT', 'DATETIME', 'TINYINT', 'REAL', 'BIGINT'];
@@ -289,6 +302,7 @@ END
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function doQuoting(string $text): string
     {
         return '[' . strtr($text, ['.' => '].[']) . ']';
@@ -297,6 +311,7 @@ END
     /**
      * @return string
      */
+    #[\Override]
     public function getTimestampFormatter(): string
     {
         return 'Y-m-d H:i:s';

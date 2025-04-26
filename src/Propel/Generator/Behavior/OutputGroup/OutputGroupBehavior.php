@@ -69,6 +69,7 @@ class OutputGroupBehavior extends Behavior
      *
      * @return $this|\Propel\Generator\Behavior\OutputGroup\OgObjectModifier
      */
+    #[\Override]
     public function getObjectBuilderModifier()
     {
         if ($this->objectModifier === null) {
@@ -83,6 +84,7 @@ class OutputGroupBehavior extends Behavior
      *
      * @return $this|\Propel\Generator\Behavior\OutputGroup\OgTableMapModifier
      */
+    #[\Override]
     public function getTableMapBuilderModifier()
     {
         if ($this->tableModifier === null) {
@@ -97,6 +99,7 @@ class OutputGroupBehavior extends Behavior
      *
      * @return $this|\Propel\Generator\Behavior\OutputGroup\OgQueryModifier
      */
+    #[\Override]
     public function getQueryBuilderModifier()
     {
         if ($this->queryModifier === null) {
@@ -115,6 +118,7 @@ class OutputGroupBehavior extends Behavior
      *
      * @return void
      */
+    #[\Override]
     public function modifyTable(): void
     {
         $table = $this->getTable();

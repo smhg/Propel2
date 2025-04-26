@@ -29,6 +29,7 @@ class ArrayFormatter extends AbstractFormatterWithHydration
      *
      * @return \Propel\Runtime\Collection\ArrayCollection
      */
+    #[\Override]
     public function format(?DataFetcherInterface $dataFetcher = null)
     {
         $this->checkInit();
@@ -69,6 +70,7 @@ class ArrayFormatter extends AbstractFormatterWithHydration
     /**
      * @return class-string<\Propel\Runtime\Collection\ArrayCollection>|null
      */
+    #[\Override]
     public function getCollectionClassName(): ?string
     {
         return '\Propel\Runtime\Collection\ArrayCollection';
@@ -81,6 +83,7 @@ class ArrayFormatter extends AbstractFormatterWithHydration
      *
      * @return array<string, mixed>|null
      */
+    #[\Override]
     public function formatOne(?DataFetcherInterface $dataFetcher = null): ?array
     {
         $this->checkInit();
@@ -118,6 +121,7 @@ class ArrayFormatter extends AbstractFormatterWithHydration
      *
      * @return array The original record turned into an array
      */
+    #[\Override]
     public function formatRecord(?ActiveRecordInterface $record = null): array
     {
         return $record ? $record->toArray() : [];
@@ -126,6 +130,7 @@ class ArrayFormatter extends AbstractFormatterWithHydration
     /**
      * @return bool
      */
+    #[\Override]
     public function isObjectFormatter(): bool
     {
         return false;

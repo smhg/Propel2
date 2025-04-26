@@ -27,6 +27,7 @@ class ConfigLoadBehavior extends ConfigOperationBehavior
     /**
      * @return string
      */
+    #[\Override]
     protected function getKey(): string
     {
         return $this->getAttribute(static::ATTRIBUTE_KEY_REF);
@@ -37,6 +38,7 @@ class ConfigLoadBehavior extends ConfigOperationBehavior
      *
      * @return void
      */
+    #[\Override]
     protected function apply($behaviorable): void
     {
         $this->validateAttributes();

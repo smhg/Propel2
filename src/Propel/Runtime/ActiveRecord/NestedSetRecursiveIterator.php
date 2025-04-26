@@ -41,6 +41,7 @@ class NestedSetRecursiveIterator implements RecursiveIterator
     /**
      * @return void
      */
+    #[\Override]
     public function rewind(): void
     {
         $this->curNode = $this->topNode;
@@ -49,6 +50,7 @@ class NestedSetRecursiveIterator implements RecursiveIterator
     /**
      * @return bool
      */
+    #[\Override]
     public function valid(): bool
     {
         return $this->curNode !== null;
@@ -59,7 +61,7 @@ class NestedSetRecursiveIterator implements RecursiveIterator
      *
      * @return mixed
      */
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function current()
     {
         return $this->curNode;
@@ -70,7 +72,7 @@ class NestedSetRecursiveIterator implements RecursiveIterator
      *
      * @return string
      */
-    #[\ReturnTypeWillChange]
+    #[\Override, \ReturnTypeWillChange]
     public function key(): string
     {
         $method = method_exists($this->curNode, 'getPath') ? 'getPath' : 'getAncestors';
@@ -85,6 +87,7 @@ class NestedSetRecursiveIterator implements RecursiveIterator
     /**
      * @return void
      */
+    #[\Override]
     public function next(): void
     {
         $nextNode = null;
@@ -108,6 +111,7 @@ class NestedSetRecursiveIterator implements RecursiveIterator
     /**
      * @return bool
      */
+    #[\Override]
     public function hasChildren(): bool
     {
         return $this->curNode->hasChildren();
@@ -116,6 +120,7 @@ class NestedSetRecursiveIterator implements RecursiveIterator
     /**
      * @return \Propel\Runtime\ActiveRecord\NestedSetRecursiveIterator|\RecursiveIterator<int|string, mixed>|null
      */
+    #[\Override]
     public function getChildren(): ?RecursiveIterator
     {
         $method = method_exists($this->curNode, 'retrieveFirstChild') ? 'retrieveFirstChild' : 'getFirstChild';

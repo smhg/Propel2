@@ -29,6 +29,7 @@ class StatementFormatter extends AbstractFormatter
      *
      * @return \Propel\Runtime\DataFetcher\DataFetcherInterface
      */
+    #[\Override]
     public function format(?DataFetcherInterface $dataFetcher = null): DataFetcherInterface
     {
         if ($dataFetcher) {
@@ -45,6 +46,7 @@ class StatementFormatter extends AbstractFormatter
      *
      * @return \Propel\Runtime\DataFetcher\DataFetcherInterface|null
      */
+    #[\Override]
     public function formatOne(?DataFetcherInterface $dataFetcher = null): ?DataFetcherInterface
     {
         $dataFetcher = $this->format($dataFetcher);
@@ -59,6 +61,7 @@ class StatementFormatter extends AbstractFormatter
      *
      * @return \Propel\Runtime\ActiveRecord\ActiveRecordInterface|array
      */
+    #[\Override]
     public function formatRecord(?ActiveRecordInterface $record = null)
     {
         throw new PropelException('The Statement formatter cannot transform a record into a statement');
@@ -67,6 +70,7 @@ class StatementFormatter extends AbstractFormatter
     /**
      * @return bool
      */
+    #[\Override]
     public function isObjectFormatter(): bool
     {
         return false;

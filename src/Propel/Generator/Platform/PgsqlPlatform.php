@@ -41,6 +41,7 @@ class PgsqlPlatform extends DefaultPlatform
      *
      * @return void
      */
+    #[\Override]
     protected function initializeTypeMap(): void
     {
         parent::initializeTypeMap();
@@ -70,6 +71,7 @@ class PgsqlPlatform extends DefaultPlatform
     /**
      * @return string
      */
+    #[\Override]
     public function getNativeIdMethod(): string
     {
         return PlatformInterface::SERIAL;
@@ -78,6 +80,7 @@ class PgsqlPlatform extends DefaultPlatform
     /**
      * @return string
      */
+    #[\Override]
     public function getAutoIncrement(): string
     {
         return '';
@@ -86,6 +89,7 @@ class PgsqlPlatform extends DefaultPlatform
     /**
      * @return array<int>
      */
+    #[\Override]
     public function getDefaultTypeSizes(): array
     {
         return [
@@ -101,6 +105,7 @@ class PgsqlPlatform extends DefaultPlatform
     /**
      * @return int
      */
+    #[\Override]
     public function getMaxColumnNameLength(): int
     {
         return 63;
@@ -111,6 +116,7 @@ class PgsqlPlatform extends DefaultPlatform
      *
      * @return string
      */
+    #[\Override]
     public function getBooleanString($value): string
     {
         // parent method does the checking for allows string
@@ -123,6 +129,7 @@ class PgsqlPlatform extends DefaultPlatform
     /**
      * @return bool
      */
+    #[\Override]
     public function supportsNativeDeleteTrigger(): bool
     {
         return true;
@@ -136,6 +143,7 @@ class PgsqlPlatform extends DefaultPlatform
      *
      * @return string
      */
+    #[\Override]
     public function getSequenceName(Table $table): string
     {
         $result = null;
@@ -287,6 +295,7 @@ SET search_path TO public;
      *
      * @return string
      */
+    #[\Override]
     public function getAddTablesDDL(Database $database): string
     {
         $ret = $this->getAddSchemasDDL($database);
@@ -317,6 +326,7 @@ SET search_path TO public;
      *
      * @return string
      */
+    #[\Override]
     public function getForeignKeyDDL(ForeignKey $fk): string
     {
         $script = parent::getForeignKeyDDL($fk);
@@ -335,6 +345,7 @@ SET search_path TO public;
     /**
      * @return string
      */
+    #[\Override]
     public function getBeginDDL(): string
     {
         return "
@@ -345,6 +356,7 @@ BEGIN;
     /**
      * @return string
      */
+    #[\Override]
     public function getEndDDL(): string
     {
         return "
@@ -355,6 +367,7 @@ COMMIT;
     /**
      * @inheritDoc
      */
+    #[\Override]
     public function getAddForeignKeysDDL(Table $table): string
     {
         $ret = '';
@@ -370,6 +383,7 @@ COMMIT;
      *
      * @return string
      */
+    #[\Override]
     public function getAddTableDDL(Table $table): string
     {
         $ret = $this->getUseSchemaDDL($table);
@@ -462,6 +476,7 @@ COMMENT ON COLUMN %s.%s IS %s;
      *
      * @return string
      */
+    #[\Override]
     public function getDropTableDDL(Table $table): string
     {
         $ret = $this->getUseSchemaDDL($table);
@@ -480,6 +495,7 @@ DROP TABLE IF EXISTS %s CASCADE;
      *
      * @return string
      */
+    #[\Override]
     public function getPrimaryKeyName(Table $table): string
     {
         $tableName = $table->getCommonName();
@@ -492,6 +508,7 @@ DROP TABLE IF EXISTS %s CASCADE;
      *
      * @return string
      */
+    #[\Override]
     public function getColumnDDL(Column $col): string
     {
         $domain = $col->getDomain();
@@ -549,6 +566,7 @@ DROP TABLE IF EXISTS %s CASCADE;
      *
      * @return string
      */
+    #[\Override]
     public function getUniqueDDL(Unique $unique): string
     {
         return sprintf(
@@ -564,6 +582,7 @@ DROP TABLE IF EXISTS %s CASCADE;
      *
      * @return string
      */
+    #[\Override]
     public function getRenameTableDDL(string $fromTableName, string $toTableName): string
     {
         $pos = strpos($toTableName, '.');
@@ -587,6 +606,7 @@ ALTER TABLE %s RENAME TO %s;
      *
      * @return bool
      */
+    #[\Override]
     public function supportsSchemas(): bool
     {
         return true;
@@ -597,6 +617,7 @@ ALTER TABLE %s RENAME TO %s;
      *
      * @return bool
      */
+    #[\Override]
     public function hasSize(string $sqlType): bool
     {
         return !in_array(strtoupper($sqlType), ['BYTEA', 'TEXT', 'DOUBLE PRECISION'], true);
@@ -605,6 +626,7 @@ ALTER TABLE %s RENAME TO %s;
     /**
      * @return bool
      */
+    #[\Override]
     public function hasStreamBlobImpl(): bool
     {
         return true;
@@ -613,6 +635,7 @@ ALTER TABLE %s RENAME TO %s;
     /**
      * @return bool
      */
+    #[\Override]
     public function supportsVarcharWithoutSize(): bool
     {
         return true;
@@ -623,6 +646,7 @@ ALTER TABLE %s RENAME TO %s;
      *
      * @return string
      */
+    #[\Override]
     public function getModifyTableDDL(TableDiff $tableDiff): string
     {
         $ret = parent::getModifyTableDDL($tableDiff);
@@ -647,6 +671,7 @@ ALTER TABLE %s RENAME TO %s;
      *
      * @return string
      */
+    #[\Override]
     public function getModifyColumnDDL(ColumnDiff $columnDiff): string
     {
         $ret = '';
@@ -834,6 +859,7 @@ DROP SEQUENCE %s CASCADE;
      *
      * @return string
      */
+    #[\Override]
     public function getModifyColumnsDDL(array $columnDiffs): string
     {
         $ret = '';
@@ -855,6 +881,7 @@ DROP SEQUENCE %s CASCADE;
      *
      * @return string
      */
+    #[\Override]
     public function getAddColumnsDDL(array $columns): string
     {
         $ret = '';
@@ -876,6 +903,7 @@ DROP SEQUENCE %s CASCADE;
      *
      * @return string
      */
+    #[\Override]
     public function getDropIndexDDL(Index $index): string
     {
         if ($index instanceof Unique) {
@@ -908,6 +936,7 @@ ALTER TABLE %s DROP CONSTRAINT %s;
      *
      * @return string
      */
+    #[\Override]
     public function getIdentifierPhp(
         string $columnValueMutator,
         string $connectionVariableName = '$con',
@@ -937,6 +966,7 @@ ALTER TABLE %s DROP CONSTRAINT %s;
      *
      * @return string
      */
+    #[\Override]
     public function getAddIndexDDL(Index $index): string
     {
         if (!$index->isUnique()) {

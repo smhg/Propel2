@@ -56,6 +56,7 @@ class RawCriterion extends AbstractCriterion
      *
      * @return void
      */
+    #[\Override]
     protected function appendPsForUniqueClauseTo(string &$sb, array &$params): void
     {
         if (substr_count($this->column, '?') !== 1) {

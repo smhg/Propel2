@@ -26,6 +26,7 @@ class ColumnToQueryFilter extends AbstractInnerQueryFilter
      *
      * @return void
      */
+    #[\Override]
     protected function initForRelation(ModelCriteria $outerQuery, RelationMap $relation): void
     {
         $outerColumns = $relation->getLeftColumns();
@@ -47,6 +48,7 @@ class ColumnToQueryFilter extends AbstractInnerQueryFilter
      *
      * @return string
      */
+    #[\Override]
     protected function resolveOperator(?string $operatorDeclaration): string
     {
         return $operatorDeclaration ?? trim(Criteria::IN);
@@ -58,6 +60,7 @@ class ColumnToQueryFilter extends AbstractInnerQueryFilter
      *
      * @return \Propel\Runtime\ActiveQuery\Criteria
      */
+    #[\Override]
     protected function processInnerQuery(): Criteria
     {
         return $this->innerQuery;

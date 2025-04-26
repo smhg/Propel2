@@ -25,6 +25,7 @@ class YamlParser extends AbstractParser
      *
      * @return string Converted data, as a YAML string
      */
+    #[\Override]
     public function fromArray(array $array, ?string $rootKey = null): string
     {
         return Yaml::dump($rootKey === null ? $array : [$rootKey => $array], 3);
@@ -51,6 +52,7 @@ class YamlParser extends AbstractParser
      *
      * @return array Converted data
      */
+    #[\Override]
     public function toArray(string $data, ?string $rootKey = null): array
     {
         $data = Yaml::parse($data);

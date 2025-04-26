@@ -146,6 +146,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return string
      */
+    #[\Override]
     public function getDefaultSyncedTableSuffix(): string
     {
         return static::DEFAULT_SYNCED_TABLE_SUFFIX;
@@ -184,6 +185,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return array
      */
+    #[\Override]
     public function getTableAttributes(): array
     {
         $val = $this->parameters[static::PARAMETER_KEY_TABLE_ATTRIBUTES] ?? null;
@@ -194,6 +196,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return string|null
      */
+    #[\Override]
     public function getSyncedTablePhpName(): ?string
     {
         return $this->getParameter(static::PARAMETER_KEY_SYNCED_PHPNAME);
@@ -202,6 +205,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return string|null
      */
+    #[\Override]
     public function addPkAs(): ?string
     {
         $val = $this->getParameterTrueOrValue(static::PARAMETER_KEY_ADD_PK, false);
@@ -212,6 +216,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return array|null
      */
+    #[\Override]
     public function getColmns(): ?array
     {
         return $this->parameters[static::PARAMETER_KEY_COLUMNS] ?? [];
@@ -220,6 +225,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return array
      */
+    #[\Override]
     public function getForeignKeys(): array
     {
         return $this->parameters[static::PARAMETER_KEY_FOREIGN_KEYS] ?? [];
@@ -228,6 +234,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return bool
      */
+    #[\Override]
     public function isSync(): bool
     {
         return $this->getParameterBool(static::PARAMETER_KEY_SYNC, false);
@@ -244,6 +251,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return bool
      */
+    #[\Override]
     public function isSyncIndexes(): bool
     {
         return $this->getParameterBool(static::PARAMETER_KEY_SYNC_INDEXES, false);
@@ -252,6 +260,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return string|null
      */
+    #[\Override]
     public function getSyncUniqueIndexAs(): ?string
     {
         return $this->getParameter(static::PARAMETER_KEY_SYNC_UNIQUE_AS);
@@ -260,6 +269,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return array|null
      */
+    #[\Override]
     public function getRelationAttributes(): ?array
     {
         /** @var array<array>|string|null $val */
@@ -284,6 +294,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return bool
      */
+    #[\Override]
     public function isInheritForeignKeyRelations(): bool
     {
         return $this->getParameterBool(static::PARAMETER_KEY_INHERIT_FOREIGN_KEY_RELATIONS, false);
@@ -292,6 +303,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return bool
      */
+    #[\Override]
     public function isInheritForeignKeyConstraints(): bool
     {
         return $this->getParameterBool(static::PARAMETER_KEY_INHERIT_FOREIGN_KEY_CONSTRAINTS, false);
@@ -300,6 +312,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return array
      */
+    #[\Override]
     public function getIgnoredColumnNames(): array
     {
         return $this->getParameterCsv(static::PARAMETER_KEY_IGNORE_COLUMNS, []);
@@ -318,6 +331,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return bool
      */
+    #[\Override]
     public function isSyncPkOnly(): bool
     {
         return $this->getParameterBool(static::PARAMETER_KEY_SYNC_PK_ONLY, false);
@@ -336,6 +350,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
     /**
      * @return bool
      */
+    #[\Override]
     public function inheritSkipSql(): bool
     {
         return $this->onSkipSql() === 'inherit';
@@ -354,6 +369,7 @@ abstract class SyncedTableBehaviorDeclaration extends BehaviorWithParameterAcces
      *
      * @return array|null
      */
+    #[\Override]
     public function getTableInheritance()
     {
         $val = $this->parameters[static::PARAMETER_KEY_INHERIT_FROM_TABLE] ?? null;

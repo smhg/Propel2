@@ -47,6 +47,7 @@ abstract class AbstractCommand extends Command
      *
      * @return void
      */
+    #[\Override]
     protected function configure()
     {
         $this

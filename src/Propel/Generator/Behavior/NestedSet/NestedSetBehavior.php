@@ -47,6 +47,7 @@ class NestedSetBehavior extends Behavior
      *
      * @return void
      */
+    #[\Override]
     public function modifyTable(): void
     {
         $table = $this->getTable();
@@ -83,6 +84,7 @@ class NestedSetBehavior extends Behavior
     /**
      * @return $this|\Propel\Generator\Behavior\NestedSet\NestedSetBehaviorObjectBuilderModifier
      */
+    #[\Override]
     public function getObjectBuilderModifier()
     {
         if ($this->objectBuilderModifier === null) {
@@ -95,6 +97,7 @@ class NestedSetBehavior extends Behavior
     /**
      * @return $this|\Propel\Generator\Behavior\NestedSet\NestedSetBehaviorQueryBuilderModifier
      */
+    #[\Override]
     public function getQueryBuilderModifier()
     {
         if ($this->queryBuilderModifier === null) {

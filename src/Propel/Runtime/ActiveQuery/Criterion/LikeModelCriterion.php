@@ -57,6 +57,7 @@ class LikeModelCriterion extends BasicModelCriterion
      *
      * @return void
      */
+    #[\Override]
     protected function appendPsForUniqueClauseTo(string &$sb, array &$params): void
     {
         // LIKE is case insensitive in mySQL and SQLite, but not in PostGres

@@ -34,6 +34,7 @@ class JoinCondition extends AbstractColumnFilter
      *
      * @return void
      */
+    #[\Override]
     protected function resolveUnresolved(): void
     {
         parent::resolveUnresolved();
@@ -45,6 +46,7 @@ class JoinCondition extends AbstractColumnFilter
      *
      * @return string
      */
+    #[\Override]
     protected function buildFilterClause(array &$paramCollector): string
     {
         $leftHandExpression = $this->queryColumn->getColumnExpressionInQuery(true);

@@ -25,6 +25,7 @@ class SeveralModelCriterion extends AbstractModelCriterion
      *
      * @return void
      */
+    #[\Override]
     protected function appendPsForUniqueClauseTo(string &$sb, array &$params): void
     {
         if (!is_array($this->value)) {

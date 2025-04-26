@@ -50,6 +50,7 @@ abstract class AbstractColumnFilter extends AbstractFilter
      *
      * @return string
      */
+    #[\Override]
     public function getLocalColumnName(bool $useQuoteIfEnable): string
     {
         return $this->queryColumn->getColumnExpressionInQuery($useQuoteIfEnable);
@@ -62,6 +63,7 @@ abstract class AbstractColumnFilter extends AbstractFilter
      *
      * @return string
      */
+    #[\Override]
     public function getColumnName(): string
     {
         return $this->queryColumn->getColumnName();
@@ -78,6 +80,7 @@ abstract class AbstractColumnFilter extends AbstractFilter
     /**
      * @return string|null
      */
+    #[\Override]
     public function getTableAlias(): ?string
     {
         return $this->queryColumn->getTableAlias();
@@ -96,6 +99,7 @@ abstract class AbstractColumnFilter extends AbstractFilter
     /**
      * @return string
      */
+    #[\Override]
     public function getOperator(): string
     {
         return $this->operator;
@@ -114,6 +118,7 @@ abstract class AbstractColumnFilter extends AbstractFilter
      *
      * @return void
      */
+    #[\Override]
     protected function resolveUnresolved(): void
     {
         $this->resolveColumn($this->queryColumn);
@@ -149,6 +154,7 @@ abstract class AbstractColumnFilter extends AbstractFilter
      *
      * @return string Positional variable in query for the added parameter
      */
+    #[\Override]
     protected function addParameter(array &$paramCollector, ?array $parameter = null): string
     {
         $parameter = $parameter ?: $this->buildParameter();
@@ -164,6 +170,7 @@ abstract class AbstractColumnFilter extends AbstractFilter
      *
      * @return bool
      */
+    #[\Override]
     public function equals(?object $filter): bool
     {
         return parent::equals($filter)
@@ -177,6 +184,7 @@ abstract class AbstractColumnFilter extends AbstractFilter
      *
      * @return void
      */
+    #[\Override]
     public function __clone()
     {
         parent::__clone();

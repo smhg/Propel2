@@ -60,6 +60,7 @@ class XmlDumper implements DumperInterface
      *
      * @return string The dumped XML formatted output
      */
+    #[\Override]
     public function dump(Database $database): string
     {
         $this->appendDatabaseNode($database, $this->document);
@@ -75,6 +76,7 @@ class XmlDumper implements DumperInterface
      *
      * @return string
      */
+    #[\Override]
     public function dumpSchema(Schema $schema, bool $doFinalInitialization = true): string
     {
         $rootNode = $this->document->createElement('app-data');

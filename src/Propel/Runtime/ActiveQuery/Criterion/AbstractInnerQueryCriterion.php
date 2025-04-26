@@ -113,6 +113,7 @@ abstract class AbstractInnerQueryCriterion extends AbstractCriterion
      *
      * @return void
      */
+    #[\Override]
     protected function appendPsForUniqueClauseTo(string &$sb, array &$params): void
     {
         $leftOperand = $this->leftOperand ? $this->leftOperand . ' ' : '';
