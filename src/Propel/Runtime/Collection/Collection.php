@@ -446,7 +446,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
     // Serializable interface
 
     /**
-     * @return string|null
+     * @return string
      */
     #[\Override, \ReturnTypeWillChange]
     public function serialize(): string

@@ -8,7 +8,7 @@
 
 namespace Propel\Runtime\ServiceContainer;
 
-use Propel\Runtime\Adapter\AdapterInterface;
+use Propel\Runtime\Adapter\SqlAdapterInterface;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Connection\ConnectionManagerInterface;
 use Propel\Runtime\Map\DatabaseMap;
@@ -64,16 +64,16 @@ interface ServiceContainerInterface
      *
      * @param string|null $name The datasource name
      *
-     * @return \Propel\Runtime\Adapter\AdapterInterface
+     * @return \Propel\Runtime\Adapter\SqlAdapterInterface
      */
-    public function getAdapter(?string $name = null): AdapterInterface;
+    public function getAdapter(?string $name = null): SqlAdapterInterface;
 
     /**
      * Get the adapter class for a given datasource.
      *
      * @param string|null $name The datasource name
      *
-     * @return string
+     * @return class-string<\Propel\Runtime\Adapter\SqlAdapterInterface>
      */
     public function getAdapterClass(?string $name = null): string;
 
@@ -81,11 +81,11 @@ interface ServiceContainerInterface
      * Set the adapter for a given datasource.
      *
      * @param string $name The datasource name
-     * @param \Propel\Runtime\Adapter\AdapterInterface $adapter
+     * @param \Propel\Runtime\Adapter\SqlAdapterInterface $adapter
      *
      * @return void
      */
-    public function setAdapter(string $name, AdapterInterface $adapter): void;
+    public function setAdapter(string $name, SqlAdapterInterface $adapter): void;
 
     /**
      * Get the database map for a given datasource.

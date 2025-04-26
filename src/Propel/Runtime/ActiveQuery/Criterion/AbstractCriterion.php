@@ -12,7 +12,6 @@ use Exception;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\FilterExpression\ClauseList;
 use Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface;
-use Propel\Runtime\Adapter\AdapterInterface;
 use Propel\Runtime\Adapter\SqlAdapterInterface;
 use Propel\Runtime\Map\ColumnMap;
 use Propel\Runtime\Propel;
@@ -262,12 +261,12 @@ abstract class AbstractCriterion extends ClauseList implements ColumnFilterInter
      *
      * The AdapterInterface might be used to get db specific variations of sql.
      *
-     * @param \Propel\Runtime\Adapter\AdapterInterface $adapter Value to assign to db.
+     * @param \Propel\Runtime\Adapter\SqlAdapterInterface $adapter Value to assign to db.
      *
      * @return void
      */
     #[\Override]
-    public function setAdapter(AdapterInterface $adapter): void
+    public function setAdapter(SqlAdapterInterface $adapter): void
     {
         $this->db = $adapter;
         foreach ($this->clauses as $clause) {

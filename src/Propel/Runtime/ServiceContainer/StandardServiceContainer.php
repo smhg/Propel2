@@ -13,8 +13,8 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogHandler;
 use Monolog\Logger;
 use Propel\Runtime\Adapter\AdapterFactory;
-use Propel\Runtime\Adapter\AdapterInterface;
 use Propel\Runtime\Adapter\Exception\AdapterException;
+use Propel\Runtime\Adapter\SqlAdapterInterface;
 use Propel\Runtime\Connection\ConnectionFactory;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Connection\ConnectionManagerInterface;
@@ -53,12 +53,12 @@ class StandardServiceContainer implements ServiceContainerInterface
     protected const HOWTO_FIX_MISSING_LOADER_SCRIPT_URL = 'https://github.com/propelorm/Propel2/wiki/Exception-Target:-Loading-the-database';
 
     /**
-     * @var array<string, \Propel\Runtime\Adapter\AdapterInterface> List of database adapter instances
+     * @var array<string, \Propel\Runtime\Adapter\SqlAdapterInterface> List of database adapter instances
      */
     protected $adapters = [];
 
     /**
-     * @phpstan-var array<string, class-string<\Propel\Runtime\Adapter\AdapterInterface>>
+     * @phpstan-var array<string, class-string<\Propel\Runtime\Adapter\SqlAdapterInterface>>
      *
      * @var array<string, string> List of database adapter classes
      */
@@ -138,7 +138,7 @@ class StandardServiceContainer implements ServiceContainerInterface
      *
      * @param string|null $name The datasource name
      *
-     * @return string
+     * @return class-string<\Propel\Runtime\Adapter\SqlAdapterInterface>
      */
     #[\Override]
     public function getAdapterClass(?string $name = null): string
@@ -156,7 +156,7 @@ class StandardServiceContainer implements ServiceContainerInterface
      * This allows for lazy-loading adapter objects in getAdapter().
      *
      * @param string $name The datasource name
-     * @param class-string<\Propel\Runtime\Adapter\AdapterInterface> $adapterClass
+     * @param class-string<\Propel\Runtime\Adapter\SqlAdapterInterface> $adapterClass
      *
      * @return void
      */
@@ -169,7 +169,7 @@ class StandardServiceContainer implements ServiceContainerInterface
     /**
      * Reset existing adapters classes and set new classes for all datasources.
      *
-     * @param array<string, class-string<\Propel\Runtime\Adapter\AdapterInterface>> $adapterClasses A list of adapters
+     * @param array<string, class-string<\Propel\Runtime\Adapter\SqlAdapterInterface>> $adapterClasses A list of adapters
      *
      * @return void
      */
@@ -188,10 +188,10 @@ class StandardServiceContainer implements ServiceContainerInterface
      *
      * @throws \Propel\Runtime\Adapter\Exception\AdapterException
      *
-     * @return \Propel\Runtime\Adapter\AdapterInterface
+     * @return \Propel\Runtime\Adapter\SqlAdapterInterface
      */
     #[\Override]
-    public function getAdapter(?string $name = null): AdapterInterface
+    public function getAdapter(?string $name = null): SqlAdapterInterface
     {
         if ($name === null) {
             $name = $this->getDefaultDatasource();
@@ -210,12 +210,12 @@ class StandardServiceContainer implements ServiceContainerInterface
      * Set the adapter for a given datasource.
      *
      * @param string $name The datasource name
-     * @param \Propel\Runtime\Adapter\AdapterInterface $adapter
+     * @param \Propel\Runtime\Adapter\SqlAdapterInterface $adapter
      *
      * @return void
      */
     #[\Override]
-    public function setAdapter(string $name, AdapterInterface $adapter): void
+    public function setAdapter(string $name, SqlAdapterInterface $adapter): void
     {
         $this->adapters[$name] = $adapter;
         $this->adapterClasses[$name] = get_class($adapter);
@@ -224,7 +224,7 @@ class StandardServiceContainer implements ServiceContainerInterface
     /**
      * Reset existing adapters and set new adapters for all datasources.
      *
-     * @param array<string, \Propel\Runtime\Adapter\AdapterInterface> $adapters A list of adapters
+     * @param array<string, \Propel\Runtime\Adapter\SqlAdapterInterface> $adapters A list of adapters
      *
      * @return void
      */

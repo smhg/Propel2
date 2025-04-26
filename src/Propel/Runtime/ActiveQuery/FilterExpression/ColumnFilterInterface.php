@@ -8,7 +8,7 @@
 
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
-use Propel\Runtime\Adapter\AdapterInterface;
+use Propel\Runtime\Adapter\SqlAdapterInterface;
 
 interface ColumnFilterInterface
 {
@@ -121,11 +121,11 @@ interface ColumnFilterInterface
     public function count(): int;
 
     /**
-     * @param \Propel\Runtime\Adapter\AdapterInterface $adapter
+     * @param \Propel\Runtime\Adapter\SqlAdapterInterface $adapter
      *
      * @return void
      */
-    public function setAdapter(AdapterInterface $adapter): void;
+    public function setAdapter(SqlAdapterInterface $adapter): void;
 
     /**
      * Check if this or any of the attached filters is a Criterion
