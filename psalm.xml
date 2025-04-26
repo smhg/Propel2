@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <psalm
-    errorLevel="6"
+    errorLevel="5"
     allowStringToStandInForClass="true"
     usePhpDocMethodsWithoutMagicCall="true"
     findUnusedCode="false"

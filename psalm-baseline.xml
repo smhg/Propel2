@@ -5,20 +5,103 @@
       <code><![CDATA[$configSection = &$this->config[$section]]]></code>
     </UnsupportedPropertyReferenceUsage>
   </file>
+  <file src="src/Propel/Common/Config/Loader/IniFileLoader.php">
+    <MoreSpecificImplementedParamType>
+      <code><![CDATA[$resource]]></code>
+    </MoreSpecificImplementedParamType>
+  </file>
+  <file src="src/Propel/Common/Config/Loader/JsonFileLoader.php">
+    <MoreSpecificImplementedParamType>
+      <code><![CDATA[$resource]]></code>
+    </MoreSpecificImplementedParamType>
+  </file>
+  <file src="src/Propel/Common/Config/Loader/PhpFileLoader.php">
+    <MoreSpecificImplementedParamType>
+      <code><![CDATA[$resource]]></code>
+    </MoreSpecificImplementedParamType>
+  </file>
+  <file src="src/Propel/Common/Config/Loader/XmlFileLoader.php">
+    <MoreSpecificImplementedParamType>
+      <code><![CDATA[$resource]]></code>
+    </MoreSpecificImplementedParamType>
+  </file>
+  <file src="src/Propel/Common/Config/Loader/YamlFileLoader.php">
+    <MoreSpecificImplementedParamType>
+      <code><![CDATA[$resource]]></code>
+    </MoreSpecificImplementedParamType>
+  </file>
   <file src="src/Propel/Common/Config/PropelConfiguration.php">
+    <UndefinedInterfaceMethod>
+      <code><![CDATA[arrayNode]]></code>
+      <code><![CDATA[booleanNode]]></code>
+      <code><![CDATA[end]]></code>
+      <code><![CDATA[scalarNode]]></code>
+      <code><![CDATA[scalarNode]]></code>
+      <code><![CDATA[scalarNode]]></code>
+      <code><![CDATA[scalarNode]]></code>
+    </UndefinedInterfaceMethod>
     <UndefinedMethod>
       <code><![CDATA[requiresAtLeastOneElement]]></code>
     </UndefinedMethod>
+  </file>
+  <file src="src/Propel/Common/Pluralizer/StandardEnglishPluralizer.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[$replacement]]></code>
+      <code><![CDATA[preg_replace($searchPattern, $result, $root)]]></code>
+    </NullableReturnStatement>
   </file>
   <file src="src/Propel/Generator/Behavior/AggregateMultipleColumns/AggregateMultipleColumnsBehavior.php">
     <UnsupportedPropertyReferenceUsage>
       <code><![CDATA[$existingNames = &self::$insertedAggregationNames[$tableName]]]></code>
     </UnsupportedPropertyReferenceUsage>
   </file>
+  <file src="src/Propel/Generator/Behavior/Archivable/ArchivableBehavior.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[$this->getParameter('archive_class')]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="src/Propel/Generator/Behavior/OutputGroup/OgObjectModifier.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[preg_replace_callback($pattern, fn (array $match) => "{$match[0]}, \\$interface", $script, 1)]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="src/Propel/Generator/Behavior/OutputGroup/OgQueryModifier.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[preg_replace_callback($pattern, fn (array $match) => $methodDeclarations . $match[0], $script, 1)]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="src/Propel/Generator/Behavior/SyncedTable/TableSyncer/TableSyncer.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[\Propel\Generator\Model\Column]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[$table->getColumn($columnName)]]></code>
+    </NullableReturnStatement>
+  </file>
   <file src="src/Propel/Generator/Builder/Util/SchemaReader.php">
     <UnsupportedPropertyReferenceUsage>
       <code><![CDATA[$items = &$this->currParameterListCollector['value']]]></code>
     </UnsupportedPropertyReferenceUsage>
+  </file>
+  <file src="src/Propel/Generator/Config/ArrayToPhpConverter.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[preg_replace('/[ \t]*$/m', '', $conf)]]></code>
+    </NullableReturnStatement>
   </file>
   <file src="src/Propel/Generator/Manager/AbstractManager.php">
     <UndefinedClass>
@@ -32,15 +115,82 @@
       <code><![CDATA[getLocation]]></code>
     </UndefinedMethod>
   </file>
+  <file src="src/Propel/Generator/Manager/DataDictionaryExportManager.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[preg_replace('/\W/', '-', $name)]]></code>
+    </NullableReturnStatement>
+  </file>
   <file src="src/Propel/Generator/Model/Index.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
     <InvalidPropertyAssignmentValue>
       <code><![CDATA[$this->columnObjects]]></code>
     </InvalidPropertyAssignmentValue>
+    <NullableReturnStatement>
+      <code><![CDATA[$this->name]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="src/Propel/Generator/Platform/DefaultPlatform.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[preg_replace('/^(.+)/m', $tab . '$1', $script)]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="src/Propel/Generator/Platform/OraclePlatform.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[preg_replace('/^/m', $tab, $script)]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="src/Propel/Generator/Platform/PgsqlPlatform.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[$result]]></code>
+      <code><![CDATA[preg_replace('/^/m', $tab, $script)]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="src/Propel/Generator/Reverse/MssqlSchemaParser.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[preg_replace('/^\'(.*)\'$/U', '$1', $identifier)]]></code>
+    </NullableReturnStatement>
   </file>
   <file src="src/Propel/Generator/Reverse/OracleSchemaParser.php">
     <InvalidArrayOffset>
       <code><![CDATA[$row[0]]]></code>
     </InvalidArrayOffset>
+  </file>
+  <file src="src/Propel/Runtime/ActiveQuery/ColumnResolver/ColumnExpression/UpdateColumn/UpdateExpression.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[preg_replace_callback('/\?/', function (array $match) use (&$positionIndex) {
+            return ':p' . $positionIndex++;
+        }, $this->expression)]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="src/Propel/Runtime/ActiveQuery/DeprecatedCriteriaMethods.php">
+    <LessSpecificImplementedReturnType>
+      <code><![CDATA[\Propel\Runtime\ActiveQuery\Criteria]]></code>
+    </LessSpecificImplementedReturnType>
+  </file>
+  <file src="src/Propel/Runtime/ActiveQuery/FilterExpression/AbstractFilter.php">
+    <NullableReturnStatement>
+      <code><![CDATA[preg_replace_callback('/:p\d+/', $replacer, $statement)]]></code>
+    </NullableReturnStatement>
   </file>
   <file src="src/Propel/Runtime/ActiveQuery/ModelCriteria.php">
     <UndefinedMethod>
@@ -54,6 +204,21 @@
       <code><![CDATA[$selColArr[$selColCount - 1]]]></code>
     </InvalidArrayOffset>
   </file>
+  <file src="src/Propel/Runtime/Adapter/Pdo/OracleAdapter.php">
+    <NullableReturnStatement>
+      <code><![CDATA[$dataFetcher->fetchColumn()]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="src/Propel/Runtime/Adapter/Pdo/PgsqlAdapter.php">
+    <NullableReturnStatement>
+      <code><![CDATA[$dataFetcher->fetchColumn()]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="src/Propel/Runtime/Adapter/Pdo/SqliteAdapter.php">
+    <UndefinedInterfaceMethod>
+      <code><![CDATA[sqliteCreateFunction]]></code>
+    </UndefinedInterfaceMethod>
+  </file>
   <file src="src/Propel/Runtime/Adapter/Pdo/SqlsrvAdapter.php">
     <UndefinedConstant>
       <code><![CDATA[PDO::SQLSRV_ATTR_ENCODING]]></code>
@@ -62,6 +227,29 @@
       <code><![CDATA[PDO::SQLSRV_ENCODING_SYSTEM]]></code>
       <code><![CDATA[PDO::SQLSRV_ENCODING_UTF8]]></code>
     </UndefinedConstant>
+  </file>
+  <file src="src/Propel/Runtime/Collection/ArrayCollection.php">
+    <UndefinedInterfaceMethod>
+      <code><![CDATA[delete]]></code>
+      <code><![CDATA[fromArray]]></code>
+      <code><![CDATA[fromArray]]></code>
+      <code><![CDATA[fromArray]]></code>
+      <code><![CDATA[save]]></code>
+    </UndefinedInterfaceMethod>
+  </file>
+  <file src="src/Propel/Runtime/Collection/ObjectCollection.php">
+    <UndefinedInterfaceMethod>
+      <code><![CDATA[delete]]></code>
+      <code><![CDATA[save]]></code>
+    </UndefinedInterfaceMethod>
+  </file>
+  <file src="src/Propel/Runtime/Connection/StatementWrapper.php">
+    <InvalidNullableReturnType>
+      <code><![CDATA[string]]></code>
+    </InvalidNullableReturnType>
+    <NullableReturnStatement>
+      <code><![CDATA[preg_replace_callback('/:p\d++\b/', $resolveParameterValue, $this->statement->queryString)]]></code>
+    </NullableReturnStatement>
   </file>
   <file src="src/Propel/Runtime/Formatter/AbstractFormatterWithHydration.php">
     <NonVariableReferenceReturn>
@@ -81,5 +269,10 @@
     <InvalidArrayOffset>
       <code><![CDATA[$suffix[$i]]]></code>
     </InvalidArrayOffset>
+  </file>
+  <file src="src/Propel/Runtime/Validator/Constraints/UniqueValidator.php">
+    <MoreSpecificImplementedParamType>
+      <code><![CDATA[$constraint]]></code>
+    </MoreSpecificImplementedParamType>
   </file>
 </files>
