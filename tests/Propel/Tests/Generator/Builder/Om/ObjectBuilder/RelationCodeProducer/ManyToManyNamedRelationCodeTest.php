@@ -39,14 +39,14 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @var \Base\Collection\TeamCollection Objects in LeTeam relation.
+     * @var \Base\Collection\TeamCollection|null Objects in LeTeam relation.
      */
-    protected $collLeTeams;
+    protected ?TeamCollection $collLeTeams = null;
 
     /**
      * @var bool
      */
-    protected $collLeTeamsIsPartial;
+    protected bool $collLeTeamsIsPartial = false;
 ';
         $this->assertProducedCodeMatches('addAttributes', $expected);
     }
@@ -57,9 +57,9 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Items of LeTeam relation marked for deletion.
      *
-     * @var \Base\Collection\TeamCollection
+     * @var \Base\Collection\TeamCollection|null
      */
-    protected $leTeamsScheduledForDeletion = null;
+    protected ?TeamCollection $leTeamsScheduledForDeletion = null;
 ';
         $this->assertProducedCodeMatches('addScheduledForDeletionAttribute', $expected);
     }
@@ -67,31 +67,30 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     public function testDeleteScheduledItemsCode()
     {
         $expected = '
-            if ($this->leTeamsScheduledForDeletion !== null && !$this->leTeamsScheduledForDeletion->isEmpty()) {
-                $pks = [];
-                foreach ($this->leTeamsScheduledForDeletion as $entry) {
-                    $entryPk = [];
+        if ($this->leTeamsScheduledForDeletion !== null && !$this->leTeamsScheduledForDeletion->isEmpty()) {
+            $pks = [];
+            foreach ($this->leTeamsScheduledForDeletion as $entry) {
+                $entryPk = [];
 
-                    $entryPk[1] = $this->getId();
-                    $entryPk[0] = $entry->getId();
-                    $pks[] = $entryPk;
-                }
-
-                ChildTeamUserQuery::create()
-                    ->filterByPrimaryKeys($pks)
-                    ->delete($con);
-
-                $this->leTeamsScheduledForDeletion = null;
+                $entryPk[1] = $this->getId();
+                $entryPk[0] = $entry->getId();
+                $pks[] = $entryPk;
             }
 
-            if ($this->collLeTeams) {
-                foreach ($this->collLeTeams as $leTeam) {
-                    if (!$leTeam->isDeleted() && ($leTeam->isNew() || $leTeam->isModified())) {
-                        $leTeam->save($con);
-                    }
+            ChildTeamUserQuery::create()
+                ->filterByPrimaryKeys($pks)
+                ->delete($con);
+
+            $this->leTeamsScheduledForDeletion = null;
+        }
+
+        if ($this->collLeTeams) {
+            foreach ($this->collLeTeams as $leTeam) {
+                if (!$leTeam->isDeleted() && ($leTeam->isNew() || $leTeam->isModified())) {
+                    $leTeam->save($con);
                 }
             }
-
+        }
 ';
         $this->assertProducedCodeMatches('addDeleteScheduledItemsCode', $expected);
     }
@@ -130,7 +129,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     public function initLeTeams(): void
     {
         $collectionClassName = TeamTableMap::getTableMap()->getCollectionClassName();
-        $this->collLeTeams = new $collectionClassName;
+        $this->collLeTeams = new $collectionClassName();
         $this->collLeTeamsIsPartial = true;
         $this->collLeTeams->setModel(\'\Team\');
     }
@@ -141,7 +140,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     public function testOnReloadCode()
     {
         $expected = '
-        $this->collLeTeams = null;';
+            $this->collLeTeams = null;';
 
         $this->assertProducedCodeMatches('addOnReloadCode', $expected);
     }
@@ -188,7 +187,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * If the $criteria is not null, it is used to always fetch the results from the database.
      * Otherwise the results are fetched from the database the first time, then cached.
      * Next time the same method is called without $criteria, the cached collection is returned.
-     * If this ChildUser is new, it will return
+     * If this User is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
@@ -206,7 +205,6 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
                     $this->initLeTeams();
                 }
             } else {
-
                 $query = ChildTeamQuery::create(null, $criteria)
                     ->filterByLeUser($this);
                 $collLeTeams = $query->find($con);
@@ -243,10 +241,10 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<ChildTeam> $leTeams A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<Team> $leTeams A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return $this
+     * @return static
      */
     public function setLeTeams(Collection $leTeams, ?ConnectionInterface $con = null): static
     {
@@ -322,7 +320,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Associate a LeTeam with this object through the team_user cross reference table.
      *
-     * @param ChildTeam $leTeam
+     * @param Team $leTeam
      *
      * @return static
      */
@@ -348,7 +346,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @param ChildTeam $leTeam
+     * @param Team $leTeam
      *
      * @return void
      */
@@ -379,7 +377,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Remove leTeam of this object through the team_user cross reference table.
      *
-     * @param ChildTeam $leTeam
+     * @param Team $leTeam
      *
      * @return static
      */
@@ -418,11 +416,11 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     public function testClearReferencesCode()
     {
         $expected = '
-        if ($this->collLeTeams) {
-            foreach ($this->collLeTeams as $o) {
-                $o->clearAllReferences($deep);
-            }
-        }';
+            if ($this->collLeTeams) {
+                foreach ($this->collLeTeams as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }';
 
         $this->assertProducedCodeMatches('addClearReferencesCode', $expected);
     }

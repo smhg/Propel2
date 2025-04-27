@@ -1168,7 +1168,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      */
     protected function addGetOMClassNoInheritanceAbstract(string &$script): void
     {
-        $objectClassName = $this->ownClassIdentifier();
+        $objectClassName = $this->registerOwnClassIdentifier();
 
         $script .= "
     /**
@@ -1209,7 +1209,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      *
      * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array (" . $this->ownClassIdentifier() . " object, last column rank)
+     * @return array (" . $this->registerOwnClassIdentifier() . " object, last column rank)
      */
     public static function populateObject(array \$row, int \$offset = 0, string \$indexType = TableMap::TYPE_NUM): array
     {
@@ -1221,7 +1221,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
             \$col = \$offset + " . $this->getTableMapClass() . '::NUM_HYDRATE_COLUMNS;';
         if ($table->isAbstract()) {
             $script .= "
-        } elseif (null == \$key) {
+        } elseif (\$key === null) {
             // empty resultset, probably from a left join
             // since this table is abstract, we can't hydrate an empty object
             \$obj = null;
@@ -1237,7 +1237,7 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
             \$cls = static::getOMClass(\$row, \$offset, false);";
         }
         $script .= "
-            /** @var {$this->ownClassIdentifier()} \$obj */
+            /** @var {$this->registerOwnClassIdentifier()} \$obj */
             \$obj = new \$cls();
             \$col = \$obj->hydrate(\$row, \$offset, false, \$indexType);
             {$this->getTableMapClassName()}::addInstanceToPool(\$obj, \$key);
@@ -1294,14 +1294,14 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
                 // class must be set each time from the record row
                 \$cls = static::getOMClass(\$row, 0);
                 \$cls = preg_replace('#\.#', '\\\\', \$cls);
-                /** @var {$this->ownClassIdentifier()} \$obj */
+                /** @var {$this->registerOwnClassIdentifier()} \$obj */
                 " . $this->buildObjectInstanceCreationCode('$obj', '$cls') . "
                 \$obj->hydrate(\$row);
                 \$results[] = \$obj;
                 {$this->getTableMapClassName()}::addInstanceToPool(\$obj, \$key);";
         } else {
             $script .= "
-                /** @var {$this->ownClassIdentifier()} \$obj */
+                /** @var {$this->registerOwnClassIdentifier()} \$obj */
                 " . $this->buildObjectInstanceCreationCode('$obj', '$cls') . "
                 \$obj->hydrate(\$row);
                 \$results[] = \$obj;
@@ -1332,8 +1332,9 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      * XML schema will not be added to the select list and only loaded
      * on demand.
      *
-     * @param Criteria \$criteria Object containing the columns to add.
+     * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Object containing the columns to add.
      * @param string|null \$alias Optional table alias
+     *
      * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      * @return void
@@ -1373,10 +1374,12 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
      * Note: any columns that were marked with lazyLoad=\"true\" in the
      * XML schema will not be removed as they are only loaded on demand.
      *
-     * @param Criteria \$criteria Object containing the columns to remove.
+     * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Object containing the columns to remove.
      * @param string|null \$alias Optional table alias
+     *
      * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
+     *
      * @return void
      */
     public static function removeSelectColumns(Criteria \$criteria, ?string \$alias = null): void
@@ -1443,7 +1446,8 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
     /**
      * Deletes all rows from the " . $table->getName() . " table.
      *
-     * @param ConnectionInterface \$con the connection to use
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con the connection to use
+     *
      * @return int The number of affected rows (if supported by underlying database driver).
      */
     public static function doDeleteAll(?ConnectionInterface \$con = null): int
@@ -1467,11 +1471,11 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
     /**
      * @deprecated Delete via model or {$this->getQueryClassName()}.
      *
-     * Performs a DELETE on the database, given a " . $this->ownClassIdentifier() . " or Criteria object OR a primary key value.
+     * Performs a DELETE on the database, given a " . $this->registerOwnClassIdentifier() . " or Criteria object OR a primary key value.
      *
-     * @param mixed \$values Criteria or " . $this->ownClassIdentifier() . " object or primary key or array of primary keys
+     * @param mixed \$values Criteria or " . $this->registerOwnClassIdentifier() . " object or primary key or array of primary keys
      *              which is used to create the DELETE statement
-     * @param ConnectionInterface \$con the connection to use
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
      * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
@@ -1573,14 +1577,14 @@ class " . $this->getUnqualifiedClassName() . " extends TableMap
     {
         $table = $this->getTable();
         $tableMapClass = $this->getTableMapClass();
-        $stubObjectName = $this->ownClassIdentifier();
+        $stubObjectName = $this->registerOwnClassIdentifier();
 
         $script .= "
     /**
      * Performs an INSERT on the database, given a $stubObjectName or Criteria object.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria|$stubObjectName \$criteria Criteria or $stubObjectName object containing data that is used to create the INSERT statement.
-     * @param ConnectionInterface \$con the ConnectionInterface connection to use
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con the ConnectionInterface connection to use
      * @return mixed The new primary key.
      * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.

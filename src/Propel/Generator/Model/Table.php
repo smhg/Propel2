@@ -2390,4 +2390,12 @@ class Table extends ScopedMappingModel implements IdMethod
     {
         $this->attributes['collection-class'] = $classNameFq;
     }
+
+    /**
+     * @return string
+     */
+    public function getQualifiedClassName(): string
+    {
+        return $this->makeNamespaceAbsolute($this->namespace) . '\\' . $this->getPhpName();
+    }
 }

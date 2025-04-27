@@ -2,7 +2,7 @@
 /**
  * Computes the value of the aggregate columns defined as <?=$aggregationName?> ?>
  *
- * @param ConnectionInterface $con A connection object
+ * @param \Propel\Runtime\Connection\ConnectionInterface $con A connection object
  *
  * @return array The result row from the aggregate query
  */

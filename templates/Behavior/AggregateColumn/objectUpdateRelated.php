@@ -2,7 +2,7 @@
 /**
  * Update the aggregate column in the related <?=$relationName?> object
  *
- * @param ConnectionInterface $con A connection object
+ * @param \Propel\Runtime\Connection\ConnectionInterface $con A connection object
  */
 protected function updateRelated<?=$relationName.$aggregateName?>(ConnectionInterface $con)
 {

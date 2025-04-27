@@ -2,7 +2,7 @@
 /**
  * Persists the object to the database without archiving it.
  *
- * @param ConnectionInterface|null $con Optional connection object
+ * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
  *
  * @return $this|<?php echo $objectClassName ?> The current object (for fluent API support)
  */

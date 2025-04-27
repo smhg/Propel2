@@ -36,7 +36,7 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
         $this->assertEqualsCanonicalizing($expectedAliasedClasses, $aliasedClasses);
 
         $collectionClasses = $referencedClasses->getDeclaredClasses('Propel\Runtime\Collection');
-        $expectedCollections = ['ObjectCombinationCollection'];
+        $expectedCollections = ['Collection', 'ObjectCombinationCollection'];
         $this->assertEqualsCanonicalizing($expectedCollections, $collectionClasses);
     }
 
@@ -47,14 +47,14 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, string, int}> Objects in TeamDayType relation.
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, string, int}>|null Objects in TeamDayType relation.
      */
-    protected $combinationTeamDayTypes;
+    protected ?ObjectCombinationCollection $combinationTeamDayTypes = null;
 
     /**
      * @var bool
      */
-    protected $combinationTeamDayTypesIsPartial;
+    protected bool $combinationTeamDayTypesIsPartial = false;
 ';
         $this->assertProducedCodeMatches('addAttributes', $expected);
     }
@@ -68,9 +68,9 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
     /**
      * Items of TeamDayType relation marked for deletion.
      *
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, string, int}>
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, string, int}>|null
      */
-    protected $teamDayTypesScheduledForDeletion = null;
+    protected ?ObjectCombinationCollection $teamDayTypesScheduledForDeletion = null;
 ';
         $this->assertProducedCodeMatches('addScheduledForDeletionAttribute', $expected);
     }
@@ -149,7 +149,7 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
     public function testOnReloadCode()
     {
         $expected = '
-        $this->combinationTeamDayTypes = null;';
+            $this->combinationTeamDayTypes = null;';
 
         $this->assertProducedCodeMatches('addOnReloadCode', $expected);
     }
@@ -160,36 +160,35 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
     public function testDeleteScheduledItemsCode()
     {
         $expected = '
-            if ($this->teamDayTypesScheduledForDeletion !== null && !$this->teamDayTypesScheduledForDeletion->isEmpty()) {
-                $pks = [];
-                foreach ($this->teamDayTypesScheduledForDeletion as $combination) {
-                    $entryPk = [];
+        if ($this->teamDayTypesScheduledForDeletion !== null && !$this->teamDayTypesScheduledForDeletion->isEmpty()) {
+            $pks = [];
+            foreach ($this->teamDayTypesScheduledForDeletion as $combination) {
+                $entryPk = [];
 
-                    $entryPk[2] = $this->getId();
-                    $entryPk[3] = $combination[0]->getId();
-                    $entryPk[0] = $combination[1];
-                    $entryPk[1] = $combination[2];
+                $entryPk[2] = $this->getId();
+                $entryPk[3] = $combination[0]->getId();
+                $entryPk[0] = $combination[1];
+                $entryPk[1] = $combination[2];
 
-                    $pks[] = $entryPk;
-                }
-
-                ChildTeamUserQuery::create()
-                    ->filterByPrimaryKeys($pks)
-                    ->delete($con);
-
-                $this->teamDayTypesScheduledForDeletion = null;
+                $pks[] = $entryPk;
             }
 
-            if ($this->combinationTeamDayTypes !== null) {
-                foreach ($this->combinationTeamDayTypes as $combination) {
-                    $model = $combination[0];
-                    if (!$model->isDeleted() && ($model->isNew() || $model->isModified())) {
-                        $model->save($con);
-                    }
+            ChildTeamUserQuery::create()
+                ->filterByPrimaryKeys($pks)
+                ->delete($con);
 
+            $this->teamDayTypesScheduledForDeletion = null;
+        }
+
+        if ($this->combinationTeamDayTypes !== null) {
+            foreach ($this->combinationTeamDayTypes as $combination) {
+                $model = $combination[0];
+                if (!$model->isDeleted() && ($model->isNew() || $model->isModified())) {
+                    $model->save($con);
                 }
-            }
 
+            }
+        }
 ';
         $this->assertProducedCodeMatches('addDeleteScheduledItemsCode', $expected);
     }
@@ -255,13 +254,13 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
      * If the $criteria is not null, it is used to always fetch the results from the database.
      * Otherwise the results are fetched from the database the first time, then cached.
      * Next time the same method is called without $criteria, the cached collection is returned.
-     * If this ChildUser is new, it will return
+     * If this User is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, string, int}>
+     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, string, int}>
      */
     public function getTeamDayTypes(?Criteria $criteria = null, ?ConnectionInterface $con = null): ObjectCombinationCollection
     {
@@ -347,10 +346,10 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<array{ChildTeam, string, int}> $teamDayTypes A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<array{Team, string, int}> $teamDayTypes A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return $this
+     * @return static
      */
     public function setTeamDayTypes(Collection $teamDayTypes, ?ConnectionInterface $con = null): static
     {
@@ -449,7 +448,7 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
     /**
      * Associate a Team with this object through the team_user cross reference table.
      *
-     * @param ChildTeam $team
+     * @param Team $team
      * @param string $day
      * @param int $type
      *
@@ -480,7 +479,7 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @param ChildTeam $team
+     * @param Team $team
      * @param string $day
      * @param int $type
      *
@@ -519,7 +518,7 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
     /**
      * Remove team, day, type of this object through the team_user cross reference table.
      *
-     * @param ChildTeam $team
+     * @param Team $team
      * @param string $day
      * @param int $type
      *

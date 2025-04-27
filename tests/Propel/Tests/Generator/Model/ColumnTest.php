@@ -703,11 +703,11 @@ class ColumnTest extends ModelTestCase
             ['TINYINT', 'int', true],
             ['INTEGER', 'int', true],
             ['BIGINT', 'string', false],
-            ['FLOAT', 'double', true],
-            ['DOUBLE', 'double', true],
+            ['FLOAT', 'float', true],
+            ['DOUBLE', 'float', true],
             ['NUMERIC', 'string', false],
             ['DECIMAL', 'string', false],
-            ['REAL', 'double', true],
+            ['REAL', 'float', true],
         ];
     }
 

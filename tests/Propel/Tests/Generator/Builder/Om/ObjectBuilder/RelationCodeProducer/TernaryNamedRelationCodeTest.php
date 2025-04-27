@@ -36,7 +36,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
         $this->assertEqualsCanonicalizing($expectedAliasedClasses, $aliasedClasses);
 
         $collectionClasses = $referencedClasses->getDeclaredClasses('Propel\Runtime\Collection');
-        $expectedCollections = ['ObjectCombinationCollection'];
+        $expectedCollections = ['Collection', 'ObjectCombinationCollection'];
         $this->assertEqualsCanonicalizing($expectedCollections, $collectionClasses);
     }
 
@@ -47,14 +47,14 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent, string}> Objects in LeTeamLeEventDate relation.
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event, string}>|null Objects in LeTeamLeEventDate relation.
      */
-    protected $combinationLeTeamLeEventDates;
+    protected ?ObjectCombinationCollection $combinationLeTeamLeEventDates = null;
 
     /**
      * @var bool
      */
-    protected $combinationLeTeamLeEventDatesIsPartial;
+    protected bool $combinationLeTeamLeEventDatesIsPartial = false;
 ';
         $this->assertProducedCodeMatches('addAttributes', $expected);
     }
@@ -68,9 +68,9 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Items of LeTeamLeEventDate relation marked for deletion.
      *
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent, string}>
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event, string}>|null
      */
-    protected $leTeamLeEventDatesScheduledForDeletion = null;
+    protected ?ObjectCombinationCollection $leTeamLeEventDatesScheduledForDeletion = null;
 ';
         $this->assertProducedCodeMatches('addScheduledForDeletionAttribute', $expected);
     }
@@ -149,7 +149,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     public function testOnReloadCode()
     {
         $expected = '
-        $this->combinationLeTeamLeEventDates = null;';
+            $this->combinationLeTeamLeEventDates = null;';
 
         $this->assertProducedCodeMatches('addOnReloadCode', $expected);
     }
@@ -160,41 +160,40 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     public function testDeleteScheduledItemsCode()
     {
         $expected = '
-            if ($this->leTeamLeEventDatesScheduledForDeletion !== null && !$this->leTeamLeEventDatesScheduledForDeletion->isEmpty()) {
-                $pks = [];
-                foreach ($this->leTeamLeEventDatesScheduledForDeletion as $combination) {
-                    $entryPk = [];
+        if ($this->leTeamLeEventDatesScheduledForDeletion !== null && !$this->leTeamLeEventDatesScheduledForDeletion->isEmpty()) {
+            $pks = [];
+            foreach ($this->leTeamLeEventDatesScheduledForDeletion as $combination) {
+                $entryPk = [];
 
-                    $entryPk[0] = $this->getId();
-                    $entryPk[1] = $combination[0]->getId();
-                    $entryPk[2] = $combination[1]->getId();
-                    $entryPk[3] = $combination[2];
+                $entryPk[0] = $this->getId();
+                $entryPk[1] = $combination[0]->getId();
+                $entryPk[2] = $combination[1]->getId();
+                $entryPk[3] = $combination[2];
 
-                    $pks[] = $entryPk;
-                }
-
-                ChildTeamUserQuery::create()
-                    ->filterByPrimaryKeys($pks)
-                    ->delete($con);
-
-                $this->leTeamLeEventDatesScheduledForDeletion = null;
+                $pks[] = $entryPk;
             }
 
-            if ($this->combinationLeTeamLeEventDates !== null) {
-                foreach ($this->combinationLeTeamLeEventDates as $combination) {
-                    $model = $combination[0];
-                    if (!$model->isDeleted() && ($model->isNew() || $model->isModified())) {
-                        $model->save($con);
-                    }
+            ChildTeamUserQuery::create()
+                ->filterByPrimaryKeys($pks)
+                ->delete($con);
 
-                    $model = $combination[1];
-                    if (!$model->isDeleted() && ($model->isNew() || $model->isModified())) {
-                        $model->save($con);
-                    }
+            $this->leTeamLeEventDatesScheduledForDeletion = null;
+        }
 
+        if ($this->combinationLeTeamLeEventDates !== null) {
+            foreach ($this->combinationLeTeamLeEventDates as $combination) {
+                $model = $combination[0];
+                if (!$model->isDeleted() && ($model->isNew() || $model->isModified())) {
+                    $model->save($con);
                 }
-            }
 
+                $model = $combination[1];
+                if (!$model->isDeleted() && ($model->isNew() || $model->isModified())) {
+                    $model->save($con);
+                }
+
+            }
+        }
 ';
         $this->assertProducedCodeMatches('addDeleteScheduledItemsCode', $expected);
     }
@@ -208,7 +207,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Returns a new query object pre configured with filters from current object and given arguments to query the database.
      *
-     * @param ChildEvent $leEvent
+     * @param Event $leEvent
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      *
@@ -237,7 +236,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Returns a new query object pre configured with filters from current object and given arguments to query the database.
      *
-     * @param ChildTeam $leTeam
+     * @param Team $leTeam
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      *
@@ -289,13 +288,13 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * If the $criteria is not null, it is used to always fetch the results from the database.
      * Otherwise the results are fetched from the database the first time, then cached.
      * Next time the same method is called without $criteria, the cached collection is returned.
-     * If this ChildUser is new, it will return
+     * If this User is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent, string}>
+     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event, string}>
      */
     public function getLeTeamLeEventDates(?Criteria $criteria = null, ?ConnectionInterface $con = null): ObjectCombinationCollection
     {
@@ -355,7 +354,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * If you have attached new ChildTeam object to this object you need to call `save` first to get
      * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
      *
-     * @param ChildEvent $leEvent
+     * @param Event $leEvent
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
@@ -372,7 +371,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * If you have attached new ChildEvent object to this object you need to call `save` first to get
      * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
      *
-     * @param ChildTeam $leTeam
+     * @param Team $leTeam
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
@@ -399,10 +398,10 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<array{ChildTeam, ChildEvent, string}> $leTeamLeEventDates A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<array{Team, Event, string}> $leTeamLeEventDates A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return $this
+     * @return static
      */
     public function setLeTeamLeEventDates(Collection $leTeamLeEventDates, ?ConnectionInterface $con = null): static
     {
@@ -477,7 +476,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * If you have attached new ChildTeam object to this object you need to call `save` first to get
      * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
      *
-     * @param ChildEvent $leEvent
+     * @param Event $leEvent
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
@@ -494,7 +493,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * If you have attached new ChildEvent object to this object you need to call `save` first to get
      * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
      *
-     * @param ChildTeam $leTeam
+     * @param Team $leTeam
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
@@ -518,8 +517,8 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Associate a LeTeam with this object through the team_user cross reference table.
      *
-     * @param ChildTeam $leTeam
-     * @param ChildEvent $leEvent
+     * @param Team $leTeam
+     * @param Event $leEvent
      * @param string $date
      *
      * @return static
@@ -542,8 +541,8 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Associate a LeEvent with this object through the team_user cross reference table.
      *
-     * @param ChildEvent $leEvent
-     * @param ChildTeam $leTeam
+     * @param Event $leEvent
+     * @param Team $leTeam
      * @param string $date
      *
      * @return static
@@ -573,8 +572,8 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @param ChildTeam $leTeam
-     * @param ChildEvent $leEvent
+     * @param Team $leTeam
+     * @param Event $leEvent
      * @param string $date
      *
      * return void
@@ -621,8 +620,8 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Remove leTeam, leEvent, date of this object through the team_user cross reference table.
      *
-     * @param ChildTeam $leTeam
-     * @param ChildEvent $leEvent
+     * @param Team $leTeam
+     * @param Event $leEvent
      * @param string $date
      *
      * @return static

@@ -9,6 +9,7 @@
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use Propel\Generator\Builder\Om\ObjectBuilder;
+use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\Column;
 use Propel\Generator\Model\ForeignKey;
 
@@ -74,12 +75,12 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
     #[\Override]
     public function addAttributes(string &$script): void
     {
-        $className = $this->getClassNameFromTable($this->relation->getForeignTable());
+        $className = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $this->relation->getForeignTable(), true);
         $varName = $this->getAttributeName();
 
         $script .= "
     /**
-     * @var        $className|null
+     * @var $className|null
      */
     protected $" . $varName . ";
 ";
@@ -110,13 +111,12 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
         $relationIdentifierSingular = $this->nameProducer->resolveRelationIdentifier($this->relation, false);
 
         $script .= "
-    if (\$this->$attributeName !== null) {
-        if (\$this->" . $attributeName . '->isModified() || $this->' . $attributeName . "->isNew()) {
-            \$affectedRows += \$this->" . $attributeName . "->save(\$con);
-        }
-        \$this->set{$relationIdentifierSingular}(\$this->$attributeName);
-    }
-";
+        if (\$this->$attributeName !== null) {
+            if (\$this->" . $attributeName . '->isModified() || $this->' . $attributeName . "->isNew()) {
+                \$affectedRows += \$this->" . $attributeName . "->save(\$con);
+            }
+            \$this->set{$relationIdentifierSingular}(\$this->$attributeName);
+        }\n";
     }
 
     /**
@@ -152,19 +152,18 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
         $className = $interface
             ? $this->declareClass($interface)
             : $this->getClassNameFromTable($fkTable);
+        $classNameFqcn = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $fkTable, true);
 
         $attributeName = $this->getAttributeName();
-
-        $orNull = $fk->getLocalColumn()->isNotNull() ? '' : '|null';
         $setAdd = $fk->isLocalPrimaryKey() ? 'set' : 'add'; // one-to-one or one-to-many
 
         $script .= "
     /**
      * Declares an association between this object and a $className object.
      *
-     * @param {$className}{$orNull} $varName
-     * @return \$this The current object (for fluent API support)
-     * @throws \Propel\Runtime\Exception\PropelException
+     * @param {$classNameFqcn}|null $varName
+     *
+     * @return \$this
      */
     public function set{$relationIdentifierSingular}(?$className $varName = null)
     {";
@@ -243,11 +242,11 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
                 $localColumns[$rightValueOrColumn->getPosition()] = '$this->' . $clo;
 
                 if ($cptype === 'int' || $cptype === 'float' || $cptype === 'double') {
-                    $conditional .= $and . '$this->' . $clo . ' != 0';
+                    $conditional .= "$and\$this->$clo != 0";
                 } elseif ($cptype === 'string') {
-                    $conditional .= $and . '($this->' . $clo . ' !== "" && $this->' . $clo . ' !== null)';
+                    $conditional .= "$and(\$this->$clo !== '' && \$this->$clo !== null)";
                 } else {
-                    $conditional .= $and . '$this->' . $clo . ' !== null';
+                    $conditional .= "$and\$this->$clo !== null";
                 }
             } else {
                 $val = var_export($rightValueOrColumn, true);
@@ -259,21 +258,20 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
 
         ksort($localColumns); // restoring the order of the foreign PK
         $localColumns = count($localColumns) > 1 ?
-            ('array(' . implode(', ', $localColumns) . ')') : reset($localColumns);
+            ('[' . implode(', ', $localColumns) . ']')
+            : reset($localColumns);
 
         $orNull = $fk->getLocalColumn()->isNotNull() ? '' : '|null';
         $queryClassName = $this->getClassNameFromBuilder($fkQueryBuilder);
 
+        $classNameFqcn = $this->getClassNameFromBuilder($fkObjectBuilder, true);
         $script .= "
-
     /**
      * Get the associated $className object
      *
-     * @param ConnectionInterface \$con Optional Connection object.
+     * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con Optional Connection object.
      *
-     *  @return {$className}{$orNull} $returnDesc
-     *
-     * @throws \Propel\Runtime\Exception\PropelException
+     * @return {$classNameFqcn}{$orNull} $returnDesc
      */
     public function get{$relationIdentifierSingular}(?ConnectionInterface \$con = null)
     {";

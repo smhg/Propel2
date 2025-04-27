@@ -2,7 +2,7 @@
 /**
  * Returns the current translation
  *
- * @param ConnectionInterface|null $con an optional connection object
+ * @param \Propel\Runtime\Connection\ConnectionInterface|null $con an optional connection object
  *
  * @return <?= $i18nTablePhpName ?>
  */

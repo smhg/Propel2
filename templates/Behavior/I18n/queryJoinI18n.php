@@ -6,7 +6,7 @@
  * @param string $relationAlias optional alias for the relation
  * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'. Defaults to left join.
  *
- * @return <?php echo $queryClass ?> The current query, for fluid interface
+ * @return <?php echo $queryClass ?>
  */
 public function joinI18n($locale = '<?php echo $defaultLocale ?>', $relationAlias = null, $joinType = Criteria::LEFT_JOIN)
 {

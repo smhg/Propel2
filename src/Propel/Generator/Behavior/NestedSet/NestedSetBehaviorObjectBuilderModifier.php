@@ -281,7 +281,8 @@ if (\$this->isInTree()) {
 /**
  * Execute queries that were saved to be run inside the save transaction
  *
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
+ *
  * @return void
  */
 protected function processNestedSetQueries(ConnectionInterface \$con): void
@@ -403,7 +404,8 @@ public function getScopeValue(): int
  * It provides a generic way to set the value, whatever the actual column name is.
  *
  * @param int \$v The nested set right value
- * @return \$this The current object (for fluent API support)
+ *
+ * @return \$this
  */
 public function setRightValue(int \$v)
 {
@@ -427,7 +429,8 @@ public function setRightValue(int \$v)
  * It provides a generic way to set the value, whatever the actual column name is.
  *
  * @param int \$v The nested set level value
- * @return \$this The current object (for fluent API support)
+ *
+ * @return \$this
  */
 public function setLevel(int \$v)
 {
@@ -451,7 +454,8 @@ public function setLevel(int \$v)
  * It provides a generic way to set the value, whatever the actual column name is.
  *
  * @param int \$v The nested set scope value
- * @return \$this The current object (for fluent API support)
+ *
+ * @return \$this
  */
 public function setScopeValue(int \$v)
 {
@@ -473,7 +477,8 @@ public function setScopeValue(int \$v)
 /**
  * Creates the supplied node as the root node.
  *
- * @return \$this The current object (for fluent API support)
+ * @return \$this
+ *
  * @throws     PropelException
  */
 public function makeRoot()
@@ -565,6 +570,7 @@ public function isLeaf(): bool
  * Tests if node is a descendant of another node
  *
  * @param $objectClassName \$parent Propel node object
+ *
  * @return bool
  */
 public function isDescendantOf($objectClassName \$parent): bool
@@ -596,6 +602,7 @@ public function isDescendantOf($objectClassName \$parent): bool
  * Tests if node is a ancestor of another node
  *
  * @param $objectClassName \$child Propel node object
+ *
  * @return bool
  */
 public function isAncestorOf($objectClassName \$child): bool
@@ -641,6 +648,7 @@ public function hasParent(): bool
  * Use moveTofirstChildOf() or moveToLastChildOf() for that purpose
  *
  * @param $objectClassName \$parent
+ *
  * @return \$this
  */
 public function setParent(?$objectClassName \$parent = null)
@@ -667,7 +675,8 @@ public function setParent(?$objectClassName \$parent = null)
  * Gets parent node for the current object if it exists
  * The result is cached so further calls to the same method don't issue any queries
  *
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
+ *
  * @return $objectClassName|null Propel object if exists else null
  */
 public function getParent(?ConnectionInterface \$con = null)
@@ -697,7 +706,8 @@ public function getParent(?ConnectionInterface \$con = null)
 /**
  * Determines if the node has previous sibling
  *
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
+ *
  * @return bool
  */
 public function hasPrevSibling(?ConnectionInterface \$con = null): bool
@@ -732,7 +742,8 @@ public function hasPrevSibling(?ConnectionInterface \$con = null): bool
 /**
  * Gets previous sibling for the given node if it exists
  *
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
+ *
  * @return $objectClassName|null         Propel object if exists else null
  */
 public function getPrevSibling(?ConnectionInterface \$con = null)
@@ -762,7 +773,7 @@ public function getPrevSibling(?ConnectionInterface \$con = null)
 /**
  * Determines if the node has next sibling
  *
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  * @return bool
  */
 public function hasNextSibling(?ConnectionInterface \$con = null): bool
@@ -797,7 +808,7 @@ public function hasNextSibling(?ConnectionInterface \$con = null): bool
 /**
  * Gets next sibling for the given node if it exists
  *
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  * @return $objectClassName|null         Propel object if exists else null
  */
 public function getNextSibling(?ConnectionInterface \$con = null)
@@ -886,7 +897,7 @@ public function addNestedSetChild($objectClassName $objectName): void
         \$this->initNestedSetChildren();
     }
     if (!in_array($objectName, \$this->collNestedSetChildren->getArrayCopy(), true)) { // only add it if the **same** object is not already associated
-        \$this->collNestedSetChildren[]= $objectName;
+        \$this->collNestedSetChildren[] = $objectName;
         {$objectName}->setParent(\$this);
     }
 }
@@ -927,8 +938,9 @@ public function hasChildren(): bool
 /**
  * Gets the children of the given node
  *
- * @param Criteria \$criteria Criteria to filter results.
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Criteria to filter results.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
+ *
  * @return ObjectCollection|{$objectClassName}[] List of $objectClassName objects
  */
 public function getChildren(?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
@@ -967,8 +979,9 @@ public function getChildren(?Criteria \$criteria = null, ?ConnectionInterface \$
 /**
  * Gets number of children for the given node
  *
- * @param Criteria \$criteria Criteria to filter results.
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Criteria to filter results.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
+ *
  * @return int Number of children
  */
 public function countChildren(?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
@@ -1001,8 +1014,9 @@ public function countChildren(?Criteria \$criteria = null, ?ConnectionInterface 
 /**
  * Gets the first child of the given node
  *
- * @param Criteria \$criteria Criteria to filter results.
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Criteria to filter results.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
+ *
  * @return $objectClassName|null First child or null if this is a leaf
  */
 public function getFirstChild(?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
@@ -1033,8 +1047,8 @@ public function getFirstChild(?Criteria \$criteria = null, ?ConnectionInterface 
 /**
  * Gets the last child of the given node
  *
- * @param Criteria \$criteria Criteria to filter results.
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Criteria to filter results.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  * @return $objectClassName|null Last child or null if this is a leaf
  */
 public function getLastChild(?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
@@ -1066,8 +1080,8 @@ public function getLastChild(?Criteria \$criteria = null, ?ConnectionInterface \
  * Gets the siblings of the given node
  *
  * @param bool \$includeNode Whether to include the current node or not
- * @param Criteria \$criteria Criteria to filter results.
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Criteria to filter results.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  *
  * @return ObjectCollection|{$objectClassName}[] List of $objectClassName objects
  */
@@ -1103,8 +1117,8 @@ public function getSiblings(\$includeNode = false, ?Criteria \$criteria = null, 
 /**
  * Gets descendants for the given node
  *
- * @param Criteria \$criteria Criteria to filter results.
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Criteria to filter results.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  * @return ObjectCollection|{$objectClassName}[] List of $objectClassName objects
  */
 public function getDescendants(?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
@@ -1134,8 +1148,9 @@ public function getDescendants(?Criteria \$criteria = null, ?ConnectionInterface
 /**
  * Gets number of descendants for the given node
  *
- * @param Criteria \$criteria Criteria to filter results.
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Criteria to filter results.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
+ *
  * @return int Number of descendants
  */
 public function countDescendants(?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
@@ -1166,8 +1181,8 @@ public function countDescendants(?Criteria \$criteria = null, ?ConnectionInterfa
 /**
  * Gets descendants for the given node, plus the current node
  *
- * @param Criteria \$criteria Criteria to filter results.
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Criteria to filter results.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  * @return ObjectCollection|{$objectClassName}[] List of $objectClassName objects
  */
 public function getBranch(?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
@@ -1195,8 +1210,8 @@ public function getBranch(?Criteria \$criteria = null, ?ConnectionInterface \$co
  * Gets ancestors for the given node, starting with the root node
  * Use it for breadcrumb paths for instance
  *
- * @param Criteria \$criteria Criteria to filter results.
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Criteria to filter results.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  * @return ObjectCollection|{$objectClassName}[] List of $objectClassName objects
  */
 public function getAncestors(?Criteria \$criteria = null, ?ConnectionInterface \$con = null)
@@ -1348,7 +1363,7 @@ public function insertAsPrevSiblingOf($objectClassName \$sibling)
         }
         $script .= "
     // Keep the tree modification query for the save() transaction
-    \$this->nestedSetQueries []= [
+    \$this->nestedSetQueries [] = [
         'callable'  => array('$queryClassName', 'makeRoomForLeaf'),
         'arguments' => array(\$left" . ($useScope ? ', $scope' : '') . ", \$this->isNew() ? null : \$this)
     ];
@@ -1396,7 +1411,7 @@ public function insertAsNextSiblingOf($objectClassName \$sibling)
         }
         $script .= "
     // Keep the tree modification query for the save() transaction
-    \$this->nestedSetQueries []= [
+    \$this->nestedSetQueries [] = [
         'callable'  => ['$queryClassName', 'makeRoomForLeaf'],
         'arguments' => [\$left" . ($useScope ? ', $scope' : '') . ", \$this->isNew() ? null : \$this],
     ];
@@ -1420,7 +1435,7 @@ public function insertAsNextSiblingOf($objectClassName \$sibling)
  * The modifications in the current object and the tree are immediate
  *
  * @param $objectClassName \$parent    Propel object for parent node
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  *
  * @return \$this The current Propel object
  */
@@ -1457,7 +1472,7 @@ public function moveToFirstChildOf($objectClassName \$parent, ?ConnectionInterfa
  * The modifications in the current object and the tree are immediate
  *
  * @param $objectClassName \$parent    Propel object for parent node
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  *
  * @return \$this The current Propel object
  */
@@ -1494,7 +1509,7 @@ public function moveToLastChildOf($objectClassName \$parent, ?ConnectionInterfac
  * The modifications in the current object and the tree are immediate
  *
  * @param $objectClassName \$sibling    Propel object for sibling node
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  *
  * @return \$this The current Propel object
  */
@@ -1534,7 +1549,7 @@ public function moveToPrevSiblingOf($objectClassName \$sibling, ?ConnectionInter
  * The modifications in the current object and the tree are immediate
  *
  * @param $objectClassName \$sibling    Propel object for sibling node
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  *
  * @return \$this The current Propel object
  */
@@ -1576,7 +1591,7 @@ public function moveToNextSiblingOf($objectClassName \$sibling, ?ConnectionInter
  *
  * @param int \$destLeft Destination left value
  * @param int \$levelDelta Delta to add to the levels
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  */
 protected function moveSubtreeTo(\$destLeft, \$levelDelta" . ($this->behavior->useScope() ? ', $targetScope = null' : '') . ", ?ConnectionInterface \$con = null)
 {
@@ -1675,7 +1690,7 @@ protected function moveSubtreeTo(\$destLeft, \$levelDelta" . ($this->behavior->u
  * Instance pooling is wiped out by this command,
  * so existing $objectClassName instances are probably invalid (except for the current one)
  *
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  *
  * @return int number of deleted nodes
  */
@@ -1727,19 +1742,22 @@ public function deleteDescendants(?ConnectionInterface \$con = null)
         $script = "
 /**
  * Queries to be executed in the save transaction
- * @var        array
+ *
+ * @var array
  */
 protected \$nestedSetQueries = [];
 
 /**
  * Internal cache for children nodes
- * @var        null|ObjectCollection
+ *
+ * @var  null|ObjectCollection
  */
 protected \$collNestedSetChildren = null;
 
 /**
  * Internal cache for parent node
- * @var        null|$objectClassName
+ *
+ * @var  null|$objectClassName
  */
 protected \$aNestedSetParent = null;
 

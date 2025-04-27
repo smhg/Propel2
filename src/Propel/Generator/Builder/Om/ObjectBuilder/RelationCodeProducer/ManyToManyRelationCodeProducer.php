@@ -123,6 +123,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
         $attributeIsPartialName = $this->names->getAttributeIsPartialName();
 
         [$objectCollectionClass, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType($this->getFkToTarget()->getForeignTable());
+        $ownModelClassName = $this->getTable()->getPhpName();
 
         $script .= "
     /**
@@ -132,7 +133,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
      * If the \$criteria is not null, it is used to always fetch the results from the database.
      * Otherwise the results are fetched from the database the first time, then cached.
      * Next time the same method is called without \$criteria, the cached collection is returned.
-     * If this " . $this->ownClassIdentifier() . " is new, it will return
+     * If this $ownModelClassName is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria|null \$criteria Optional query object to filter the query
@@ -150,7 +151,6 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
                     \$this->init{$targetIdentifierPlural}();
                 }
             } else {
-
                 \$query = $targetQueryClassName::create(null, \$criteria)
                     ->filterBy{$sourceIdentifierSingular}(\$this);
                 \$$attributeName = \$query->find(\$con);
@@ -200,10 +200,10 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
         $crossPks = $this->crossRelation->getMiddleTable()->getPrimaryKey();
 
         $script .= "
-            if (\$this->$scheduledForDeletionVarName !== null && !\$this->{$scheduledForDeletionVarName}->isEmpty()) {
-                \$pks = [];
-                foreach (\$this->{$scheduledForDeletionVarName} as \$entry) {
-                    \$entryPk = [];\n";
+        if (\$this->$scheduledForDeletionVarName !== null && !\$this->{$scheduledForDeletionVarName}->isEmpty()) {
+            \$pks = [];
+            foreach (\$this->{$scheduledForDeletionVarName} as \$entry) {
+                \$entryPk = [];\n";
 
         foreach ($this->crossRelation->getIncomingForeignKey()->getColumnObjectsMapping() as $reference) {
             $local = $reference['local'];
@@ -211,7 +211,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
 
             $idx = array_search($local, $crossPks, true);
             $script .= "
-                    \$entryPk[$idx] = \$this->get{$foreign->getPhpName()}();";
+                \$entryPk[$idx] = \$this->get{$foreign->getPhpName()}();";
         }
 
         $crossFK = $this->crossRelation->getCrossForeignKeys()[0];
@@ -221,30 +221,30 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
 
             $idx = array_search($local, $crossPks, true);
             $script .= "
-                    \$entryPk[$idx] = \$entry->get{$foreign->getPhpName()}();";
+                \$entryPk[$idx] = \$entry->get{$foreign->getPhpName()}();";
         }
 
         $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
         $targetVar = $this->names->getTargetIdentifier(false, true);
 
         $script .= "
-                    \$pks[] = \$entryPk;
-                }
-
-                {$middleQueryClassName}::create()
-                    ->filterByPrimaryKeys(\$pks)
-                    ->delete(\$con);
-
-                \$this->$scheduledForDeletionVarName = null;
+                \$pks[] = \$entryPk;
             }
 
-            if (\$this->coll{$targetIdentifierPlural}) {
-                foreach (\$this->coll{$targetIdentifierPlural} as \${$targetVar}) {
-                    if (!\${$targetVar}->isDeleted() && (\${$targetVar}->isNew() || \${$targetVar}->isModified())) {
-                        \${$targetVar}->save(\$con);
-                    }
+            {$middleQueryClassName}::create()
+                ->filterByPrimaryKeys(\$pks)
+                ->delete(\$con);
+
+            \$this->$scheduledForDeletionVarName = null;
+        }
+
+        if (\$this->coll{$targetIdentifierPlural}) {
+            foreach (\$this->coll{$targetIdentifierPlural} as \${$targetVar}) {
+                if (!\${$targetVar}->isDeleted() && (\${$targetVar}->isNew() || \${$targetVar}->isModified())) {
+                    \${$targetVar}->save(\$con);
                 }
-            }\n\n";
+            }
+        }\n";
     }
 
     /**

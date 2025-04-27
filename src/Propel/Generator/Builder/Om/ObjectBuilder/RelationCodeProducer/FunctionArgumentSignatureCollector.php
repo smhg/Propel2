@@ -8,7 +8,10 @@
 
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
+use Propel\Generator\Builder\Om\ReferencedClasses;
 use Propel\Generator\Model\Column;
+use Propel\Generator\Model\CrossRelation;
+use Propel\Generator\Model\ForeignKey;
 
 class FunctionArgumentSignatureCollector
 {
@@ -27,6 +30,11 @@ class FunctionArgumentSignatureCollector
      * @var string
      */
     public const USE_DEFAULT_NULL = 'null';
+
+    /**
+     * @var \Propel\Generator\Builder\Om\ReferencedClasses
+     */
+    protected ReferencedClasses $referencedClasses;
 
     /**
      * Argument declarations, possibly with type hint and default value
@@ -56,6 +64,83 @@ class FunctionArgumentSignatureCollector
     protected array $classNames = [];
 
     /**
+     * @param \Propel\Generator\Builder\Om\ReferencedClasses $referencedClasses
+     */
+    public function __construct(ReferencedClasses $referencedClasses)
+    {
+        $this->referencedClasses = $referencedClasses;
+    }
+
+    /**
+     * @param \Propel\Generator\Builder\Om\ReferencedClasses $referencedClasses
+     *
+     * @return self
+     */
+    public static function create(ReferencedClasses $referencedClasses): self
+    {
+        return new self($referencedClasses);
+    }
+
+    /**
+     * Collect signature from keys, but the supplied Fk first.
+     *
+     * @param \Propel\Generator\Model\ForeignKey $firstFk
+     * @param \Propel\Generator\Model\CrossRelation $crossRelation
+     *
+     * @return static
+     */
+    public function collectWithFirstArgument(ForeignKey $firstFk, CrossRelation $crossRelation): self
+    {
+        $this->addRelationTarget($firstFk);
+
+        return $this->collect($crossRelation, $firstFk);
+    }
+
+    /**
+     * Collect signature from keys.
+     *
+     * @param \Propel\Generator\Model\CrossRelation $crossRelation
+     * @param \Propel\Generator\Model\ForeignKey|null $fkToIgnore
+     * @param string|null $withDefaultValue Set to {@see FunctionArgumentSignatureCollector::USE_COLUMN_DEFAULT} or {@see FunctionArgumentSignatureCollector::USE_DEFAULT_NULL} to add default values to argument declarations.
+     *
+     * @return $this
+     */
+    public function collect(
+        CrossRelation $crossRelation,
+        ?ForeignKey $fkToIgnore = null,
+        ?string $withDefaultValue = null
+    ) {
+        foreach ($crossRelation->getCrossForeignKeys() as $fk) {
+            if ($fk === $fkToIgnore) {
+                continue;
+            }
+            $this->addRelationTarget($fk);
+        }
+
+        foreach ($crossRelation->getUnclassifiedPrimaryKeys() as $column) {
+            //we need to add all those $primaryKey s as additional parameter as they are needed
+            //to create the entry in the middle-table.
+            $this->addColumn($column, $withDefaultValue);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param \Propel\Generator\Model\ForeignKey $relation
+     *
+     * @return void
+     */
+    protected function addRelationTarget(ForeignKey $relation): void
+    {
+        $argumentName = '$' . lcfirst($relation->getIdentifier());
+        $phpTypeHint = $this->referencedClasses->resolveForeignKeyTargetModelClassName($relation);
+        $qualifiedType = $this->referencedClasses->resolveQualifiedModelClassNameForTable($relation->getForeignTableOrFail());
+
+        $this->addEntry($argumentName, $phpTypeHint, $qualifiedType);
+    }
+
+    /**
      * @param \Propel\Generator\Model\Column $column
      * @param string|null $withDefaultValue Set to {@see static::USE_COLUMN_DEFAULT} or {@see static::USE_DEFAULT_NULL} to add default values to argument declarations.
      *
@@ -63,12 +148,11 @@ class FunctionArgumentSignatureCollector
      */
     public function addColumn(Column $column, ?string $withDefaultValue = null): void
     {
-        $name = '$' . lcfirst($column->getPhpName());
-        $phpType = $column->getPhpType();
-        $typeHint = $column->isPhpArrayType() ? 'array' : null;
+        $argumentName = '$' . lcfirst($column->getPhpName());
+        $phpType = $qualifiedType = $column->getPhpType();
         $defaultValue = $this->resolveDefaultValue($column, $withDefaultValue);
 
-        $this->addEntry($name, $phpType, $typeHint, $defaultValue);
+        $this->addEntry($argumentName, $phpType, $qualifiedType, $defaultValue);
     }
 
     /**
@@ -91,42 +175,45 @@ class FunctionArgumentSignatureCollector
 
     /**
      * @param string $argumentName
-     * @param string $phpType
-     * @param string|null $typeHint
+     * @param string $phpTypeHint
+     * @param string $qualifiedType
      * @param string|null $defaultValue
      *
      * @return void
      */
-    public function addEntry(string $argumentName, string $phpType, ?string $typeHint = null, ?string $defaultValue = null): void
-    {
-        if ($defaultValue === 'null' && $typeHint) {
-            $typeHint = "?$typeHint";
-        }
-        $this->argumentDeclarations[] = $this->buildArgumentDeclarationStatement($argumentName, $phpType, $defaultValue);
+    protected function addEntry(
+        string $argumentName,
+        string $phpTypeHint,
+        string $qualifiedType,
+        ?string $defaultValue = null
+    ): void {
+        $this->argumentDeclarations[] = $this->buildArgumentDeclarationStatement($argumentName, $phpTypeHint, $defaultValue);
         $this->functionParameterVariables[] = $argumentName;
-        $docType = $this->buildDocType($phpType, $typeHint, $defaultValue);
+
+        $docType = $defaultValue === 'null' ? "$qualifiedType|null" : $qualifiedType;
         $this->phpDocParamDeclaration[] = "\n     * @param $docType $argumentName";
-        $this->classNames[] = $phpType;
+
+        $this->classNames[] = $docType;
     }
 
     /**
      * Build statement like "?int $id = null"
      *
      * @param string $argumentName
-     * @param string|null $phpType
+     * @param string|null $phpTypeHint
      * @param string|null $defaultValue
      *
      * @return string
      */
-    protected function buildArgumentDeclarationStatement(string $argumentName, ?string $phpType, ?string $defaultValue): string
+    protected function buildArgumentDeclarationStatement(string $argumentName, ?string $phpTypeHint, ?string $defaultValue): string
     {
         $argumentDeclarationStatement = '';
 
-        if ($phpType) {
+        if ($phpTypeHint) {
             if ($defaultValue === 'null') {
                 $argumentDeclarationStatement .= '?';
             }
-            $argumentDeclarationStatement .= "$phpType ";
+            $argumentDeclarationStatement .= "$phpTypeHint ";
         }
 
         $argumentDeclarationStatement .= $argumentName;
@@ -136,23 +223,6 @@ class FunctionArgumentSignatureCollector
         }
 
         return $argumentDeclarationStatement;
-    }
-
-    /**
-     * @param string $phpType
-     * @param string|null $typeHint
-     * @param string|null $defaultValue
-     *
-     * @return string
-     */
-    protected function buildDocType(string $phpType, ?string $typeHint, ?string $defaultValue): string
-    {
-        $docType = $typeHint === 'array' ? "array<$phpType>" : $phpType;
-        if ($docType && $defaultValue === 'null') {
-            $docType .= '|null';
-        }
-
-        return $docType;
     }
 
     /**

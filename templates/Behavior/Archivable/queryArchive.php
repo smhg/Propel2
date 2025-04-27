@@ -6,7 +6,7 @@
  * is updated and not duplicated.
  * Warning: This termination methods issues 2n+1 queries.
  *
- * @param ConnectionInterface|null $con    Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface|null $con    Connection to use.
  * @param bool $useLittleMemory Whether to use OnDemandFormatter to retrieve objects.
  *               Set to false if the identity map matters.
  *               Set to true (default) to use less memory.
@@ -17,7 +17,7 @@ public function archive($con = null, $useLittleMemory = true)
 {
     $criteria = clone $this;
     // prepare the query
-    $criteria->setWith(array());
+    $criteria->setWith([]);
     if ($useLittleMemory) {
         $criteria->setFormatter(ModelCriteria::FORMAT_ON_DEMAND);
     }

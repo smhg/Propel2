@@ -81,7 +81,7 @@ class OgObjectModifier
 
         $fks = $builder->getTable()->getForeignKeys();
         foreach ($fks as $fk) {
-            $lookup = $builder->addToArrayKeyLookUp($fk->getPhpName(), $fk->getForeignTable(), false);
+            $lookup = '$key = ' . $builder->addToArrayKeyLookUp($fk->getPhpName(), $fk->getForeignTable(), false, '        ');
             $result[] = [
                 'localVariableName' => $builder->getFKVarName($fk),
                 'relationName' => $builder->getFKPhpNameAffix($fk),
@@ -94,8 +94,8 @@ class OgObjectModifier
         $refs = $builder->getTable()->getReferrers();
         foreach ($refs as $ref) {
             $isLocal = $ref->isLocalPrimaryKey();
-            $localVariableName = ($isLocal) ? $builder->getPKRefFKVarName($ref) : $builder->getRefFKCollVarName($ref);
-            $lookup = $builder->addToArrayKeyLookUp($ref->getRefPhpName(), $ref->getTable(), !$isLocal);
+            $localVariableName = $isLocal ? $builder->getPKRefFKVarName($ref) : $builder->getRefFKCollVarName($ref);
+            $lookup = '$key = ' . $builder->addToArrayKeyLookUp($ref->getRefPhpName(), $ref->getTable(), !$isLocal, '        ');
             /** @var string $relationName */
             $relationName = $builder->getRefFKPhpNameAffix($ref);
             $result[] = [

@@ -3,7 +3,7 @@
  * Remove the translation for a given locale
  *
  * @param string $locale Locale to use for the translation, e.g. 'fr_FR'
- * @param ConnectionInterface|null $con an optional connection object
+ * @param \Propel\Runtime\Connection\ConnectionInterface|null $con an optional connection object
  *
  * @return $this The current object (for fluent API support)
  */

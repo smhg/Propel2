@@ -39,7 +39,7 @@ class ReferencedClasses
      *
      * @var array<string>
      */
-    protected $whiteListOfDeclaredClasses = ['PDO', 'Exception', 'DateTime'];
+    protected $whiteListOfDeclaredClasses = ['PDO', 'Exception', 'DateTime', 'ReflectionClass', 'ReflectionProperty', 'DateTimeInterface'];
 
     /**
      * @param \Propel\Generator\Builder\Om\AbstractOMBuilder $builder
@@ -298,5 +298,48 @@ class ReferencedClasses
     public function resolveForeignKeyTargetModelClassName(ForeignKey $fk): string
     {
         return $this->getInternalNameOfTable($fk->getForeignTableOrFail());
+    }
+
+    /**
+     * @param \Propel\Generator\Model\Table $table
+     *
+     * @return string
+     */
+    public function resolveQualifiedModelClassNameForTable(Table $table): string
+    {
+        $namespace = trim((string)$table->getNamespace(), '\\');
+        $className = $table->getPhpName();
+
+        $this->registerSimpleClassName($className, $namespace, true);
+
+        return $namespace ? "\\$namespace\\$className" : $className;
+    }
+
+    /**
+     * @param string $ownNamespace
+     * @param string $ownClassName
+     * @param string|null $ignoredNamespace
+     *
+     * @return string
+     */
+    public function buildUseStatements(string $ownNamespace, string $ownClassName, ?string $ignoredNamespace = null): string
+    {
+        $declaredClasses = $this->getDeclaredClasses();
+        unset($declaredClasses[$ignoredNamespace]);
+        $usedClasses = [];
+        foreach ($declaredClasses as $namespace => $classes) {
+            foreach ($classes as $class => $alias) {
+                if ($class == $ownClassName && $namespace === $ownNamespace) {
+                    continue;
+                }
+                $fqcn = $namespace ? "$namespace\\$class" : $class;
+                $usedClasses[] = ($class === $alias)
+                    ? "use $fqcn;"
+                    : "use $fqcn as $alias;";
+            }
+        }
+        asort($usedClasses, SORT_STRING | SORT_FLAG_CASE);
+
+        return implode("\n", $usedClasses) . "\n";
     }
 }

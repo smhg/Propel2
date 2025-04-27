@@ -59,18 +59,23 @@ abstract class AbstractOMBuilder extends DataModelBuilder
         $this->addClassClose($script);
 
         $ignoredNamespace = ltrim((string)$this->getNamespace(), '\\');
-
-        $useStatements = $this->getUseStatements($ignoredNamespace ?: 'namespace');
+        $useStatements = $this->buildUseStatements($ignoredNamespace ?: 'namespace');
         if ($useStatements) {
             $script = $useStatements . $script;
         }
 
-        $namespaceStatement = $this->getNamespaceStatement();
+        $namespaceStatement = $this->buildNamespaceStatement();
         if ($namespaceStatement) {
             $script = $namespaceStatement . $script;
         }
 
         $script = "<?php
+
+/**
+ * MIT License. This file is part of the Propel package.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 " . $script;
 
@@ -251,45 +256,26 @@ abstract class AbstractOMBuilder extends DataModelBuilder
      *
      * @return string|null
      */
-    public function getNamespaceStatement(): ?string
+    public function buildNamespaceStatement(): ?string
     {
         $namespace = $this->getNamespace();
-        if ($namespace) {
-            return sprintf("namespace %s;
 
-", $namespace);
-        }
-
-        return null;
+        return $namespace ? "namespace $namespace;\n\n" : null;
     }
 
     /**
-     * Return all the use statement of the class
+     * Build "use" block of class.
      *
      * @param string|null $ignoredNamespace the ignored namespace
      *
      * @return string
      */
-    public function getUseStatements(?string $ignoredNamespace = null): string
+    public function buildUseStatements(?string $ignoredNamespace = null): string
     {
-        $script = '';
-        $declaredClasses = $this->referencedClasses->getDeclaredClasses();
-        unset($declaredClasses[$ignoredNamespace]);
-        ksort($declaredClasses);
-        foreach ($declaredClasses as $namespace => $classes) {
-            asort($classes);
-            foreach ($classes as $class => $alias) {
-                // Don't use our own class
-                if ($class == $this->getUnqualifiedClassName() && $namespace == $this->getNamespace()) {
-                    continue;
-                }
-                $script .= ($class === $alias)
-                    ? sprintf("use %s\\%s;\n", $namespace, $class)
-                    : sprintf("use %s\\%s as %s;\n", $namespace, $class, $alias);
-            }
-        }
+        $ownNamespace = $this->getNamespace();
+        $ownClassName = $this->getUnqualifiedClassName();
 
-        return $script;
+        return $this->referencedClasses->buildUseStatements($ownNamespace, $ownClassName, $ignoredNamespace);
     }
 
     /**

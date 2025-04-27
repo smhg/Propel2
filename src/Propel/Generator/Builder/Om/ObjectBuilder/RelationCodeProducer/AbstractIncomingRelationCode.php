@@ -10,6 +10,7 @@ namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use Propel\Common\Pluralizer\PluralizerInterface;
 use Propel\Generator\Builder\Om\ObjectBuilder;
+use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\ForeignKey;
 
 /**
@@ -84,13 +85,13 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
     public static function addInitRelations(string &$script, array $referrers, PluralizerInterface $pluralizer): void
     {
         $script .= "
-
     /**
      * Initializes a collection based on the name of a relation.
      * Avoids crafting an 'init[\$relationName]s' method name
      * that wouldn't work when StandardEnglishPluralizer is used.
      *
      * @param string \$relationName The name of the relation to initialize
+     *
      * @return void
      */
     public function initRelation(\$relationName): void
@@ -104,8 +105,9 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
             $relationIdentifierPlural = $refFK->getIdentifierReversed($pluralizer);
 
             $script .= "
-        if ('$relationIdentifierSingular' === \$relationName) {
+        if (\$relationName === '$relationIdentifierSingular') {
             \$this->init$relationIdentifierPlural();
+
             return;
         }";
         }
@@ -124,7 +126,7 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
         $attributeName = $this->getAttributeName();
 
         $script .= "
-    \$this->$attributeName = null;\n";
+            \$this->$attributeName = null;";
     }
 
     /**
@@ -135,13 +137,13 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
     public function addScheduledForDeletionAttribute(string &$script): void
     {
         $refFK = $this->relation;
-        $className = $this->getClassNameFromTable($refFK->getTable());
+        $className = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $refFK->getTable(), true);
         $fkName = lcfirst($this->getRefFKPhpNameAffix($refFK, true));
 
         $script .= "
     /**
-     * @var ObjectCollection|{$className}[]
+     * @var \Propel\Runtime\Collection\ObjectCollection<{$className}>|null
      */
-    protected \${$fkName}ScheduledForDeletion = null;\n";
+    protected \${$fkName}ScheduledForDeletion;\n";
     }
 }

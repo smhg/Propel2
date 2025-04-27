@@ -327,7 +327,7 @@ public function enforceVersioning()
 /**
  * Checks whether the current state must be recorded as a version
  *
- * @param ConnectionInterface \$con The ConnectionInterface connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con The ConnectionInterface connection to use.
  * @return bool
  */
 public function isVersioningNecessary(?ConnectionInterface \$con = null): bool
@@ -412,7 +412,7 @@ public function isVersioningNecessary(?ConnectionInterface \$con = null): bool
 /**
  * Creates a version of the current object and saves it.
  *
- * @param ConnectionInterface \$con The ConnectionInterface connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con The ConnectionInterface connection to use.
  *
  * @return {$versionARClassName} A version object
  */
@@ -482,7 +482,7 @@ public function addVersion(?ConnectionInterface \$con = null)
  * Sets the properties of the current object to the value they had at a specific version
  *
  * @param int \$versionNumber The version number to read
- * @param ConnectionInterface|null \$con The ConnectionInterface connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con The ConnectionInterface connection to use.
  *
  * @return \$this The current object (for fluent API support)
  */
@@ -517,7 +517,7 @@ public function toVersion(\$versionNumber, ?ConnectionInterface \$con = null)
  * Sets the properties of the current object to the value they had at a specific version
  *
  * @param {$versionARClassName} \$version The version object to use
- * @param ConnectionInterface \$con the connection to use
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con the connection to use
  * @param array \$loadedObjects objects that been loaded in a chain of populateFromVersion calls on referrer or fk objects.
  *
  * @return \$this The current object (for fluent API support)
@@ -618,7 +618,7 @@ public function populateFromVersion(\$version, \$con = null, &\$loadedObjects = 
 /**
  * Gets the latest persisted version number for the current object
  *
- * @param ConnectionInterface \$con The ConnectionInterface connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con The ConnectionInterface connection to use.
  *
  * @return int
  */
@@ -648,7 +648,7 @@ public function getLastVersionNumber(?ConnectionInterface \$con = null): int
 /**
  * Checks whether the current object is the latest one
  *
- * @param ConnectionInterface \$con The ConnectionInterface connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con The ConnectionInterface connection to use.
  *
  * @return bool
  */
@@ -672,7 +672,7 @@ public function isLastVersion(?ConnectionInterface \$con = null)
  * Retrieves a version object for this entity and a version number
  *
  * @param int \$versionNumber The version number to read
- * @param ConnectionInterface|null \$con The ConnectionInterface connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con The ConnectionInterface connection to use.
  *
  * @return {$versionARClassName} A version object
  */
@@ -704,7 +704,7 @@ public function getOneVersion(int \$versionNumber, ?ConnectionInterface \$con = 
 /**
  * Gets all the versions of this object, in incremental order
  *
- * @param ConnectionInterface \$con The ConnectionInterface connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con The ConnectionInterface connection to use.
  *
  * @return ObjectCollection|{$versionARClassName}[] A list of {$versionARClassName} objects
  */
@@ -809,7 +809,7 @@ protected function computeDiff(\$fromVersion, \$toVersion, \$keys = 'columns', \
  *
  * @param int \$versionNumber
  * @param string \$keys Main key used for the result diff (versions|columns)
- * @param ConnectionInterface \$con The ConnectionInterface connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con The ConnectionInterface connection to use.
  * @param array \$ignoredColumns  The columns to exclude from the diff.
  *
  * @return array A list of differences
@@ -845,7 +845,7 @@ public function compareVersion(int \$versionNumber, string \$keys = 'columns', ?
  * @param int \$fromVersionNumber
  * @param int \$toVersionNumber
  * @param string \$keys Main key used for the result diff (versions|columns)
- * @param ConnectionInterface|null \$con The ConnectionInterface connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con The ConnectionInterface connection to use.
  * @param array \$ignoredColumns  The columns to exclude from the diff.
  *
  * @return array A list of differences
@@ -877,11 +877,11 @@ public function compareVersions(int \$fromVersionNumber, int \$toVersionNumber, 
 
         $script .= <<<EOF
 /**
- * retrieve the last \$number versions.
+ * Retrieve the last \$number versions.
  *
- * @param Integer \$number The number of record to return.
- * @param Criteria \$criteria The Criteria object containing modified values.
- * @param ConnectionInterface \$con The ConnectionInterface connection to use.
+ * @param int \$number The number of record to return.
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria The Criteria object containing modified values.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con The ConnectionInterface connection to use.
  *
  * @return PropelCollection|{$versionARClassName}[] List of {$versionARClassName} objects
  */
