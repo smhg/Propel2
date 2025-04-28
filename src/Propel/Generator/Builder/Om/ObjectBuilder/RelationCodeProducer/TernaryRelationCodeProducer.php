@@ -75,7 +75,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
 
         $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $relationFk->getForeignTable());
 
-        [$signature, $_, $phpDoc] = $this->collectSignature($relationFk, null, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
+        [$signature, $_, $phpDoc] = $this->collectSignature($relationFk, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
 
         $relatedUseQueryClassName = $this->getNewStubQueryBuilder($this->crossRelation->getMiddleTable())->getUnqualifiedClassName();
         $relatedUseQueryGetter = 'use' . ucfirst($relatedUseQueryClassName);
@@ -184,6 +184,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
         }
         $classNames = implode(', ', $classNames);
         $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $this->crossRelation->getMiddleTable());
+        $ownModelClassName = $this->getTable()->getPhpName();
 
         $script .= "
     /**
@@ -193,7 +194,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      * If the \$criteria is not null, it is used to always fetch the results from the database.
      * Otherwise the results are fetched from the database the first time, then cached.
      * Next time the same method is called without \$criteria, the cached collection is returned.
-     * If this " . $this->ownClassIdentifier() . " is new, it will return
+     * If this $ownModelClassName is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria|null \$criteria Optional query object to filter the query
@@ -288,7 +289,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
 
         $relatedObjectClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $relationFk->getForeignTable());
 
-        [$argumentDeclaration, $functionParameters, $phpDoc] = $this->collectSignature($relationFk, null, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
+        [$argumentDeclaration, $functionParameters, $phpDoc] = $this->collectSignature($relationFk, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
         [$_, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType($relationFk->getForeignTable());
 
         $script .= "
@@ -351,10 +352,10 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
         $crossPks = $this->crossRelation->getMiddleTable()->getPrimaryKey();
 
         $script .= "
-            if (\$this->$scheduledForDeletionVarName !== null && !\$this->{$scheduledForDeletionVarName}->isEmpty()) {
-                \$pks = [];
-                foreach (\$this->{$scheduledForDeletionVarName} as \$combination) {
-                    \$entryPk = [];\n";
+        if (\$this->$scheduledForDeletionVarName !== null && !\$this->{$scheduledForDeletionVarName}->isEmpty()) {
+            \$pks = [];
+            foreach (\$this->{$scheduledForDeletionVarName} as \$combination) {
+                \$entryPk = [];\n";
 
         foreach ($this->crossRelation->getIncomingForeignKey()->getColumnObjectsMapping() as $reference) {
             $local = $reference['local'];
@@ -362,7 +363,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
 
             $idx = array_search($local, $crossPks, true);
             $script .= "
-                    \$entryPk[$idx] = \$this->get{$foreign->getPhpName()}();";
+                \$entryPk[$idx] = \$this->get{$foreign->getPhpName()}();";
         }
 
         $combinationIdx = 0;
@@ -373,7 +374,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
 
                 $idx = array_search($local, $crossPks, true);
                 $script .= "
-                    \$entryPk[$idx] = \$combination[$combinationIdx]->get{$foreign->getPhpName()}();";
+                \$entryPk[$idx] = \$combination[$combinationIdx]->get{$foreign->getPhpName()}();";
             }
             $combinationIdx++;
         }
@@ -381,33 +382,33 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
         foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $pk) {
             $idx = array_search($pk, $crossPks, true);
             $script .= "
-                    \$entryPk[$idx] = \$combination[$combinationIdx];";
+                \$entryPk[$idx] = \$combination[$combinationIdx];";
             $combinationIdx++;
         }
 
         $combineVarName = $this->names->getAttributeWithCollectionName();
         $script .= "
 
-                    \$pks[] = \$entryPk;
-                }
-
-                $middleQueryClassName::create()
-                    ->filterByPrimaryKeys(\$pks)
-                    ->delete(\$con);
-
-                \$this->$scheduledForDeletionVarName = null;
+                \$pks[] = \$entryPk;
             }
 
-            if (\$this->$combineVarName !== null) {
-                foreach (\$this->$combineVarName as \$combination) {";
+            $middleQueryClassName::create()
+                ->filterByPrimaryKeys(\$pks)
+                ->delete(\$con);
+
+            \$this->$scheduledForDeletionVarName = null;
+        }
+
+        if (\$this->$combineVarName !== null) {
+            foreach (\$this->$combineVarName as \$combination) {";
 
         $combinationIdx = 0;
         foreach ($this->crossRelation->getCrossForeignKeys() as $crossFK) {
             $script .= "
-                    \$model = \$combination[$combinationIdx];
-                    if (!\$model->isDeleted() && (\$model->isNew() || \$model->isModified())) {
-                        \$model->save(\$con);
-                    }\n";
+                \$model = \$combination[$combinationIdx];
+                if (!\$model->isDeleted() && (\$model->isNew() || \$model->isModified())) {
+                    \$model->save(\$con);
+                }\n";
             $combinationIdx++;
         }
 
@@ -416,8 +417,8 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
         }
 
         $script .= "
-                }
-            }\n\n";
+            }
+        }\n";
     }
 
     /**
@@ -443,7 +444,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
 
         $argsCsv = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $fk->getForeignTable());
 
-        [$argumentDeclarations, $functionParameters, $phpDoc] = $this->collectSignature($fk, null, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
+        [$argumentDeclarations, $functionParameters, $phpDoc] = $this->collectSignature($fk, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
 
         return "
     /**

@@ -4,7 +4,7 @@
  * If the current object has already been archived, the archived object
  * is updated and not duplicated.
  *
- * @param ConnectionInterface|null $con Optional connection object
+ * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
  *
  * @throws \Propel\Runtime\Exception\PropelException If the object is new
  *

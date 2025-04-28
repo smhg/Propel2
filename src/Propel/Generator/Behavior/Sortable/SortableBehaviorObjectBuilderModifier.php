@@ -214,7 +214,7 @@ if (($condition) && !\$this->isColumnModified({$this->tableMapClassName}::RANK_C
         $script = "
 /**
  * Queries to be executed in the save transaction
- * @var        array
+ * @var array
  */
 protected \$sortableQueries = [];
 ";
@@ -222,7 +222,7 @@ protected \$sortableQueries = [];
             $script .= "
 /**
  * The old scope value.
- * @var        int
+ * @var int
  */
 protected \$oldScope;
 ";
@@ -454,7 +454,7 @@ public function isFirst()
 /**
  * Check if the object is last in the list, i.e. if its rank is the highest rank
  *
- * @param ConnectionInterface \$con Optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Optional connection
  *
  * @return bool
  */
@@ -481,7 +481,7 @@ public function isLast(?ConnectionInterface \$con = null)
 /**
  * Get the next item in the list, i.e. the one for which rank is immediately higher
  *
- * @param ConnectionInterface \$con Optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Optional connection
  *
  * @return {$this->objectClassName}
  */
@@ -530,7 +530,7 @@ public function getNext(?ConnectionInterface \$con = null)
 /**
  * Get the previous item in the list, i.e. the one for which rank is immediately lower
  *
- * @param ConnectionInterface \$con      optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con      optional connection
  *
  * @return {$this->objectClassName}
  */
@@ -577,7 +577,7 @@ public function getPrevious(?ConnectionInterface \$con = null)
  * The modifications are not persisted until the object is saved.
  *
  * @param int \$rank rank value
- * @param ConnectionInterface \$con Optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Optional connection
  *
  * @return \$this The current object
  *
@@ -594,7 +594,7 @@ public function insertAtRank(\$rank, ?ConnectionInterface \$con = null)
     \$this->{$this->getColumnSetter()}(\$rank);
     if (\$rank != \$maxRank + 1) {
         // Keep the list modification query for the save() transaction
-        \$this->sortableQueries []= [
+        \$this->sortableQueries [] = [
             'callable'  => array('{$queryClassName}', 'sortableShiftRank'),
             'arguments' => array(1, \$rank, null, " . ($useScope ? '$this->getScopeValue()' : '') . "),
         ];
@@ -618,7 +618,7 @@ public function insertAtRank(\$rank, ?ConnectionInterface \$con = null)
  * Insert in the last rank
  * The modifications are not persisted until the object is saved.
  *
- * @param ConnectionInterface \$con optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con optional connection
  *
  * @return \$this The current object
  *
@@ -671,7 +671,7 @@ public function insertAtTop()
  * Of the objects inbetween the old and new rank accordingly
  *
  * @param int \$newRank rank value
- * @param ConnectionInterface \$con optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con optional connection
  *
  * @return \$this The current object
  *
@@ -721,7 +721,7 @@ public function moveToRank(\$newRank, ?ConnectionInterface \$con = null)
  * Exchange the rank of the object with the one passed as argument, and saves both objects
  *
  * @param {$this->objectClassName} \$object
- * @param ConnectionInterface \$con optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con optional connection
  *
  * @return \$this The current object
  *
@@ -770,7 +770,7 @@ public function swapWith(\$object, ?ConnectionInterface \$con = null)
 /**
  * Move the object higher in the list, i.e. exchanges its rank with the one of the previous object
  *
- * @param ConnectionInterface \$con optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con optional connection
  *
  * @return \$this The current object
  */
@@ -803,7 +803,7 @@ public function moveUp(?ConnectionInterface \$con = null)
 /**
  * Move the object higher in the list, i.e. exchanges its rank with the one of the next object
  *
- * @param ConnectionInterface \$con optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con optional connection
  *
  * @return \$this The current object
  */
@@ -836,7 +836,7 @@ public function moveDown(?ConnectionInterface \$con = null)
 /**
  * Move the object to the top of the list
  *
- * @param ConnectionInterface \$con optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con optional connection
  *
  * @return \$this The current object
  */
@@ -865,7 +865,7 @@ public function moveToTop(?ConnectionInterface \$con = null)
 /**
  * Move the object to the bottom of the list
  *
- * @param ConnectionInterface \$con optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con optional connection
  *
  * @return \$this The current object
  */

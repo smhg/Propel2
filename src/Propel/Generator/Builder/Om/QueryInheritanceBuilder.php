@@ -204,7 +204,7 @@ class " . $this->getUnqualifiedClassName() . ' extends ' . $baseClassName . "
      * Returns a new " . $classname . " object.
      *
      * @param string \$modelAlias The alias of a model in the query
-     * @param Criteria \$criteria Optional Criteria to build the query from
+     * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Optional Criteria to build the query from
      *
      * @return " . $classname . "
      */
@@ -321,7 +321,7 @@ class " . $this->getUnqualifiedClassName() . ' extends ' . $baseClassName . "
      * Having the " . $child->getClassName() . " class.
      * This method is called by ModelCriteria::deleteAll() inside a transaction
      *
-     * @param ConnectionInterface \$con a connection object
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con a connection object
      *
      * @return int The number of deleted rows
      */

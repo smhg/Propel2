@@ -1,4 +1,3 @@
-
 <?php if ($behaviorCallScript) :?>
     /**
      * Catches calls to undefined methods.
@@ -27,6 +26,8 @@
      *
      * @param string $name
      * @param mixed $params
+     *
+     * @throws \Propel\Runtime\Exception\BadMethodCallException
      *
      * @return array|string
      */

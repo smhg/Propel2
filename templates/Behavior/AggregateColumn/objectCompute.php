@@ -2,7 +2,7 @@
 /**
  * Computes the value of the aggregate column <?=$column->getName()?>
  *
- * @param ConnectionInterface $con A connection object
+ * @param \Propel\Runtime\Connection\ConnectionInterface $con A connection object
  *
  * @return mixed The scalar result from the aggregate query
  */

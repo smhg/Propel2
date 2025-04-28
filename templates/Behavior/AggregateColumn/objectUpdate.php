@@ -2,7 +2,7 @@
 /**
  * Updates the aggregate column <?=$column->getName()?>
  *
- * @param ConnectionInterface $con A connection object
+ * @param \Propel\Runtime\Connection\ConnectionInterface $con A connection object
  */
 public function update<?=$column->getPhpName()?>(ConnectionInterface $con)
 {

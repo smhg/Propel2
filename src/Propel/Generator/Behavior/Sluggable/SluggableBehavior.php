@@ -479,7 +479,7 @@ public function filterBySlug(string \$slug)
  * Find one object based on its slug
  *
  * @param string \$slug The value to use as filter.
- * @param ConnectionInterface \$con The optional connection object
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con The optional connection object
  *
  * @return " . $this->builder->getObjectClassName() . " the result, formatted by the current formatter
  */

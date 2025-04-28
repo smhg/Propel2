@@ -1,12 +1,12 @@
 
 /**
  * Current locale
- * @var        string
+ * @var string
  */
 protected $currentLocale = '<?= $defaultLocale ?>';
 
 /**
  * Current translation objects
- * @var        array[<?= $objectClassName ?>]
+ * @var array[<?= $objectClassName ?>]
  */
 protected $currentTranslations;

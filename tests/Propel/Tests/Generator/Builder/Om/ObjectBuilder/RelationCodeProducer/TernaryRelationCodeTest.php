@@ -36,7 +36,7 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
         $this->assertEqualsCanonicalizing($expectedAliasedClasses, $aliasedClasses);
 
         $collectionClasses = $referencedClasses->getDeclaredClasses('Propel\Runtime\Collection');
-        $expectedCollections = ['ObjectCombinationCollection'];
+        $expectedCollections = ['Collection', 'ObjectCombinationCollection'];
         $this->assertEqualsCanonicalizing($expectedCollections, $collectionClasses);
     }
 
@@ -47,14 +47,14 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent}> Objects in TeamEvent relation.
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event}>|null Objects in TeamEvent relation.
      */
-    protected $combinationTeamEvents;
+    protected ?ObjectCombinationCollection $combinationTeamEvents = null;
 
     /**
      * @var bool
      */
-    protected $combinationTeamEventsIsPartial;
+    protected bool $combinationTeamEventsIsPartial = false;
 ';
         $this->assertProducedCodeMatches('addAttributes', $expected);
     }
@@ -68,9 +68,9 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Items of TeamEvent relation marked for deletion.
      *
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent}>
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event}>|null
      */
-    protected $teamEventsScheduledForDeletion = null;
+    protected ?ObjectCombinationCollection $teamEventsScheduledForDeletion = null;
 ';
         $this->assertProducedCodeMatches('addScheduledForDeletionAttribute', $expected);
     }
@@ -149,7 +149,7 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     public function testOnReloadCode()
     {
         $expected = '
-        $this->combinationTeamEvents = null;';
+            $this->combinationTeamEvents = null;';
 
         $this->assertProducedCodeMatches('addOnReloadCode', $expected);
     }
@@ -160,40 +160,39 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     public function testDeleteScheduledItemsCode()
     {
         $expected = '
-            if ($this->teamEventsScheduledForDeletion !== null && !$this->teamEventsScheduledForDeletion->isEmpty()) {
-                $pks = [];
-                foreach ($this->teamEventsScheduledForDeletion as $combination) {
-                    $entryPk = [];
+        if ($this->teamEventsScheduledForDeletion !== null && !$this->teamEventsScheduledForDeletion->isEmpty()) {
+            $pks = [];
+            foreach ($this->teamEventsScheduledForDeletion as $combination) {
+                $entryPk = [];
 
-                    $entryPk[0] = $this->getId();
-                    $entryPk[1] = $combination[0]->getId();
-                    $entryPk[2] = $combination[1]->getId();
+                $entryPk[0] = $this->getId();
+                $entryPk[1] = $combination[0]->getId();
+                $entryPk[2] = $combination[1]->getId();
 
-                    $pks[] = $entryPk;
-                }
-
-                ChildTeamUserQuery::create()
-                    ->filterByPrimaryKeys($pks)
-                    ->delete($con);
-
-                $this->teamEventsScheduledForDeletion = null;
+                $pks[] = $entryPk;
             }
 
-            if ($this->combinationTeamEvents !== null) {
-                foreach ($this->combinationTeamEvents as $combination) {
-                    $model = $combination[0];
-                    if (!$model->isDeleted() && ($model->isNew() || $model->isModified())) {
-                        $model->save($con);
-                    }
+            ChildTeamUserQuery::create()
+                ->filterByPrimaryKeys($pks)
+                ->delete($con);
 
-                    $model = $combination[1];
-                    if (!$model->isDeleted() && ($model->isNew() || $model->isModified())) {
-                        $model->save($con);
-                    }
+            $this->teamEventsScheduledForDeletion = null;
+        }
 
+        if ($this->combinationTeamEvents !== null) {
+            foreach ($this->combinationTeamEvents as $combination) {
+                $model = $combination[0];
+                if (!$model->isDeleted() && ($model->isNew() || $model->isModified())) {
+                    $model->save($con);
                 }
-            }
 
+                $model = $combination[1];
+                if (!$model->isDeleted() && ($model->isNew() || $model->isModified())) {
+                    $model->save($con);
+                }
+
+            }
+        }
 ';
         $this->assertProducedCodeMatches('addDeleteScheduledItemsCode', $expected);
     }
@@ -207,7 +206,7 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Returns a new query object pre configured with filters from current object and given arguments to query the database.
      *
-     * @param ChildEvent $event
+     * @param Event $event
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      *
      * @return ChildTeamQuery
@@ -231,7 +230,7 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Returns a new query object pre configured with filters from current object and given arguments to query the database.
      *
-     * @param ChildTeam $team
+     * @param Team $team
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      *
      * @return ChildEventQuery
@@ -278,13 +277,13 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
      * If the $criteria is not null, it is used to always fetch the results from the database.
      * Otherwise the results are fetched from the database the first time, then cached.
      * Next time the same method is called without $criteria, the cached collection is returned.
-     * If this ChildUser is new, it will return
+     * If this User is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{ChildTeam, ChildEvent}>
+     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event}>
      */
     public function getTeamEvents(?Criteria $criteria = null, ?ConnectionInterface $con = null): ObjectCombinationCollection
     {
@@ -343,7 +342,7 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
      * If you have attached new ChildTeam object to this object you need to call `save` first to get
      * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param ChildEvent $event
+     * @param Event $event
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
@@ -359,7 +358,7 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
      * If you have attached new ChildEvent object to this object you need to call `save` first to get
      * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param ChildTeam $team
+     * @param Team $team
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
@@ -385,10 +384,10 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<array{ChildTeam, ChildEvent}> $teamEvents A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<array{Team, Event}> $teamEvents A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return $this
+     * @return static
      */
     public function setTeamEvents(Collection $teamEvents, ?ConnectionInterface $con = null): static
     {
@@ -463,7 +462,7 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
      * If you have attached new ChildTeam object to this object you need to call `save` first to get
      * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param ChildEvent $event
+     * @param Event $event
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
@@ -479,7 +478,7 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
      * If you have attached new ChildEvent object to this object you need to call `save` first to get
      * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param ChildTeam $team
+     * @param Team $team
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
@@ -502,8 +501,8 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Associate a Team with this object through the team_user cross reference table.
      *
-     * @param ChildTeam $team
-     * @param ChildEvent $event
+     * @param Team $team
+     * @param Event $event
      *
      * @return static
      */
@@ -525,8 +524,8 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Associate a Event with this object through the team_user cross reference table.
      *
-     * @param ChildEvent $event
-     * @param ChildTeam $team
+     * @param Event $event
+     * @param Team $team
      *
      * @return static
      */
@@ -555,8 +554,8 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @param ChildTeam $team
-     * @param ChildEvent $event
+     * @param Team $team
+     * @param Event $event
      *
      * return void
      */
@@ -601,8 +600,8 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Remove team, event of this object through the team_user cross reference table.
      *
-     * @param ChildTeam $team
-     * @param ChildEvent $event
+     * @param Team $team
+     * @param Event $event
      *
      * @return static
      */

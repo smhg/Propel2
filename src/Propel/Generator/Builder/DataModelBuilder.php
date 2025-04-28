@@ -396,7 +396,7 @@ abstract class DataModelBuilder
      *
      * @return string (e.g. 'MyTable' or 'ChildMyTable')
      */
-    public function ownClassIdentifier(bool $fqcn = false): string
+    public function registerOwnClassIdentifier(bool $fqcn = false): string
     {
         $stubObjectBuilder = $this->codeBuilderStore->getStubObjectBuilder();
 

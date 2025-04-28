@@ -5,6 +5,7 @@ Perpl is a fork of the unmaintained [Propel2](https://github.com/propelorm/Prope
 [![Github actions Status](https://github.com/propelorm/Propel2/workflows/CI/badge.svg?branch=master)](https://github.com/propelorm/Propel2/actions?query=workflow%3ACI+branch%3Amaster)
 [![codecov](https://codecov.io/gh/propelorm/Propel2/branch/master/graph/badge.svg?token=L1thFB9nOG)](https://codecov.io/gh/propelorm/Propel2)
 [![PHPStan](https://img.shields.io/badge/PHPStan-level%207-brightgreen.svg?style=flat)](https://phpstan.org/)
+[![Psalm](https://img.shields.io/badge/Psalm-level%205-darkred.svg?style=flat)](https://psalm.dev/docs/running_psalm/error_levels/)
 [![Code Climate](https://codeclimate.com/github/propelorm/Propel2/badges/gpa.svg)](https://codeclimate.com/github/propelorm/Propel2)
 [![Minimum PHP Version](http://img.shields.io/badge/php-%3E%3D%208.1-8892BF.svg)](https://php.net/)
 [![License](https://poser.pugx.org/propel/propel/license.svg)](https://packagist.org/packages/propel/propel)
@@ -39,11 +40,19 @@ $ composer update
 ```bash
 $ vendor/bin/propel --config-dir <path/to/config> model:build
 ```
-- Open a file where you call `Query::find()` and replace it with `Query::findObjects()`. If everything worked, you get return type `ObjectCollection<YourModelName>`. Yay!
+- Open a file where you call `Query::find()` and replace it with `Query::findObjects()`. If everything worked, you get return type `ObjectCollection<YourModelName>`. Yay!  
+
+
+| :zap:        Don't forget to analyze your project with [PHPStan](https://phpstan.org/) (or similar) to get notice where updates are necessary due to improved types in Perpl.  |
+|------------------------------------------|
 
 # Features
 
 Motivation for Perpl was to make features available around code-style, typing, performance and usability.
+
+## Ready for PHP 8.4
+
+Code is tested to run in PHP 8.4 without deprecation notices or warnings.
 
 ## Type-preserving queries
 
@@ -114,7 +123,7 @@ Propel restricts reading behaviors from repositories to one per repo. This allow
 ## Fixed cross-relations
 
 Creates methods for all elements of ternary relation (Propel only uses first foreign key).
-Fixes naming issues and detects duplicates in model method names. 
+Fixes naming issues and detects duplicates in model method names.
 
 # Breaking Changes
 

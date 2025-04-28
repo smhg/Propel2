@@ -8,6 +8,8 @@
 
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
+use Propel\Generator\Config\GeneratorConfig;
+
 /**
  * A one-to-one relation from an incoming FK
  */
@@ -50,11 +52,11 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
     #[\Override]
     public function addAttributes(string &$script): void
     {
-        $className = $this->getClassNameFromTable($this->relation->getTable());
+        $className = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $this->relation->getTable(), true);
 
         $script .= "
     /**
-     * @var        $className|null one-to-one related $className object
+     * @var $className|null one-to-one related $className object
      */
     protected $" . $this->getAttributeName() . ";
 ";
@@ -87,9 +89,9 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
     {
         $varName = $this->getAttributeName();
         $script .= "
-        if (\$this->$varName) {
-            \$this->{$varName}->clearAllReferences(\$deep);
-        }";
+            if (\$this->$varName) {
+                \$this->{$varName}->clearAllReferences(\$deep);
+            }";
 
         return $varName;
     }
@@ -104,25 +106,24 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
      */
     protected function addGet(string &$script): void
     {
-        $refFK = $this->relation;
-        $className = $this->getClassNameFromTable($refFK->getTable());
+        $referrer = $this->relation;
+        $modelClassName = $this->getClassNameFromTable($referrer->getTable());
+        $modelClassNameFq = $this->referencedClasses->resolveQualifiedModelClassNameForTable($referrer->getTable());
 
-        $queryClassName = $this->getClassNameFromBuilder($this->getNewStubQueryBuilder($refFK->getTable()));
+        $queryClassName = $this->getClassNameFromBuilder($this->getNewStubQueryBuilder($referrer->getTable()));
 
         $varName = $this->getAttributeName();
 
         $script .= "
     /**
-     * Gets a single $className object, which is related to this object by a one-to-one relationship.
+     * Gets a single $modelClassName object, which is related to this object by a one-to-one relationship.
      *
-     * @param ConnectionInterface \$con optional connection object
-     * @return $className|null
-     * @throws \Propel\Runtime\Exception\PropelException
+     * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con optional connection object
+     *
+     * @return $modelClassNameFq|null
      */
-    public function get" . $this->getRefFKPhpNameAffix($refFK, false) . "(?ConnectionInterface \$con = null)
+    public function get" . $this->getRefFKPhpNameAffix($referrer, false) . "(?ConnectionInterface \$con = null)
     {
-";
-        $script .= "
         if (\$this->$varName === null && !\$this->isNew()) {
             \$this->$varName = $queryClassName::create()->findPk(\$this->getPrimaryKey(), \$con);
         }
@@ -142,26 +143,30 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
      */
     protected function addSet(string &$script): void
     {
-        $refFK = $this->relation;
-        $className = $this->getClassNameFromTable($refFK->getTable());
+        $referrer = $this->relation;
+        $modelClassName = $this->getClassNameFromTable($referrer->getTable());
+        $modelClassNameFq = $this->referencedClasses->resolveQualifiedModelClassNameForTable($referrer->getTable());
+
+        $ownIdentifier = $referrer->getIdentifier();
+        $targetIdentifier = $referrer->getIdentifierReversed();
 
         $varName = $this->getAttributeName();
 
         $script .= "
     /**
-     * Sets a single $className object as related to this object by a one-to-one relationship.
+     * Sets a single $modelClassName object as related to this object by a one-to-one relationship.
      *
-     * @param $className|null \$v $className
-     * @return \$this The current object (for fluent API support)
-     * @throws \Propel\Runtime\Exception\PropelException
+     * @param $modelClassNameFq|null \$v
+     *
+     * @return \$this
      */
-    public function set" . $this->getRefFKPhpNameAffix($refFK, false) . "(?$className \$v = null)
+    public function set{$targetIdentifier}(?$modelClassName \$v = null)
     {
         \$this->$varName = \$v;
 
-        // Make sure that that the passed-in $className isn't already associated with this object
-        if (\$v !== null && \$v->get" . $refFK->getIdentifier() . "(null, false) === null) {
-            \$v->set" . $refFK->getIdentifier() . "(\$this);
+        // Make sure that that the passed-in $modelClassName isn't already associated with this object
+        if (\$v && \$v->get{$ownIdentifier}() === null) {
+            \$v->set{$ownIdentifier}(\$this);
         }
 
         return \$this;

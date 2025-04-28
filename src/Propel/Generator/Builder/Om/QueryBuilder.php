@@ -437,7 +437,7 @@ class QueryBuilder extends AbstractOMBuilder
      * Returns a new " . $classname . " object.
      *
      * @param string \$modelAlias The alias of a model in the query
-     * @param Criteria \$criteria Optional Criteria to build the query from
+     * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Optional Criteria to build the query from
      *
      * @return " . $classname . "<null>
      */";
@@ -532,7 +532,7 @@ class QueryBuilder extends AbstractOMBuilder
      * </code>
      *
      * @param $pkType \$key Primary key to use for the query
-     * @param ConnectionInterface \$con an optional connection object
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con an optional connection object
      *
      * @return $class|array|mixed the result, formatted by the current formatter
      */
@@ -619,7 +619,7 @@ class QueryBuilder extends AbstractOMBuilder
      * Bypass doSelect() and the object formatter by using generated code.
      *
      * @param mixed \$key Primary key to use for the query
-     * @param ConnectionInterface \$con A connection object
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con A connection object
      *
      * @throws \\Propel\\Runtime\\Exception\\PropelException
      *
@@ -782,7 +782,7 @@ class QueryBuilder extends AbstractOMBuilder
      * Find object by primary key.
      *
      * @param mixed \$key Primary key to use for the query
-     * @param ConnectionInterface \$con A connection object
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con A connection object
      *
      * @return " . $class . "|array|mixed the result, formatted by the current formatter
      */
@@ -830,7 +830,7 @@ class QueryBuilder extends AbstractOMBuilder
         $script .= "
      * </code>
      * @param array \$keys Primary keys to use for the query
-     * @param ConnectionInterface \$con an optional connection object
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con an optional connection object
      *
      * @return Collection|array|mixed the list of results, formatted by the current formatter
      */
@@ -1178,7 +1178,7 @@ class QueryBuilder extends AbstractOMBuilder
                 if (!in_array(\$value, \$valueSet)) {
                     throw new PropelException(sprintf('Value \"%s\" is not accepted in this enumerated column', \$value));
                 }
-                \$convertedValues []= array_search(\$value, \$valueSet);
+                \$convertedValues [] = array_search(\$value, \$valueSet);
             }
             \$$variableName = \$convertedValues;
             if (\$comparison === null) {
@@ -1839,7 +1839,7 @@ class QueryBuilder extends AbstractOMBuilder
     /**
      * Code to execute before every SELECT statement
      *
-     * @param ConnectionInterface \$con The connection object used by the query
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con The connection object used by the query
      */
     protected function basePreSelect(ConnectionInterface \$con): void
     {" . $behaviorCode . "
@@ -1867,8 +1867,9 @@ class QueryBuilder extends AbstractOMBuilder
     /**
      * Code to execute before every DELETE statement
      *
-     * @param ConnectionInterface \$con The connection object used by the query
-     * @return int|null
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con The connection object used by the query
+     *
+     *  @return int|null
      */
     protected function basePreDelete(ConnectionInterface \$con): ?int
     {" . $behaviorCode . "
@@ -1897,7 +1898,7 @@ class QueryBuilder extends AbstractOMBuilder
      * Code to execute after every DELETE statement
      *
      * @param int \$affectedRows the number of deleted rows
-     * @param ConnectionInterface \$con The connection object used by the query
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con The connection object used by the query
      * @return int|null
      */
     protected function basePostDelete(int \$affectedRows, ConnectionInterface \$con): ?int
@@ -1927,7 +1928,7 @@ class QueryBuilder extends AbstractOMBuilder
      * Code to execute before every UPDATE statement
      *
      * @param array \$values The associative array of columns and values for the update
-     * @param ConnectionInterface \$con The connection object used by the query
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con The connection object used by the query
      * @param bool \$forceIndividualSaves If false (default), the resulting call is a Criteria::doUpdate(), otherwise it is a series of save() calls on all the found objects
      *
      * @return int|null
@@ -1959,7 +1960,7 @@ class QueryBuilder extends AbstractOMBuilder
      * Code to execute after every UPDATE statement
      *
      * @param int \$affectedRows the number of updated rows
-     * @param ConnectionInterface \$con The connection object used by the query
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con The connection object used by the query
      *
      * @return int|null
      */
@@ -2026,7 +2027,7 @@ class QueryBuilder extends AbstractOMBuilder
     /**
      * Performs a DELETE on the database based on the current ModelCriteria
      *
-     * @param ConnectionInterface \$con the connection to use
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
      * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
@@ -2099,7 +2100,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * This method should be used within a transaction if possible.
      *
-     * @param ConnectionInterface \$con
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con
      * @return int The number of affected rows (if supported by underlying database driver).
      */
     protected function doOnDeleteCascade(ConnectionInterface \$con): int
@@ -2181,7 +2182,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * This method should be used within a transaction if possible.
      *
-     * @param ConnectionInterface \$con
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con
      * @return void
      */
     protected function doOnDeleteSetNull(ConnectionInterface \$con): void
@@ -2253,7 +2254,7 @@ class QueryBuilder extends AbstractOMBuilder
     /**
      * Deletes all rows from the " . $table->getName() . " table.
      *
-     * @param ConnectionInterface \$con the connection to use
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
     public function doDeleteAll(?ConnectionInterface \$con = null): int

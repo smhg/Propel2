@@ -64,6 +64,10 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
             $this->nameProducer,
             $this->referencedClasses,
         );
+
+        $this->declareClasses(
+            '\Propel\Runtime\Collection\Collection',
+        );
     }
 
     /**
@@ -179,7 +183,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     }
 
     /**
-     * Collect signature from keys, but the supplied Fk first.
+     * Collect signature from keys, with the supplied Fk first.
      *
      * @param \Propel\Generator\Model\ForeignKey $firstFk
      *
@@ -187,50 +191,24 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
      */
     protected function collectSignatureWithFirstArgument(ForeignKey $firstFk): FunctionArgumentSignatureCollector
     {
-        $collector = new FunctionArgumentSignatureCollector();
-            $crossObjectName = '$' . $this->nameProducer->resolveRelationIdentifier($firstFk, false, true);
-            $crossObjectClassName = $this->referencedClasses->resolveForeignKeyTargetModelClassName($firstFk);
-            $typeHint = $firstFk->usesNotNullSourceColumn() ? null : 'null';
-
-            $collector->addEntry($crossObjectName, $crossObjectClassName, $crossObjectClassName, $typeHint);
-
-        return $this->collectSignature($firstFk, $collector);
+        return FunctionArgumentSignatureCollector::create($this->referencedClasses)
+            ->collectWithFirstArgument($firstFk, $this->crossRelation);
     }
 
     /**
      * Collect signature from keys.
      *
      * @param \Propel\Generator\Model\ForeignKey|null $fkToIgnore
-     * @param \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\FunctionArgumentSignatureCollector|null $collector
      * @param string|null $withDefaultValue Set to {@see FunctionArgumentSignatureCollector::USE_COLUMN_DEFAULT} or {@see FunctionArgumentSignatureCollector::USE_DEFAULT_NULL} to add default values to argument declarations.
      *
      * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\FunctionArgumentSignatureCollector
      */
     protected function collectSignature(
         ?ForeignKey $fkToIgnore = null,
-        ?FunctionArgumentSignatureCollector $collector = null,
         ?string $withDefaultValue = null
     ): FunctionArgumentSignatureCollector {
-        $collector = $collector ?: new FunctionArgumentSignatureCollector();
-
-        foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
-            if ($fk === $fkToIgnore) {
-                continue;
-            }
-
-            $phpType = $typeHint = $this->referencedClasses->resolveForeignKeyTargetModelClassName($fk);
-            $name = '$' . $this->nameProducer->resolveRelationIdentifier($fk, false, true);
-
-            $collector->addEntry($name, $phpType, $typeHint);
-        }
-
-        foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $column) {
-            //we need to add all those $primaryKey s as additional parameter as they are needed
-            //to create the entry in the middle-table.
-            $collector->addColumn($column, $withDefaultValue);
-        }
-
-        return $collector;
+        return FunctionArgumentSignatureCollector::create($this->referencedClasses)
+            ->collect($this->crossRelation, $fkToIgnore, $withDefaultValue);
     }
 
     /**
@@ -296,18 +274,18 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         $attributeName = '$' . $this->names->getAttributeWithCollectionName();
         $attributePartialName = '$' . $this->names->getAttributeIsPartialName();
         $relationIdentifier = $this->names->getTargetIdentifier(false);
-        [$_, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
+        [$objectCollectionName, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
 
         $script .= "
     /**
-     * @var $objectCollectionType Objects in $relationIdentifier relation.
+     * @var $objectCollectionType|null Objects in $relationIdentifier relation.
      */
-    protected $attributeName;
+    protected ?$objectCollectionName $attributeName = null;
 
     /**
      * @var bool
      */
-    protected $attributePartialName;\n";
+    protected bool $attributePartialName = false;\n";
     }
 
     /**
@@ -319,15 +297,15 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     {
         $attributeName = $this->names->getAttributeScheduledForDeletionName();
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
-        [$_, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
+        [$objectCollectionName, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
 
         $script .= "
     /**
      * Items of $targetIdentifierSingular relation marked for deletion.
      *
-     * @var $objectCollectionType
+     * @var $objectCollectionType|null
      */
-    protected \$$attributeName = null;\n";
+    protected ?$objectCollectionName \$$attributeName = null;\n";
     }
 
     /**
@@ -369,11 +347,11 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         $varName = $this->names->getAttributeWithCollectionName();
 
         $script .= "
-        if (\$this->$varName) {
-            foreach (\$this->$varName as \$o) {
-                \$o->clearAllReferences(\$deep);
-            }
-        }";
+            if (\$this->$varName) {
+                foreach (\$this->$varName as \$o) {
+                    \$o->clearAllReferences(\$deep);
+                }
+            }";
 
         return $varName;
     }
@@ -413,7 +391,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         } else {
             $script .= "
         \$collectionClassName = $foreignTableMapName::getTableMap()->getCollectionClassName();
-        \$this->$attributeName = new \$collectionClassName;";
+        \$this->$attributeName = new \$collectionClassName();";
         }
 
             $script .= "
@@ -495,7 +473,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
      * @param \Propel\Runtime\Collection\Collection<$collectionContentType> $inputCollectionVar A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con Optional connection object
      *
-     * @return \$this
+     * @return static
      */
     public function set{$targetIdentifierPlural}(Collection $inputCollectionVar, ?ConnectionInterface \$con = null): static
     {
@@ -533,7 +511,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     {
         $attributeName = $this->names->getAttributeWithCollectionName();
         $script .= "
-        \$this->$attributeName = null;";
+            \$this->$attributeName = null;";
     }
 
     /**

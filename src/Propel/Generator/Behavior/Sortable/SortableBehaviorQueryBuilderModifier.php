@@ -150,7 +150,7 @@ class SortableBehaviorQueryBuilderModifier
 /**
  * Applies all scope fields to the given criteria.
  *
- * @param Criteria \$criteria Applies the values directly to this criteria.
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria Applies the values directly to this criteria.
  * @param mixed \$scope The scope value as scalar type or array(\$value1, ...).
  * @param string \$method The method we use to apply the values.
  *
@@ -306,7 +306,7 @@ public function orderByRank(string \$order = Criteria::ASC)
 $paramsDoc";
         }
         $script .= "
- * @param ConnectionInterface \$con optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con optional connection
  *
  * @return {$this->objectClassName}
  */
@@ -348,7 +348,7 @@ $paramsDoc
         }
 
         $script .= "
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  *
  * @return mixed the list of results, formatted by the current formatter
  */
@@ -395,7 +395,7 @@ public function findList(" . ($useScope ? "$methodSignature, " : '') . "\$con = 
 $paramsDoc";
         }
         $script .= "
- * @param ConnectionInterface \$con Optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Optional connection
  *
  * @return int|null Highest position
  */
@@ -438,7 +438,7 @@ public function getMaxRank(" . ($useScope ? "$methodSignature, " : '') . "?Conne
 ";
         }
         $script .= "
- * @param ConnectionInterface \$con Optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Optional connection
  *
  * @return int|null Highest position
  */
@@ -478,7 +478,7 @@ public function getMaxRankArray(" . ($useScope ? '$scope, ' : '') . "?Connection
  * So incoherent positions will result in an incoherent list
  *
  * @param mixed \$order id => rank pairs
- * @param ConnectionInterface \$con   optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con   optional connection
  *
  * @return bool true if the reordering took place, false if a database problem prevented it
  */
@@ -524,7 +524,7 @@ public function reorder(\$order, ?ConnectionInterface \$con = null)
  * @param int \$scope        Scope to determine which suite to consider";
         }
         $script .= "
- * @param ConnectionInterface \$con optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con optional connection
  *
  * @return {$this->objectClassName}
  */
@@ -559,9 +559,9 @@ static public function retrieveByRank(\$rank, " . ($useScope ? '$scope = null, '
 /**
  * Return an array of sortable objects ordered by position
  *
- * @param Criteria \$criteria  optional criteria object
+ * @param \Propel\Runtime\ActiveQuery\Criteria \$criteria  optional criteria object
  * @param string \$order     sorting order, to be chosen between Criteria::ASC (default) and Criteria::DESC
- * @param ConnectionInterface \$con       optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con       optional connection
  *
  * @return array|\Propel\Runtime\Collection\Collection list of sortable objects
  */
@@ -603,7 +603,7 @@ static public function doSelectOrderByRank(?Criteria \$criteria = null, \$order 
  *
  * @param int \$scope  the scope of the list
  * @param string \$order  sorting order, to be chosen between Criteria::ASC (default) and Criteria::DESC
- * @param ConnectionInterface \$con    optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con    optional connection
  *
  * @return \Propel\Runtime\Collection\ObjectCollection List of sortable objects
  */
@@ -629,7 +629,7 @@ static public function retrieveList(\$scope, \$order = Criteria::ASC, ?Connectio
  * Return the number of sortable objects in the given scope
  *
  * @param int \$scope  the scope of the list
- * @param ConnectionInterface \$con    optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con    optional connection
  *
  * @return int Count.
  */
@@ -655,7 +655,7 @@ static public function countList(\$scope, ?ConnectionInterface \$con = null): in
  * Deletes the sortable objects in the given scope
  *
  * @param int \$scope  the scope of the list
- * @param ConnectionInterface \$con    optional connection
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con    optional connection
  *
  * @return int number of deleted objects
  */
@@ -690,7 +690,7 @@ static public function deleteList(\$scope, ?ConnectionInterface \$con = null): i
  * @param int \$scope Scope to use for the shift";
         }
         $script .= "
- * @param ConnectionInterface \$con Connection to use.
+ * @param \Propel\Runtime\Connection\ConnectionInterface \$con Connection to use.
  */
 static public function sortableShiftRank(\$delta, \$first, \$last = null, " . ($useScope ? '$scope = null, ' : '') . "?ConnectionInterface \$con = null)
 {

@@ -14,7 +14,7 @@
 *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
 * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
 *
-* @return $this|<?=$childClassName?> The current query, for fluid interface
+* @return $this|<?=$childClassName?>
 */
 public function filterBy<?=$phpName?>($value = null, $comparison = null)
 {
@@ -33,7 +33,7 @@ public function filterBy<?=$phpName?>($value = null, $comparison = null)
 *
 * @param string $order The sorting order. Criteria::ASC by default, also accepts Criteria::DESC
 *
-* @return $this|ModelCriteria The current object, for fluid interface
+* @return $this|ModelCriteria
 */
 public function orderBy<?=$phpName?>(string $order = Criteria::ASC)
 {

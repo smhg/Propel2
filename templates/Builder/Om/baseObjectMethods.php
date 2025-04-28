@@ -6,7 +6,7 @@
      */
     public function isModified(): bool
     {
-        return !!$this->modifiedColumns;
+        return (bool)$this->modifiedColumns;
     }
 
     /**
@@ -32,7 +32,7 @@
     }
 
     /**
-     * Returns whether the object has ever been saved.  This will
+     * Returns whether the object has ever been saved. This will
      * be false, if the object was retrieved from storage or was created
      * and then saved.
      *
@@ -44,8 +44,9 @@
     }
 
     /**
-     * Setter for the isNew attribute.  This method will be called
-     * by Propel-generated children and objects.
+     * Setter for the isNew attribute.
+     *
+     * Called by Propel-generated children and objects.
      *
      * @param bool $b the state of the object.
      *
@@ -81,13 +82,13 @@
     /**
      * Sets the modified state for the object to be false.
      *
-     * @param string $col If supplied, only the specified column is reset.
+     * @param string|null $col If supplied, only the specified column is reset.
      *
      * @return void
      */
     public function resetModified(?string $col = null): void
     {
-        if (null !== $col) {
+        if ($col !== null) {
             unset($this->modifiedColumns[$col]);
         } else {
             $this->modifiedColumns = [];
@@ -95,9 +96,9 @@
     }
 
     /**
-     * Compares this with another <code><?php echo $className ?></code> instance.  If
-     * <code>obj</code> is an instance of <code><?php echo $className ?></code>, delegates to
-     * <code>equals(<?php echo $className ?>)</code>.  Otherwise, returns <code>false</code>.
+     * Compares this with another <code><?= $className ?></code> instance. If
+     * <code>obj</code> is an instance of <code><?= $className ?></code>, delegates to
+     * <code>equals(<?= $className ?>)</code>. Otherwise, returns <code>false</code>.
      *
      * @param mixed $obj The object to compare to.
      *
@@ -147,9 +148,9 @@
      *
      * @param string $name The virtual column name
      *
-     * @return mixed
-     *
      * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return mixed
      */
     public function getVirtualColumn(string $name)
     {
@@ -166,7 +167,7 @@
      * @param string $name The virtual column name
      * @param mixed $value The value to give to the virtual column
      *
-     * @return $this The current object, for fluid interface
+     * @return $this
      */
     public function setVirtualColumn(string $name, $value)
     {
@@ -185,7 +186,7 @@
      */
     protected function log(string $msg, int $priority = Propel::LOG_INFO): void
     {
-        Propel::log(get_class($this) . ': ' . $msg, $priority);
+        Propel::log(static::class . ': ' . $msg, $priority);
     }
 
     /**
@@ -208,7 +209,7 @@
             $parser = AbstractParser::getParser($parser);
         }
 
-        return $parser->fromArray($this->toArray($keyType, $includeLazyLoadColumns, array(), true));
+        return $parser->fromArray($this->toArray($keyType, $includeLazyLoadColumns, [], true));
     }
 
     /**
@@ -221,11 +222,13 @@
     {
         $this->clearAllReferences();
 
-        $cls = new \ReflectionClass($this);
+        $cls = new ReflectionClass($this);
+        $staticProperties = $cls->getProperties(ReflectionProperty::IS_STATIC);
+        $properties = $cls->getProperties();
+        $serializableProperties = array_diff($properties, $staticProperties);
+        
         $propertyNames = [];
-        $serializableProperties = array_diff($cls->getProperties(), $cls->getProperties(\ReflectionProperty::IS_STATIC));
-
-        foreach($serializableProperties as $property) {
+        foreach ($serializableProperties as $property) {
             $propertyNames[] = $property->getName();
         }
 

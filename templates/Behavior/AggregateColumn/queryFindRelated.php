@@ -2,7 +2,7 @@
 /**
  * Finds the related <?=$foreignTable->getPhpName()?> objects and keep them for later
  *
- * @param ConnectionInterface $con A connection object
+ * @param \Propel\Runtime\Connection\ConnectionInterface $con A connection object
  */
 protected function findRelated<?=$relationName.$aggregateName?>s($con)
 {

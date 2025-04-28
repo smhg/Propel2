@@ -603,11 +603,11 @@ class QuickBuilder
     protected function forceNamespace(string $code): string
     {
         if (preg_match('/\nnamespace/', $code) === 0) {
-            $use = array_filter(explode(PHP_EOL, $code), function ($string) {
-                return substr($string, 0, 5) === 'use \\';
-            });
+            $lines = explode(PHP_EOL, $code);
+            $isUseStatement = fn (string $s) => str_starts_with($s, 'use ') && !str_contains($s, '\\');
+            $useStatements = array_filter($lines, $isUseStatement);
 
-            $code = str_replace($use, '', $code);
+            $code = str_replace($useStatements, '', $code);
 
             return "\nnamespace\n{\n" . $code . "\n}\n";
         }

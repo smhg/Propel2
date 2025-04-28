@@ -568,7 +568,7 @@ EOF;
         $actual = $manager->get();
 
         $this->assertTrue($actual['generator']['namespaceAutoPackage']);
-        $this->assertEquals($actual['generator']['dateTime']['dateTimeClass'], 'DateTime');
+        $this->assertEquals($actual['generator']['dateTime']['dateTimeClass'], '\DateTime');
         $this->assertFalse($actual['generator']['schema']['autoPackage']);
         $this->assertEquals($actual['generator']['objectModel']['pluralizerClass'], '\Propel\Common\Pluralizer\StandardEnglishPluralizer');
         $this->assertEquals($actual['generator']['objectModel']['builders']['objectstub'], '\Propel\Generator\Builder\Om\ExtensionObjectBuilder');

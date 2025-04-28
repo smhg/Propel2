@@ -161,7 +161,7 @@ abstract class ScopedMappingModel extends MappingModel
      */
     protected function makeNamespaceAbsolute(?string $namespace): ?string
     {
-        $prependBackslash = ($namespace && !$this->isAbsoluteNamespace($namespace));
+        $prependBackslash = $namespace && !$this->isAbsoluteNamespace($namespace);
 
         return ($prependBackslash) ? "\\$namespace" : $namespace;
     }
