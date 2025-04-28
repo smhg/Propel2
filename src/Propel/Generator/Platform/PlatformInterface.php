@@ -143,7 +143,7 @@ interface PlatformInterface
      * // '"foo","bar"'
      * </code>
      *
-     * @param array<\Propel\Generator\Model\Column>|array<string> $columns
+     * @param array<\Propel\Generator\Model\Column> $columns
      * @param string $delimiter The delimiter to use in separating the column names.
      *
      * @return string
@@ -246,7 +246,7 @@ interface PlatformInterface
      * This function is used to set default column values when building
      * SQL.
      *
-     * @param mixed $value A boolean or string representation of boolean ('y', 'true').
+     * @param string|int|bool $value A boolean or string representation of boolean ('y', 'true').
      *
      * @return string
      */

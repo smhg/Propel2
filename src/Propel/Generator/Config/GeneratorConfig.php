@@ -83,7 +83,7 @@ class GeneratorConfig extends ConfigurationManager implements GeneratorConfigInt
     /**
      * Connections configured in the `generator` section of the configuration file
      *
-     * @var array
+     * @var array<array<string, string>>
      */
     protected $buildConnections;
 
@@ -238,7 +238,7 @@ class GeneratorConfig extends ConfigurationManager implements GeneratorConfigInt
      * Return an array of all configured connection properties, from `generator` and `reverse`
      * sections of the configuration.
      *
-     * @return array
+     * @return array<array<string, string>>
      */
     public function getBuildConnections(): array
     {
@@ -246,6 +246,7 @@ class GeneratorConfig extends ConfigurationManager implements GeneratorConfigInt
             return $this->buildConnections;
         }
 
+        $this->buildConnections = [];
         $connectionNames = $this->get()['generator']['connections'];
         $reverseConnection = $this->getConfigProperty('reverse.connection');
 
@@ -254,6 +255,7 @@ class GeneratorConfig extends ConfigurationManager implements GeneratorConfigInt
         }
 
         foreach ($connectionNames as $name) {
+            /** @var array<string, string>|null $definition */
             $definition = $this->getConfigProperty('database.connections.' . $name);
 
             if ($definition) {

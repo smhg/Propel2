@@ -21,6 +21,8 @@ use Propel\Runtime\Propel;
  *
  * @template RowFormat of \Propel\Runtime\ActiveRecord\ActiveRecordInterface
  * @template ListType of \Propel\Runtime\Collection\Collection
+ *
+ * @implements \Propel\Runtime\Collection\IteratorInterface<RowFormat>
  */
 class OnDemandIterator implements IteratorInterface
 {

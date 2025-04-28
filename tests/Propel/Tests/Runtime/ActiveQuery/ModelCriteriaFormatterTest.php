@@ -10,11 +10,11 @@ namespace Propel\Tests\Runtime\ActiveQuery;
 
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\Collection\ArrayCollection;
-use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Exception\InvalidArgumentException;
 use Propel\Runtime\Formatter\AbstractFormatter;
 use Propel\Runtime\Formatter\ArrayFormatter;
 use Propel\Runtime\Formatter\StatementFormatter;
+use Propel\Tests\Bookstore\Base\Collection\BookCollection;
 use Propel\Tests\Bookstore\Book;
 use Propel\Tests\Bookstore\BookQuery;
 use Propel\Tests\Helpers\Bookstore\BookstoreDataPopulator;
@@ -203,7 +203,7 @@ class ModelCriteriaFormatterTest extends BookstoreTestBase
     public function testFindObjects()
     {
         $collection = BookQuery::create()->setFormatter(ModelCriteria::FORMAT_ARRAY)->findObjects();
-        $this->assertInstanceOf(ObjectCollection::class, $collection);
+        $this->assertInstanceOf(BookCollection::class, $collection);
     }
 
     /**

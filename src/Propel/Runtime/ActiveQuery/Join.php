@@ -426,9 +426,9 @@ class Join
      *
      * @param int $index The number of the condition to use
      *
-     * @return string
+     * @return string|null
      */
-    public function getLeftColumn(int $index = 0): string
+    public function getLeftColumn(int $index = 0): ?string
     {
         $tableName = $this->getLeftTableAliasOrName();
 
@@ -446,9 +446,9 @@ class Join
      *
      * @param int $index The number of the condition to use
      *
-     * @return string
+     * @return string|null
      */
-    public function getLeftColumnName(int $index = 0): string
+    public function getLeftColumnName(int $index = 0): ?string
     {
         return $this->left[$index];
     }
@@ -561,9 +561,9 @@ class Join
      *
      * @param int $index The number of the condition to use
      *
-     * @return string
+     * @return string|null
      */
-    public function getRightColumn(int $index = 0): string
+    public function getRightColumn(int $index = 0): ?string
     {
         $tableName = $this->getRightTableAliasOrName();
 
@@ -581,9 +581,9 @@ class Join
      *
      * @param int $index The number of the condition to use
      *
-     * @return string
+     * @return string|null
      */
-    public function getRightColumnName(int $index = 0): string
+    public function getRightColumnName(int $index = 0): ?string
     {
         return $this->right[$index];
     }

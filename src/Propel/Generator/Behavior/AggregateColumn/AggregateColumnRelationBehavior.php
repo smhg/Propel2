@@ -272,12 +272,11 @@ protected {$variableName}s;\n\n";
     }
 
     /**
-     * @return \Propel\Generator\Model\ForeignKey
+     * @return \Propel\Generator\Model\ForeignKey|null
      */
-    protected function getForeignKey(): ForeignKey
+    protected function getForeignKey(): ?ForeignKey
     {
         $foreignTable = $this->getForeignTable();
-        // let's infer the relation from the foreign table
         $fks = $this->getTable()->getForeignKeysReferencingTable($foreignTable->getName());
 
         // FIXME doesn't work when more than one fk to the same table

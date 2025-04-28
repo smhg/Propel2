@@ -14,6 +14,8 @@ use Propel\Generator\Model\Behavior;
 abstract class BehaviorWithParameterAccess extends Behavior
 {
     /**
+     * @psalm-return ($defaultValue is string ? string : string|null)
+     *
      * @param string $name
      * @param string|null $defaultValue
      *
@@ -28,6 +30,8 @@ abstract class BehaviorWithParameterAccess extends Behavior
     }
 
     /**
+     * @psalm-return ($defaultValue is bool ? bool : bool|null)
+     *
      * @param string $parameterName
      * @param bool|null $defaultValue
      *
@@ -41,6 +45,8 @@ abstract class BehaviorWithParameterAccess extends Behavior
     }
 
     /**
+     * @psalm-return ($defaultValue is int ? int : int|null)
+     *
      * @param string $parameterName
      * @param int|null $defaultValue
      *
@@ -62,6 +68,8 @@ abstract class BehaviorWithParameterAccess extends Behavior
     }
 
     /**
+     * @psalm-return ($defaultValue is array ? array : array|null)
+     *
      * @param string $parameterName
      * @param array|null $defaultValue
      * @param callable|null $mapper
@@ -94,6 +102,8 @@ abstract class BehaviorWithParameterAccess extends Behavior
     }
 
     /**
+     * @psalm-return ($defaultValue is array ? array|true : array|true|null)
+     *
      * @param string $parameterName
      * @param array|null $defaultValue
      * @param callable|null $mapper

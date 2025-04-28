@@ -71,18 +71,18 @@ class LikeCriterion extends AbstractCriterion
     protected function appendPsForUniqueClauseTo(string &$sb, array &$params): void
     {
         $field = ($this->table === null) ? $this->column : $this->table . '.' . $this->column;
-        $db = $this->getAdapter();
+        $adapter = $this->getAdapter();
         // If selection is case insensitive use ILIKE for PostgreSQL or SQL
         // UPPER() function on column name for other databases.
         if ($this->ignoreStringCase) {
-            if ($db instanceof PgsqlAdapter) {
+            if ($adapter instanceof PgsqlAdapter) {
                 if ($this->comparison === Criteria::LIKE) {
                     $this->comparison = Criteria::ILIKE;
                 } elseif ($this->comparison === Criteria::NOT_LIKE) {
                     $this->comparison = Criteria::NOT_ILIKE;
                 }
             } else {
-                $field = $db->ignoreCase($field);
+                $field = $adapter->ignoreCase($field);
             }
         }
 
@@ -92,8 +92,8 @@ class LikeCriterion extends AbstractCriterion
 
         // If selection is case insensitive use SQL UPPER() function
         // on criteria or, if Postgres we are using ILIKE, so not necessary.
-        if ($this->ignoreStringCase && !($db instanceof PgsqlAdapter)) {
-            $sb .= $db->ignoreCase(':p' . count($params));
+        if ($this->ignoreStringCase && !($adapter instanceof PgsqlAdapter)) {
+            $sb .= $adapter->ignoreCase(':p' . count($params));
         } else {
             $sb .= ':p' . count($params);
         }

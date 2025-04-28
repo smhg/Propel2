@@ -9,6 +9,7 @@
 namespace Propel\Generator\Model;
 
 use Exception;
+use LogicException;
 use Propel\Generator\Exception\EngineException;
 use Propel\Generator\Platform\PlatformInterface;
 
@@ -263,13 +264,20 @@ class Column extends MappingModel
     /**
      * @param \Propel\Generator\Platform\PlatformInterface|null $platform
      *
+     * @throws \LogicException
+     *
      * @return \Propel\Generator\Model\Domain
      */
     protected function getDomainFromAttributes(?PlatformInterface $platform): Domain
     {
         $domainName = $this->getAttribute('domain');
         if ($domainName) {
-             return $this->getDatabase()->getDomain($domainName);
+            $domain = $this->getDatabase()->getDomain($domainName);
+            if (!$domain) {
+                throw new LogicException("Unknown domain '$domainName'");
+            }
+
+            return $domain;
         }
         $type = $this->getAttribute('type', static::DEFAULT_TYPE);
         $type = strtoupper($type);
@@ -555,7 +563,7 @@ class Column extends MappingModel
     public function getPhpName(): string
     {
         if ($this->phpName === null) {
-            $this->setPhpName();
+            $this->phpName = $this->buildPhpName();
         }
 
         return $this->phpName;
@@ -566,12 +574,12 @@ class Column extends MappingModel
      * It will set & return a self-generated phpName from its name
      * if its not already set.
      *
-     * @return string|null
+     * @return string
      */
-    public function getPhpSingularName(): ?string
+    public function getPhpSingularName(): string
     {
         if ($this->phpSingularName === null) {
-            $this->setPhpSingularName();
+            $this->phpSingularName = self::generatePhpSingularName($this->getPhpName());
         }
 
         return $this->phpSingularName;
@@ -589,11 +597,15 @@ class Column extends MappingModel
      */
     public function setPhpName(?string $phpName = null): void
     {
-        if ($phpName === null) {
-            $this->phpName = self::generatePhpName($this->name, $this->phpNamingMethod, $this->namePrefix);
-        } else {
-            $this->phpName = $phpName;
-        }
+        $this->phpName = $phpName ?? $this->buildPhpName();
+    }
+
+    /**
+     * @return string
+     */
+    public function buildPhpName(): string
+    {
+        return self::generatePhpName($this->name, $this->phpNamingMethod, $this->namePrefix);
     }
 
     /**
@@ -609,11 +621,7 @@ class Column extends MappingModel
      */
     public function setPhpSingularName(?string $phpSingularName = null): void
     {
-        if ($phpSingularName === null) {
-            $this->phpSingularName = self::generatePhpSingularName($this->getPhpName());
-        } else {
-            $this->phpSingularName = $phpSingularName;
-        }
+        $this->phpSingularName = $phpSingularName ?? self::generatePhpSingularName($this->getPhpName());
     }
 
     /**
@@ -1242,9 +1250,9 @@ class Column extends MappingModel
      *
      * @see Domain::getSqlType()
      *
-     * @return string
+     * @return string|null
      */
-    public function getSqlType(): string
+    public function getSqlType(): string|null
     {
         return $this->getDomain()->getSqlType();
     }

@@ -119,7 +119,7 @@ class ArrayFormatter extends AbstractFormatterWithHydration
      *
      * @param \Propel\Runtime\ActiveRecord\ActiveRecordInterface|null $record the object to format
      *
-     * @return array The original record turned into an array
+     * @return array<string, mixed> The original record turned into an array
      */
     #[\Override]
     public function formatRecord(?ActiveRecordInterface $record = null): array

@@ -46,4 +46,32 @@ interface ActiveRecordInterface
      * @return string|int
      */
     public function hashCode();
+
+    /**
+     * Clears the current object, sets all attributes to their default values and removes
+     * outgoing references as well as back-references (from other objects to this one. Results probably in a database
+     * change of those foreign objects when you call `save` there).
+     *
+     * @return $this
+     */
+    public function clear();
+
+    /**
+     * Specify whether this object has been deleted.
+     *
+     * @param bool $b The deleted state of this object.
+     *
+     * @return void
+     */
+    public function setDeleted(bool $b): void;
+
+    /**
+     * Setter for the isNew attribute. This method will be called
+     * by Propel-generated children and objects.
+     *
+     * @param bool $b the state of the object.
+     *
+     * @return void
+     */
+    public function setNew(bool $b): void;
 }

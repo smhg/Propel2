@@ -9,7 +9,7 @@
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
 use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\Adapter\AdapterInterface;
+use Propel\Runtime\Adapter\SqlAdapterInterface;
 
 /**
  * Filter statemtent on a query
@@ -79,12 +79,12 @@ abstract class AbstractFilter extends ClauseList implements ColumnFilterInterfac
      *
      * The AdapterInterface might be used to get db specific variations of sql.
      *
-     * @param \Propel\Runtime\Adapter\AdapterInterface $adapter Value to assign to db.
+     * @param \Propel\Runtime\Adapter\SqlAdapterInterface $adapter Value to assign to db.
      *
      * @return void
      */
     #[\Override]
-    public function setAdapter(AdapterInterface $adapter): void
+    public function setAdapter(SqlAdapterInterface $adapter): void
     {
         $this->adapter = $adapter;
         foreach ($this->clauses as $clause) {

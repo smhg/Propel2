@@ -41,10 +41,10 @@ use Traversable;
  *
  * @author Francois Zaninotto
  *
- * @implements \ArrayAccess<int|string, mixed>
- * @implements \IteratorAggregate<int|string, mixed>
- *
  * @template RowFormat
+ *
+ * @implements \ArrayAccess<int|string, RowFormat>
+ * @implements \IteratorAggregate<int|string, RowFormat>
  */
 class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializable
 {
@@ -86,7 +86,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
     }
 
     /**
-     * @return array{0: string}
+     * @return array{0: string|null}
      */
     public function __serialize(): array
     {
@@ -211,7 +211,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
     }
 
     /**
-     * @return \Propel\Runtime\Collection\CollectionIterator|\Propel\Runtime\Collection\IteratorInterface
+     * @return \Propel\Runtime\Collection\IteratorInterface<RowFormat>
      */
     #[\Override]
     public function getIterator(): Traversable
@@ -508,9 +508,9 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
     /**
      * Get the model of the elements in the collection
      *
-     * @return class-string<RowFormat> Fully qualified Name of the Propel object class stored in the collection
+     * @return class-string<RowFormat>|null Fully qualified Name of the Propel object class stored in the collection
      */
-    public function getFullyQualifiedModel(): string
+    public function getFullyQualifiedModel(): ?string
     {
         return $this->fullyQualifiedModel;
     }

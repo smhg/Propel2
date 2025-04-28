@@ -158,9 +158,9 @@ class DeprecatedCriteriaMethods extends Criteria
      *
      * @param string $column Column name.
      *
-     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface A Criterion object.
+     * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface|null A Criterion object.
      */
-    public function getCriterion(string $column): ColumnFilterInterface
+    public function getCriterion(string $column): ?ColumnFilterInterface
     {
         return $this->criteria->findFilterByColumn($column);
     }

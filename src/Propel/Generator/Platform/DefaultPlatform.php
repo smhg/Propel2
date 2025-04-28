@@ -1382,7 +1382,7 @@ ALTER TABLE %s ADD
     }
 
     /**
-     * Returns the boolean value for the RDBMS.
+     * Returns the boolean value.
      *
      * This value should match the boolean value that is set
      * when using Propel's PreparedStatement::setBoolean().

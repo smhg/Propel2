@@ -8,6 +8,7 @@
 
 namespace Propel\Generator\Model\Diff;
 
+use LogicException;
 use Propel\Generator\Exception\DiffException;
 use Propel\Generator\Model\Column;
 use Propel\Generator\Model\ForeignKey;
@@ -172,10 +173,16 @@ class TableDiff
     /**
      * Returns the fromTable property.
      *
-     * @return \Propel\Generator\Model\Table|null
+     * @throws \LogicException
+     *
+     * @return \Propel\Generator\Model\Table
      */
-    public function getFromTable(): ?Table
+    public function getFromTable(): Table
     {
+        if (!$this->fromTable) {
+            throw new LogicException('TableDiff was not setup, TableDiff::toTable is null');
+        }
+
         return $this->fromTable;
     }
 
@@ -194,10 +201,16 @@ class TableDiff
     /**
      * Returns the toTable property.
      *
-     * @return \Propel\Generator\Model\Table|null
+     * @throws \LogicException
+     *
+     * @return \Propel\Generator\Model\Table
      */
-    public function getToTable(): ?Table
+    public function getToTable(): Table
     {
+        if (!$this->toTable) {
+            throw new LogicException('TableDiff was not setup, TableDiff::toTable is null');
+        }
+
         return $this->toTable;
     }
 
@@ -975,11 +988,7 @@ class TableDiff
      */
     public function getReverseDiff(): self
     {
-        $diff = new self();
-
-        // tables
-        $diff->setFromTable($this->toTable);
-        $diff->setToTable($this->fromTable);
+        $diff = new self($this->toTable, $this->fromTable);
 
         // columns
         if ($this->hasAddedColumns()) {

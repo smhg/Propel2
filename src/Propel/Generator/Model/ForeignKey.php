@@ -519,13 +519,20 @@ class ForeignKey extends MappingModel
     /**
      * Returns the resolved foreign Table model object.
      *
+     * @throws \LogicException
+     *
      * @return \Propel\Generator\Model\Table
      */
     public function getForeignTableOrFail(): Table
     {
         $database = $this->sourceTable->getDatabaseOrFail();
+        $tableName = $this->getForeignTableName();
+        $table = $database->getTable($tableName);
+        if (!$table) {
+            throw new LogicException("Table '$tableName' does not exist.");
+        }
 
-        return $database->getTable($this->getForeignTableName());
+        return $table;
     }
 
     /**

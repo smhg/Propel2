@@ -8,6 +8,7 @@
 
 namespace Propel\Runtime\ActiveQuery\FilterExpression;
 
+use LogicException;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\AbstractColumnExpression;
 use Propel\Runtime\ActiveQuery\ColumnResolver\ColumnExpression\UnresolvedColumnExpression;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -30,7 +31,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
     protected $queryColumn;
 
     /**
-     * @var string|null The sql operator expression, i.e. "IN" or "NOT IN".
+     * @var string The sql operator expression, i.e. "IN" or "NOT IN".
      */
     protected $sqlOperator;
 
@@ -187,6 +188,7 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
      * @param bool $forInnerQuery
      *
      * @throws \Propel\Runtime\Exception\PropelException
+     * @throws \LogicException
      *
      * @return \Propel\Runtime\ActiveQuery\FilterExpression\ColumnFilterInterface
      */
@@ -211,8 +213,10 @@ abstract class AbstractInnerQueryFilter extends AbstractFilter
         $leftAlias = $leftQuery->getTableNameInQuery();
         $rightAlias = $rightQuery->getTableNameInQuery();
         $join->setupJoinCondition($leftQuery, $relationMap, $leftAlias, $rightAlias);
-
         $joinCondition = $join->getJoinCondition();
+        if (!$joinCondition) {
+            throw new LogicException("No join condition can be built for relation '{$relationMap->getName()}' on {$outerQuery->getModelAliasOrName()}");
+        }
 
         return $joinCondition;
     }

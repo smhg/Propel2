@@ -25,8 +25,6 @@ class TableComparator
     protected $tableDiff;
 
     /**
-     * Constructor.
-     *
      * @param \Propel\Generator\Model\Diff\TableDiff|null $tableDiff
      */
     public function __construct(?TableDiff $tableDiff = null)
@@ -59,9 +57,9 @@ class TableComparator
     /**
      * Returns the table the comparator starts from.
      *
-     * @return \Propel\Generator\Model\Table|null
+     * @return \Propel\Generator\Model\Table
      */
-    public function getFromTable(): ?Table
+    public function getFromTable(): Table
     {
         return $this->tableDiff->getFromTable();
     }

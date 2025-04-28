@@ -123,7 +123,7 @@ class OnDemandCollection extends Collection
     // ArrayAccess Interface
 
     /**
-     * @param int $offset
+     * @param mixed $offset
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
@@ -138,11 +138,11 @@ class OnDemandCollection extends Collection
     /**
      * @psalm-suppress ReservedWord
      *
-     * @param int $offset
+     * @param mixed $offset
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return mixed
+     * @return RowFormat
      */
     #[\Override, \ReturnTypeWillChange]
     public function &offsetGet($offset)
@@ -151,7 +151,7 @@ class OnDemandCollection extends Collection
     }
 
     /**
-     * @param int $offset
+     * @param mixed $offset
      * @param mixed $value
      *
      * @throws \Propel\Runtime\Collection\Exception\ReadOnlyModelException
@@ -165,7 +165,7 @@ class OnDemandCollection extends Collection
     }
 
     /**
-     * @param int $offset
+     * @param mixed $offset
      *
      * @throws \Propel\Runtime\Collection\Exception\ReadOnlyModelException
      *
@@ -260,7 +260,7 @@ class OnDemandCollection extends Collection
     /**
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return array
+     * @return array<RowFormat>
      */
     #[\Override]
     public function getArrayCopy(): array

@@ -108,7 +108,7 @@ class FilterClauseLiteralWithColumns extends AbstractFilterClauseLiteral
      * @param int $position
      * @param mixed $value
      *
-     * @return array
+     * @return array{table?: ?string, column?: string, value: mixed, type?: int}
      */
     #[\Override]
     protected function buildParameterByPosition(int $position, $value): array

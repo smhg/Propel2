@@ -14,7 +14,8 @@ use ArrayIterator;
  * Iterator class for iterating over Collection data
  *
  * @template RowFormat
- * @extends \ArrayIterator<(int|string), mixed>
+ * @extends \ArrayIterator<(int|string), RowFormat>
+ * @implements \Propel\Runtime\Collection\IteratorInterface<RowFormat>
  */
 class CollectionIterator extends ArrayIterator implements IteratorInterface
 {
@@ -210,7 +211,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
     }
 
     /**
-     * @param string $offset
+     * @param string|int $offset
      * @param RowFormat $value
      *
      * @return void
@@ -224,7 +225,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
     }
 
     /**
-     * @param string $offset
+     * @param string|int $offset
      *
      * @return void
      */
@@ -266,7 +267,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
     /**
      * @param int $flags Not used
      *
-     * @return true
+     * @return bool
      */
     #[\Override, \ReturnTypeWillChange]
     public function ksort(int $flags = SORT_REGULAR): bool
@@ -280,7 +281,7 @@ class CollectionIterator extends ArrayIterator implements IteratorInterface
     /**
      * @param callable $cmp_function
      *
-     * @return true
+     * @return bool
      */
     #[\Override, \ReturnTypeWillChange]
     public function uasort($cmp_function): bool

@@ -23,9 +23,9 @@ use Traversable;
  * @author Fabien Potencier <fabien.potencier@symfony-project.com>
  * @author François Zaninotto
  *
- * @implements \IteratorAggregate<int|string, mixed>
- *
  * @template RowFormat
+ *
+ * @implements \IteratorAggregate<int|string, RowFormat>
  */
 class PropelModelPager implements IteratorAggregate, Countable
 {
@@ -439,7 +439,7 @@ class PropelModelPager implements IteratorAggregate, Countable
     }
 
     /**
-     * @return \Propel\Runtime\Collection\CollectionIterator|\Traversable
+     * @return \Propel\Runtime\Collection\CollectionIterator<RowFormat>|\Traversable<int|string, RowFormat>
      */
     #[\Override]
     public function getIterator(): Traversable

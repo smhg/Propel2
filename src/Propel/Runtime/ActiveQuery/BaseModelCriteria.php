@@ -373,7 +373,7 @@ class BaseModelCriteria extends Criteria implements IteratorAggregate
      *
      * @throws \Propel\Runtime\Exception\LogicException
      *
-     * @return \Traversable
+     * @return \Traversable<int|string, mixed>
      */
     #[\Override]
     public function getIterator(): Traversable

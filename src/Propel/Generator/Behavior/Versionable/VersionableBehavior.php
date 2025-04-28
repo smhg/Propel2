@@ -8,6 +8,7 @@
 
 namespace Propel\Generator\Behavior\Versionable;
 
+use LogicException;
 use Propel\Generator\Behavior\SyncedTable\SyncedTableBehavior;
 use Propel\Generator\Behavior\SyncedTable\TableSyncer\TableSyncer;
 use Propel\Generator\Model\Column;
@@ -104,10 +105,16 @@ class VersionableBehavior extends SyncedTableBehavior
     }
 
     /**
+     * @throws \LogicException
+     *
      * @return \Propel\Generator\Model\Table
      */
     public function getVersionTable(): Table
     {
+        if (!$this->syncedTable) {
+            throw new LogicException('Cannot access version table before modifyTable() was called');
+        }
+
         return $this->syncedTable;
     }
 

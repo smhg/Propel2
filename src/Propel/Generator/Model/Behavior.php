@@ -435,11 +435,18 @@ class Behavior extends MappingModel
      *
      * @param string $name
      *
-     * @return \Propel\Generator\Model\Column|null
+     * @throws \Propel\Generator\Exception\LogicException
+     *
+     * @return \Propel\Generator\Model\Column
      */
-    public function getColumnForParameter(string $name): ?Column
+    public function getColumnForParameter(string $name): Column
     {
-        return $this->table->getColumn($this->getParameter($name));
+        $column = $this->table->getColumn($this->getParameter($name));
+        if (!$column) {
+            throw new LogicException("Behavior is not associated with column '$name'.");
+        }
+
+        return $column;
     }
 
     /**
@@ -465,7 +472,7 @@ class Behavior extends MappingModel
      *
      * The current object is returned by default.
      *
-     * @return $this
+     * @return mixed
      */
     public function getTableModifier()
     {
@@ -479,7 +486,7 @@ class Behavior extends MappingModel
      *
      * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
      *
-     * @return $this
+     * @return mixed
      */
     public function getObjectBuilderModifier()
     {
@@ -493,7 +500,7 @@ class Behavior extends MappingModel
      *
      * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
      *
-     * @return $this
+     * @return mixed
      */
     public function getQueryBuilderModifier()
     {
@@ -507,7 +514,7 @@ class Behavior extends MappingModel
      *
      * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
      *
-     * @return $this
+     * @return mixed
      */
     public function getTableMapBuilderModifier()
     {
@@ -519,7 +526,7 @@ class Behavior extends MappingModel
      *
      * @see \Propel\Generator\Builder\Om\AbstractOMBuilder::applyBehaviorModifierBase()
      *
-     * @return $this
+     * @return mixed
      */
     public function getObjectCollectionBuilderModifier()
     {
