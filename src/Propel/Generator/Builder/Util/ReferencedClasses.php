@@ -6,8 +6,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Generator\Builder\Om;
+namespace Propel\Generator\Builder\Util;
 
+use Propel\Generator\Builder\BuilderFactory\BuilderFactory;
+use Propel\Generator\Builder\Om\AbstractOMBuilder;
+use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Exception\LogicException;
 use Propel\Generator\Model\ForeignKey;
 use Propel\Generator\Model\Table;
@@ -18,6 +21,11 @@ class ReferencedClasses
   * @var \Propel\Generator\Builder\Om\AbstractOMBuilder
   */
     protected $builder;
+
+    /**
+     * @var \Propel\Generator\Builder\BuilderFactory\BuilderFactory
+     */
+    protected $builderFactory;
 
     /**
      * Declared fully qualified classnames, to build the 'namespace' statements
@@ -47,6 +55,27 @@ class ReferencedClasses
     public function __construct(AbstractOMBuilder $builder)
     {
         $this->builder = $builder;
+        $this->builderFactory = new BuilderFactory();
+    }
+
+    /**
+     * @param \Propel\Generator\Model\Table $table
+     *
+     * @return EntityObjectClassNames
+     */
+    public function useEntityObjectClassNames(Table $table): EntityObjectClassNames
+    {
+        return new EntityObjectClassNames($table, $this, $this->builderFactory);
+    }
+
+    /**
+     * @param \Propel\Generator\Config\GeneratorConfig $generatorConfig
+     *
+     * @return void
+     */
+    public function setGeneratorConfig(GeneratorConfig $generatorConfig): void
+    {
+        $this->builderFactory->setGeneratorConfig($generatorConfig);
     }
 
     /**
@@ -63,6 +92,22 @@ class ReferencedClasses
         }
 
         return $this->declaredClasses;
+    }
+
+    /**
+     * Resolve the future class name of one of the to-be-built classes for the given table.
+     *
+     * @param string $classType
+     * @param \Propel\Generator\Model\Table $table
+     * @param bool $fullyQualified
+     *
+     * @return string
+     */
+    public function resolveClassNameForTable(string $classType, Table $table, bool $fullyQualified = false)
+    {
+        $builderStub = $this->builderFactory->createBuilderForTable($table, $classType);
+
+        return $this->getInternalNameOfBuilderResultClass($builderStub, $fullyQualified);
     }
 
     /**

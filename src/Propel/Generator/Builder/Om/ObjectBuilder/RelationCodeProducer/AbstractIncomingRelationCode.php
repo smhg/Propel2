@@ -10,7 +10,7 @@ namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use Propel\Common\Pluralizer\PluralizerInterface;
 use Propel\Generator\Builder\Om\ObjectBuilder;
-use Propel\Generator\Config\GeneratorConfig;
+use Propel\Generator\Builder\Util\EntityObjectClassNames;
 use Propel\Generator\Model\ForeignKey;
 
 /**
@@ -25,6 +25,11 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
     protected $relation;
 
     /**
+     * @var \Propel\Generator\Builder\Util\EntityObjectClassNames
+     */
+    protected EntityObjectClassNames $targetTableNames;
+
+    /**
      * @param \Propel\Generator\Model\ForeignKey $relation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $parentBuilder
      */
@@ -32,6 +37,7 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
     {
         $this->relation = $relation;
         parent::__construct($relation->getForeignTable(), $parentBuilder);
+        $this->targetTableNames = $this->referencedClasses->useEntityObjectClassNames($relation->getTable());
     }
 
     /**
@@ -64,16 +70,6 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
      * @return string
      */
     abstract public function getAttributeName(): string;
-
-    /**
-     * @return void
-     */
-    public function registerTargetClasses(): void
-    {
-        $targetTable = $this->relation->getTable();
-        $this->declareClassFromBuilder($this->getNewStubObjectBuilder($targetTable), 'Child');
-        $this->declareClassFromBuilder($this->getNewStubQueryBuilder($targetTable));
-    }
 
     /**
      * @param string $script
@@ -137,13 +133,14 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
     public function addScheduledForDeletionAttribute(string &$script): void
     {
         $refFK = $this->relation;
-        $className = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $refFK->getTable(), true);
+        $classNameFq = $this->targetTableNames->useObjectBaseClassName(false);
+
         $fkName = lcfirst($this->getRefFKPhpNameAffix($refFK, true));
 
         $script .= "
     /**
-     * @var \Propel\Runtime\Collection\ObjectCollection<{$className}>|null
+     * @var \Propel\Runtime\Collection\ObjectCollection<{$classNameFq}>|null
      */
-    protected \${$fkName}ScheduledForDeletion;\n";
+    protected ObjectCollection|null \${$fkName}ScheduledForDeletion;\n";
     }
 }

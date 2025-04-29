@@ -613,12 +613,11 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
      */
     protected function addColumnAttributeComment(string &$script, Column $column): void
     {
-        $temporalType = $column->isTemporalType()
+        $columnType = $column->isTemporalType()
             ? $this->getDateTimeClass($column)
             : $column->getPhpType();
 
         $clo = $column->getLowercasedName();
-        $orNull = $column->isNotNull() ? '' : '|null';
 
         $script .= "
     /**
@@ -633,7 +632,7 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
         }
         $script .= "
      *
-     * @var $temporalType{$orNull}
+     * @var $columnType|null
      */";
     }
 

@@ -50,9 +50,23 @@ abstract class AbstractRelationCodeProducer extends DataModelBuilder
         $builder = $this->builderFactory->createObjectCollectionBuilder($table);
         $fqcn = $builder->resolveTableCollectionClassNameFq();
         $className = $this->declareClass($fqcn);
-        $typeString = $builder->resolveTableCollectionClassType();
+        $typeString = $builder->resolveTableCollectionClassType($table);
 
         return [$className, $typeString];
+    }
+
+    /**
+     * @param \Propel\Generator\Model\Table|null $table
+     *
+     * @return array{string, string}
+     */
+    protected function resolveBaseObjectClassNameAndType(?Table $table = null): array
+    {
+        $targetBaseObjectBuilder = $this->builderFactory->createObjectBuilder($table);
+        $targetClassNameSimple = $this->referencedClasses->registerBuilderResultClass($targetBaseObjectBuilder);
+        $classNameFqcn = '\\' . $targetBaseObjectBuilder->getQualifiedClassName();
+
+        return [$targetClassNameSimple, $classNameFqcn];
     }
 
     /**

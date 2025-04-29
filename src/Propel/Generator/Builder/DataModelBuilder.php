@@ -14,11 +14,11 @@ use Propel\Generator\Builder\BuilderFactory\CodeBuilderStore;
 use Propel\Generator\Builder\Om\AbstractObjectBuilder;
 use Propel\Generator\Builder\Om\AbstractOMBuilder;
 use Propel\Generator\Builder\Om\MultiExtendObjectBuilder;
-use Propel\Generator\Builder\Om\NameProducer;
 use Propel\Generator\Builder\Om\ObjectBuilder;
 use Propel\Generator\Builder\Om\QueryBuilder;
-use Propel\Generator\Builder\Om\ReferencedClasses;
 use Propel\Generator\Builder\Om\TableMapBuilder;
+use Propel\Generator\Builder\Util\NameProducer;
+use Propel\Generator\Builder\Util\ReferencedClasses;
 use Propel\Generator\Config\GeneratorConfigInterface;
 use Propel\Generator\Exception\LogicException;
 use Propel\Generator\Model\Database;
@@ -66,12 +66,12 @@ abstract class DataModelBuilder
     protected $codeBuilderStore;
 
     /**
-     * @var \Propel\Generator\Builder\Om\NameProducer|null
+     * @var \Propel\Generator\Builder\Util\NameProducer|null
      */
     protected $nameProducer;
 
     /**
-     * @var \Propel\Generator\Builder\Om\ReferencedClasses
+     * @var \Propel\Generator\Builder\Util\ReferencedClasses
      */
     protected $referencedClasses;
 
@@ -91,7 +91,7 @@ abstract class DataModelBuilder
 
     /**
      * @param \Propel\Generator\Model\Table $table
-     * @param \Propel\Generator\Builder\Om\ReferencedClasses|null $referencedClasses
+     * @param \Propel\Generator\Builder\Util\ReferencedClasses|null $referencedClasses
      */
     public function __construct(Table $table, ?ReferencedClasses $referencedClasses)
     {
@@ -115,6 +115,7 @@ abstract class DataModelBuilder
         $this->generatorConfig = $generatorConfig;
         $this->nameProducer = new NameProducer($generatorConfig->getConfiguredPluralizer());
         $this->builderFactory->setGeneratorConfig($generatorConfig);
+        $this->referencedClasses->setGeneratorConfig($generatorConfig);
         $this->codeBuilderStore = new CodeBuilderStore($table, $this->builderFactory);
     }
 
@@ -341,22 +342,6 @@ abstract class DataModelBuilder
         $result = array_map($cb, $arr);
 
         return '[' . implode(', ', $result) . ']';
-    }
-
-    /**
-     * Resolve the future class name of one of the to-be-built classes for the given table.
-     *
-     * @param string $classType
-     * @param \Propel\Generator\Model\Table $table
-     * @param bool $fullyQualified
-     *
-     * @return string
-     */
-    protected function resolveClassNameForTable(string $classType, Table $table, bool $fullyQualified = false)
-    {
-        $builderStub = $this->builderFactory->createBuilderForTable($table, $classType);
-
-        return $this->referencedClasses->getInternalNameOfBuilderResultClass($builderStub, $fullyQualified);
     }
 
     /**
