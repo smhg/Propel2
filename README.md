@@ -39,6 +39,7 @@ $ composer update
 - Rebuild models:
 ```bash
 $ vendor/bin/propel --config-dir <path/to/config> model:build
+$ composer dump-autoload
 ```
 - Open a file where you call `Query::find()` and replace it with `Query::findObjects()`. If everything worked, you get return type `ObjectCollection<YourModelName>`. Yay!  
 
