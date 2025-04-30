@@ -46,10 +46,7 @@
         "monolog/monolog": "The recommended logging library to use with Propel."
     },
     "replace": {
-        "propel/propel": "dev-main as 2.0.x-dev",
-        "symfony/polyfill-ctype": "*",
-        "symfony/polyfill-intl-grapheme": "*",
-        "symfony/polyfill-intl-normalizer": "*"
+        "propel/propel": "dev-main as 2.0.x-dev"
     },
     "autoload": {
         "psr-4": {
