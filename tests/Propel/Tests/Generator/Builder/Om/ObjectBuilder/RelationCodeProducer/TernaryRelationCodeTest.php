@@ -25,24 +25,6 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * @return void
      */
-    public function testRegisterClasses()
-    {
-        $producer = $this->getCodeProducer();
-        $producer->registerTargetClasses();
-        $referencedClasses = $this->getObjectPropertyValue($producer, 'referencedClasses');
-
-        $aliasedClasses = $referencedClasses->getDeclaredClasses('');
-        $expectedAliasedClasses = ['ChildEvent', 'ChildEventQuery', 'ChildTeam', 'ChildTeamQuery'];
-        $this->assertEqualsCanonicalizing($expectedAliasedClasses, $aliasedClasses);
-
-        $collectionClasses = $referencedClasses->getDeclaredClasses('Propel\Runtime\Collection');
-        $expectedCollections = ['Collection', 'ObjectCombinationCollection'];
-        $this->assertEqualsCanonicalizing($expectedCollections, $collectionClasses);
-    }
-
-    /**
-     * @return void
-     */
     public function testAttributes()
     {
         $expected = '
@@ -206,12 +188,12 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Returns a new query object pre configured with filters from current object and given arguments to query the database.
      *
-     * @param Event $event
+     * @param \Base\Event $event
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      *
      * @return ChildTeamQuery
      */
-    public function createTeamsQuery(ChildEvent $event, ?Criteria $criteria = null): ChildTeamQuery
+    public function createTeamsQuery(Event $event, ?Criteria $criteria = null): ChildTeamQuery
     {
         $query = ChildTeamQuery::create($criteria)
             ->filterByUser($this);
@@ -230,12 +212,12 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Returns a new query object pre configured with filters from current object and given arguments to query the database.
      *
-     * @param Team $team
+     * @param \Base\Team $team
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      *
      * @return ChildEventQuery
      */
-    public function createEventsQuery(ChildTeam $team, ?Criteria $criteria = null): ChildEventQuery
+    public function createEventsQuery(Team $team, ?Criteria $criteria = null): ChildEventQuery
     {
         $query = ChildEventQuery::create($criteria)
             ->filterByUser($this);
@@ -271,7 +253,7 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * Gets a combined collection of ChildTeam, ChildEvent objects related by a many-to-many relationship
+     * Gets a combined collection of array{Team, Event} objects related by a many-to-many relationship
      * to the current object by way of the team_user cross-reference table.
      *
      * If the $criteria is not null, it is used to always fetch the results from the database.
@@ -338,33 +320,33 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     }
 
     /**
-     * Returns a not cached ObjectCollection of ChildTeam objects. This will hit always the databases.
-     * If you have attached new ChildTeam object to this object you need to call `save` first to get
+     * Returns a not cached ObjectCollection of Team objects. This will hit always the databases.
+     * If you have attached new Team object to this object you need to call `save` first to get
      * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param Event $event
+     * @param \Base\Event $event
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
      * @return \Base\Collection\TeamCollection
      */
-    public function getTeams(ChildEvent $event, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    public function getTeams(Event $event, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
     {
         return $this->createTeamsQuery($event, $criteria)->find($con);
     }
 
     /**
-     * Returns a not cached ObjectCollection of ChildEvent objects. This will hit always the databases.
-     * If you have attached new ChildEvent object to this object you need to call `save` first to get
+     * Returns a not cached ObjectCollection of Event objects. This will hit always the databases.
+     * If you have attached new Event object to this object you need to call `save` first to get
      * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param Team $team
+     * @param \Base\Team $team
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
      * @return \Base\Collection\EventCollection
      */
-    public function getEvents(ChildTeam $team, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    public function getEvents(Team $team, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
     {
         return $this->createEventsQuery($team, $criteria)->find($con);
     }
@@ -458,33 +440,33 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     }
 
     /**
-     * Returns the not cached count of ChildTeam objects. This will hit always the databases.
-     * If you have attached new ChildTeam object to this object you need to call `save` first to get
+     * Returns the not cached count of Team objects. This will hit always the databases.
+     * If you have attached new Team object to this object you need to call `save` first to get
      * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param Event $event
+     * @param \Base\Event $event
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
      * @return int
      */
-    public function countTeams(ChildEvent $event, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
+    public function countTeams(Event $event, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
     {
         return $this->createTeamsQuery($event, $criteria)->count($con);
     }
 
     /**
-     * Returns the not cached count of ChildEvent objects. This will hit always the databases.
-     * If you have attached new ChildEvent object to this object you need to call `save` first to get
+     * Returns the not cached count of Event objects. This will hit always the databases.
+     * If you have attached new Event object to this object you need to call `save` first to get
      * the correct return value. Use getTeamEvents() to get the current internal state.
      *
-     * @param Team $team
+     * @param \Base\Team $team
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
      * @return int
      */
-    public function countEvents(ChildTeam $team, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
+    public function countEvents(Team $team, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
     {
         return $this->createEventsQuery($team, $criteria)->count($con);
     }
@@ -501,12 +483,12 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Associate a Team with this object through the team_user cross reference table.
      *
-     * @param Team $team
-     * @param Event $event
+     * @param \Base\Team $team
+     * @param \Base\Event $event
      *
      * @return static
      */
-    public function addTeam(ChildTeam $team, ChildEvent $event): static
+    public function addTeam(Team $team, Event $event): static
     {
         if ($this->combinationTeamEvents === null) {
             $this->initTeamEvents();
@@ -524,12 +506,12 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Associate a Event with this object through the team_user cross reference table.
      *
-     * @param Event $event
-     * @param Team $team
+     * @param \Base\Event $event
+     * @param \Base\Team $team
      *
      * @return static
      */
-    public function addEvent(ChildEvent $event, ChildTeam $team): static
+    public function addEvent(Event $event, Team $team): static
     {
         if ($this->combinationTeamEvents === null) {
             $this->initTeamEvents();
@@ -554,12 +536,12 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @param Team $team
-     * @param Event $event
+     * @param \Base\Team $team
+     * @param \Base\Event $event
      *
      * return void
      */
-    protected function doAddTeamEvent(ChildTeam $team, ChildEvent $event): void
+    protected function doAddTeamEvent(Team $team, Event $event): void
     {
         $teamUser = new ChildTeamUser();
         $teamUser->setTeam($team);
@@ -600,12 +582,12 @@ class TernaryRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Remove team, event of this object through the team_user cross reference table.
      *
-     * @param Team $team
-     * @param Event $event
+     * @param \Base\Team $team
+     * @param \Base\Event $event
      *
      * @return static
      */
-    public function removeTeamEvent(ChildTeam $team, ChildEvent $event): static
+    public function removeTeamEvent(Team $team, Event $event): static
     {
         if (!$this->getTeamEvents()->contains([$team, $event])) {
             return $this;

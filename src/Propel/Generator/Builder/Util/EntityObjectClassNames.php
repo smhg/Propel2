@@ -81,7 +81,7 @@ class EntityObjectClassNames
      *
      * @return string
      */
-    public function getObjectStubClassName(bool $inLocalNamespace = true, string|bool $aliasPrefix = false): string
+    public function useObjectStubClassName(bool $inLocalNamespace = true, string|bool $aliasPrefix = false): string
     {
         return $this->getClassNameFromBuilder($inLocalNamespace, $aliasPrefix, GeneratorConfig::KEY_OBJECT_STUB);
     }
@@ -94,7 +94,7 @@ class EntityObjectClassNames
      *
      * @return string
      */
-    public function getQueryBaseClassName(bool $inLocalNamespace = true, string|bool $aliasPrefix = false): string
+    public function useQueryBaseClassName(bool $inLocalNamespace = true, string|bool $aliasPrefix = false): string
     {
         return $this->getClassNameFromBuilder($inLocalNamespace, $aliasPrefix, GeneratorConfig::KEY_QUERY_BASE);
     }
@@ -120,7 +120,7 @@ class EntityObjectClassNames
      *
      * @return string
      */
-    public function getCollectionStubClassName(bool $inLocalNamespace = true, string|bool $aliasPrefix = false): string
+    public function useCollectionClassName(bool $inLocalNamespace = true, string|bool $aliasPrefix = false): string
     {
         return $this->getClassNameFromBuilder($inLocalNamespace, $aliasPrefix, GeneratorConfig::KEY_COLLECTION);
     }
@@ -133,7 +133,7 @@ class EntityObjectClassNames
      *
      * @return string
      */
-    public function getTablemapClassName(bool $inLocalNamespace = true, string|bool $aliasPrefix = false): string
+    public function useTablemapClassName(bool $inLocalNamespace = true, string|bool $aliasPrefix = false): string
     {
         return $this->getClassNameFromBuilder($inLocalNamespace, $aliasPrefix, GeneratorConfig::KEY_TABLEMAP);
     }

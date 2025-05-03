@@ -9,7 +9,7 @@
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use Propel\Generator\Builder\Om\ObjectBuilder;
-use Propel\Generator\Config\GeneratorConfig;
+use Propel\Generator\Builder\Util\EntityObjectClassNames;
 use Propel\Generator\Config\GeneratorConfigInterface;
 use Propel\Generator\Model\CrossRelation;
 use Propel\Generator\Model\ForeignKey;
@@ -36,6 +36,13 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     protected $names;
 
     /**
+     * @var \Propel\Generator\Builder\Util\EntityObjectClassNames
+     */
+    protected EntityObjectClassNames $middleTableNames;
+
+    protected SignatureCollector $signature;
+
+    /**
      * @param \Propel\Generator\Model\CrossRelation $crossRelation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $parentBuilder
      */
@@ -43,6 +50,8 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     {
         $this->crossRelation = $crossRelation;
         parent::__construct($crossRelation->getTable(), $parentBuilder);
+        $this->middleTableNames = $this->referencedClasses->useEntityObjectClassNames($crossRelation->getMiddleTable());
+        $this->signature = new SignatureCollector($crossRelation, $this->referencedClasses);
     }
 
     /**
@@ -99,8 +108,6 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     #[\Override]
     public function addMethods(string &$script): void
     {
-        $this->registerTargetClasses();
-
         $this->addClear($script);
         $this->addInit($script);
         $this->addIsLoaded($script);
@@ -171,45 +178,9 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     abstract public function reserveNamesForGetters(): array;
 
     /**
-     * @return void
+     * @return array{string, string}
      */
-    public function registerTargetClasses(): void
-    {
-        foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
-            $table = $fk->getForeignTable();
-            $this->referencedClasses->registerBuilderResultClass($this->getNewStubObjectBuilder($table), 'Child');
-            $this->referencedClasses->registerBuilderResultClass($this->getNewStubQueryBuilder($table));
-        }
-    }
-
-    /**
-     * Collect signature from keys, with the supplied Fk first.
-     *
-     * @param \Propel\Generator\Model\ForeignKey $firstFk
-     *
-     * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\FunctionArgumentSignatureCollector
-     */
-    protected function collectSignatureWithFirstArgument(ForeignKey $firstFk): FunctionArgumentSignatureCollector
-    {
-        return FunctionArgumentSignatureCollector::create($this->referencedClasses)
-            ->collectWithFirstArgument($firstFk, $this->crossRelation);
-    }
-
-    /**
-     * Collect signature from keys.
-     *
-     * @param \Propel\Generator\Model\ForeignKey|null $fkToIgnore
-     * @param string|null $withDefaultValue Set to {@see FunctionArgumentSignatureCollector::USE_COLUMN_DEFAULT} or {@see FunctionArgumentSignatureCollector::USE_DEFAULT_NULL} to add default values to argument declarations.
-     *
-     * @return \Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer\FunctionArgumentSignatureCollector
-     */
-    protected function collectSignature(
-        ?ForeignKey $fkToIgnore = null,
-        ?string $withDefaultValue = null
-    ): FunctionArgumentSignatureCollector {
-        return FunctionArgumentSignatureCollector::create($this->referencedClasses)
-            ->collect($this->crossRelation, $fkToIgnore, $withDefaultValue);
-    }
+    abstract protected function resolveObjectCollectionClassNameAndType(): array;
 
     /**
      * Concat relation Fk names and unclassified primary keys into a single string.
@@ -223,7 +194,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         $keys = $this->crossRelation->getKeysInOrder($excludeFK);
         $name = '';
         foreach ($keys as $fk) {
-            $name .= $this->nameProducer->resolveRelationIdentifier($fk, false);
+            $name .= $fk->getIdentifier();
         }
 
         foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $pk) {
@@ -250,7 +221,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         foreach ($orderedRelationFks as $keyMiddle) {
             $names[] = $keyMiddle === $keyMiddleToSource
                 ? '$this'
-                : '$' . $this->nameProducer->resolveRelationIdentifier($keyMiddle, false, true);
+                : '$' . lcfirst($keyMiddle->getIdentifier());
         }
 
         foreach ($this->crossRelation->getUnclassifiedPrimaryKeys() as $pk) {
@@ -261,8 +232,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     }
 
     /**
-     * Adds attribute declaration for every relation to target and a combined collection if
-     * there is more than one relation.
+     * Adds class properties for target table data.
      *
      * @param string $script
      *
@@ -435,14 +405,6 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     }
 
     /**
-     * @return string
-     */
-    protected function getCollectionContentType(): string
-    {
-        return $this->collectSignature()->buildCombinedType();
-    }
-
-    /**
      * @param string $script
      *
      * @return void
@@ -455,7 +417,7 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
 
         $inputCollectionVar = '$' . lcfirst($targetIdentifierPlural);
-        $collectionContentType = $this->getCollectionContentType();
+        $collectionContentType = $this->signature->buildCombinedType();
         [$targetCollectionType, $_] = $this->resolveObjectCollectionClassNameAndType();
         $foreachItem = lcfirst($targetIdentifierSingular);
         $crossRefTableName = $this->crossRelation->getMiddleTable()->getName();
@@ -515,14 +477,6 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     }
 
     /**
-     * @return string
-     */
-    protected function resolveMiddleQueryClassName(): string
-    {
-        return $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $this->crossRelation->getMiddleTable());
-    }
-
-    /**
      * @param string $script
      *
      * @return void
@@ -535,7 +489,10 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         $attributeIsPartialName = $this->names->getAttributeIsPartialName();
         $crossRefTableName = $this->crossRelation->getMiddleTable()->getName();
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
-        $targetQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $this->crossRelation->getCrossForeignKeys()[0]->getForeignTable());
+
+        $firstFk = $this->crossRelation->getCrossForeignKeys()[0];
+        $targetQueryClassName = $this->signature->getClassNameImporter($firstFk)->useQueryStubClassName();
+
         $script .= "
     /**
      * Gets the number of $targetIdentifierSingular objects related by a many-to-many relationship
@@ -591,12 +548,12 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
 
-        $adderArgs = $this->collectSignature()->buildFunctionParameterVariables();
+        $adderArgs = $this->signature->buildFunctionParameterVariables();
         $collectionArg = ($this->setterItemIsArray()) ? "[$adderArgs]" : $adderArgs;
 
         foreach ($this->crossRelation->getCrossForeignKeys() as $fk) {
             $targetRelationIdentifier = $this->nameProducer->resolveRelationIdentifier($fk);
-            [$methodSignature, $_, $phpDoc] = $this->collectSignatureWithFirstArgument($fk)->buildFullSignature();
+            [$methodSignature, $_, $phpDoc] = $this->signature->buildFullSignature(['firstFk' => $fk]);
 
             $script .= "
     /**
@@ -638,11 +595,12 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
         $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
 
-        [$signature, $inputArgs, $paramDoc] = $this->collectSignature()->buildFullSignature();
+        [$signature, $inputArgs, $paramDoc] = $this->signature->buildFullSignature();
         $names = str_replace('$', '', $inputArgs);
 
         $middleTableName = $this->crossRelation->getMiddleTable();
-        $middleModelClassName = $this->names->getMiddleModelClassName();
+        $middleModelClassName = $this->middleTableNames->useObjectStubClassName();
+
         $middleTableIdentifierSingular = $this->names->getMiddleTableIdentifier(false);
         $middleModelName = '$' . $middleTableName->getCamelCaseName();
         $sourceIdentifierSingular = $this->names->getSourceIdentifier(false);

@@ -12,6 +12,7 @@ use Propel\Common\Pluralizer\PluralizerInterface;
 use Propel\Generator\Builder\Om\ObjectBuilder;
 use Propel\Generator\Builder\Util\EntityObjectClassNames;
 use Propel\Generator\Model\ForeignKey;
+use Propel\Runtime\Collection\ObjectCollection;
 
 /**
  * An incoming relation ("refFK"), to a single row (incoming one-to-one)
@@ -91,7 +92,8 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
      * @return void
      */
     public function initRelation(\$relationName): void
-    {";
+    {
+        match (\$relationName) {";
         foreach ($referrers as $refFK) {
             if ($refFK->isLocalPrimaryKey()) {
                 continue;
@@ -101,13 +103,10 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
             $relationIdentifierPlural = $refFK->getIdentifierReversed($pluralizer);
 
             $script .= "
-        if (\$relationName === '$relationIdentifierSingular') {
-            \$this->init$relationIdentifierPlural();
-
-            return;
-        }";
+            '$relationIdentifierSingular' => \$this->init$relationIdentifierPlural(),";
         }
         $script .= "
+        };
     }\n";
     }
 
@@ -132,6 +131,8 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
      */
     public function addScheduledForDeletionAttribute(string &$script): void
     {
+        $this->declareClass(ObjectCollection::class);
+
         $refFK = $this->relation;
         $classNameFq = $this->targetTableNames->useObjectBaseClassName(false);
 
@@ -141,6 +142,6 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
     /**
      * @var \Propel\Runtime\Collection\ObjectCollection<{$classNameFq}>|null
      */
-    protected ObjectCollection|null \${$fkName}ScheduledForDeletion;\n";
+    protected ObjectCollection|null \${$fkName}ScheduledForDeletion = null;\n";
     }
 }

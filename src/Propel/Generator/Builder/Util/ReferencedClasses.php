@@ -10,7 +10,7 @@ namespace Propel\Generator\Builder\Util;
 
 use Propel\Generator\Builder\BuilderFactory\BuilderFactory;
 use Propel\Generator\Builder\Om\AbstractOMBuilder;
-use Propel\Generator\Config\GeneratorConfig;
+use Propel\Generator\Config\GeneratorConfigInterface;
 use Propel\Generator\Exception\LogicException;
 use Propel\Generator\Model\ForeignKey;
 use Propel\Generator\Model\Table;
@@ -61,7 +61,7 @@ class ReferencedClasses
     /**
      * @param \Propel\Generator\Model\Table $table
      *
-     * @return EntityObjectClassNames
+     * @return \Propel\Generator\Builder\Util\EntityObjectClassNames
      */
     public function useEntityObjectClassNames(Table $table): EntityObjectClassNames
     {
@@ -69,11 +69,11 @@ class ReferencedClasses
     }
 
     /**
-     * @param \Propel\Generator\Config\GeneratorConfig $generatorConfig
+     * @param \Propel\Generator\Config\GeneratorConfigInterface $generatorConfig
      *
      * @return void
      */
-    public function setGeneratorConfig(GeneratorConfig $generatorConfig): void
+    public function setGeneratorConfig(GeneratorConfigInterface $generatorConfig): void
     {
         $this->builderFactory->setGeneratorConfig($generatorConfig);
     }

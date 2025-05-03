@@ -8,7 +8,6 @@
 
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
-use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\ForeignKey;
 
 /**
@@ -103,16 +102,15 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      */
     protected function addScheduledForDeletion(string &$script): void
     {
-        $refFK = $this->relation;
-        $relatedName = $this->getRefFKPhpNameAffix($refFK, true);
+        $relatedName = $this->relation->getIdentifierReversed($this->getPluralizer());
         $lowerRelatedName = lcfirst($relatedName);
-        $lowerSingleRelatedName = lcfirst($this->getRefFKPhpNameAffix($refFK, false));
-        $queryClassName = $this->referencedClasses->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $refFK->getTable());
+        $lowerSingleRelatedName = lcfirst($this->relation->getIdentifierReversed());
+        $queryClassName = $this->targetTableNames->useQueryStubClassName();
         $script .= "
         if (\$this->{$lowerRelatedName}ScheduledForDeletion !== null) {
             if (!\$this->{$lowerRelatedName}ScheduledForDeletion->isEmpty()) {";
 
-        if ($refFK->isLocalColumnsRequired() || $refFK->getOnDelete() === ForeignKey::CASCADE) {
+        if ($this->relation->isLocalColumnsRequired() || $this->relation->getOnDelete() === ForeignKey::CASCADE) {
             $script .= "
                 $queryClassName::create()
                     ->filterByPrimaryKeys(\$this->{$lowerRelatedName}ScheduledForDeletion->getPrimaryKeys(false))
@@ -285,7 +283,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
     protected function addCount(string &$script): void
     {
         $targetQueryClassName = $this->targetTableNames->useQueryStubClassName();
-        $targetClassName = $this->targetTableNames->useObjectBaseClassName();
+        $targetClassName = $this->relation->getForeignTable()->getName();
         $relCol = $this->getRefFKPhpNameAffix($this->relation, true);
         $collName = $this->getAttributeName();
         $identifier = $this->relation->getIdentifier();
@@ -337,7 +335,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
     protected function addGet(string &$script): void
     {
         $attributeName = $this->getAttributeName();
-        $targetModelClassName = $this->targetTableNames->useObjectBaseClassName();
+        $targetModelClassName = $this->relation->getForeignTableName();
         $targetModelClassNameFqcn = $this->targetTableNames->useObjectBaseClassName(false);
         $relationIdentifierSingular = $this->relation->getIdentifier();
         $relationIdentifierPlural = $this->relation->getIdentifierReversed($this->getPluralizer());
@@ -434,7 +432,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
         $inputCollectionVar = lcfirst($relationIdentifierPlural);
         $inputCollectionItem = lcfirst($relationIdentifierSingular);
 
-        $targetModelClassName = $this->targetTableNames->useObjectBaseClassName();
+        $targetModelClassName = $this->relation->getForeignTableName();
         $targetModelClassNameFq = $this->targetTableNames->useObjectBaseClassName(false);
         $targetCollectionType = $this->targetTableNames->useCollectionClassName();
 
@@ -605,7 +603,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      */
     protected function addGetJoinMethods(string &$script): void
     {
-        $modelClassName = $this->targetTableNames->useObjectBaseClassName();
+        $modelClassName = $this->relation->getForeignTableName();
         $joinBehavior = $this->getBuildProperty('generator.objectModel.useLeftJoinsInDoJoinMethods')
             ? 'Criteria::LEFT_JOIN'
             : 'Criteria::INNER_JOIN';

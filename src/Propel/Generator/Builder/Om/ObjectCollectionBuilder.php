@@ -271,7 +271,7 @@ class ObjectCollectionBuilder extends AbstractOMBuilder
             return $className;
         }
 
-        $modelClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_BASE, $table ?? $this->getTable());
+        $modelClassName = $this->referencedClasses->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_BASE, $table ?? $this->getTable());
 
         return '\\' . ObjectCollection::class . "<$modelClassName>";
     }

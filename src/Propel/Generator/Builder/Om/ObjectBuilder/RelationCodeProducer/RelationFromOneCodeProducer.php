@@ -56,7 +56,7 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
     /**
      * @var $classNameFq|null one-to-one related $className object
      */
-    protected ?{$className} $varName;\n";
+    protected ?$className $varName = null;\n";
     }
 
     /**

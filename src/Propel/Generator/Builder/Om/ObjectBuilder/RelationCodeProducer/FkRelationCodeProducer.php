@@ -77,7 +77,7 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
     /**
      * @var $classNameFq|null
      */
-    protected ?$className $varName;\n";
+    protected ?$className $varName = null;\n";
     }
 
     /**
@@ -220,7 +220,7 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
         // then use findPk() instead of doSelect() to take advantage
         // of instance pooling
         $findPk = $fk->isForeignPrimaryKey();
-        $valueIsEmpty = $this->buildPropertyIsEmptyConditionExpression($fk);
+        $valueIsEmpty = $this->buildPropertyIsNotEmptyConditionExpression($fk);
         $targetGetPkArgs = $this->buildTargetGetPkArgs($fk);
 
         $targetQueryClassName = $this->targetTableNames->useQueryStubClassName();
@@ -274,10 +274,9 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
      *
      * @return string
      */
-    protected function buildPropertyIsEmptyConditionExpression(ForeignKey $fk): string
+    protected function buildPropertyIsNotEmptyConditionExpression(ForeignKey $fk): string
     {
-        $and = '';
-        $conditional = '';
+        $conditions = [];
 
         foreach ($fk->getMapping() as $mapping) {
             [$column, $rightValueOrColumn] = $mapping;
@@ -287,21 +286,19 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
 
             if ($rightValueOrColumn instanceof Column) {
                 if (in_array($cptype, ['int', 'float', 'double'])) {
-                    $conditional .= "$and\$this->$clo !== 0";
+                    $conditions[] = "\$this->$clo !== null && \$this->$clo !== 0";
                 } elseif ($cptype === 'string') {
-                    $conditional .= "$and(\$this->$clo !== '' && \$this->$clo !== null)";
+                    $conditions[] = "\$this->$clo !== '' && \$this->$clo !== null";
                 } else {
-                    $conditional .= "$and\$this->$clo !== null";
+                    $conditions[] = "\$this->$clo !== null";
                 }
             } else {
                 $val = var_export($rightValueOrColumn, true);
-                $conditional .= $and . '$this->' . $clo . ' === ' . $val;
+                $conditions[] = "\$this->$clo === $val";
             }
-
-            $and = ' && ';
         }
 
-        return $conditional;
+        return implode(' && ', $conditions);
     }
 
     /**
@@ -325,8 +322,8 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
 
         ksort($localColumns); // restoring the order of the foreign PK
 
-        return count($localColumns) > 1 ?
-            '[' . implode(', ', $localColumns) . ']'
-            : reset($localColumns);
+        return count($localColumns) === 1
+            ? reset($localColumns)
+            : '[' . implode(', ', $localColumns) . ']';
     }
 }

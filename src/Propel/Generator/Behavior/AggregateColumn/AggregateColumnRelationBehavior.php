@@ -8,6 +8,7 @@
 
 namespace Propel\Generator\Behavior\AggregateColumn;
 
+use LogicException;
 use Propel\Generator\Builder\Om\AbstractOMBuilder;
 use Propel\Generator\Model\Behavior;
 use Propel\Generator\Model\ForeignKey;
@@ -105,6 +106,8 @@ protected \$old{$relationName}{$aggregateName};
      * @param string $script
      * @param \Propel\Generator\Builder\Om\AbstractOMBuilder $builder
      *
+     * @throws \LogicException
+     *
      * @return void
      */
     public function objectFilter(string &$script, AbstractOMBuilder $builder): void
@@ -112,7 +115,7 @@ protected \$old{$relationName}{$aggregateName};
         $relationName = $this->getRelationName($builder);
         $varName = '$' . lcfirst($relationName);
         $aggregateName = $this->getParameter('aggregate_name');
-        $relatedClass = $builder->getClassNameFromBuilder($builder->getNewStubObjectBuilder($this->getForeignTable()));
+        $relatedClass = $builder->getClassNameFromBuilder($builder->getNewObjectBuilder($this->getForeignTable()));
         $search = "    public function set{$relationName}(?{$relatedClass} $varName = null)
     {";
         $replace = $search . "
@@ -120,7 +123,12 @@ protected \$old{$relationName}{$aggregateName};
         if (\$this->a{$relationName} !== null && $varName !== \$this->a{$relationName}) {
             \$this->old{$relationName}{$aggregateName} = \$this->a{$relationName};
         }";
-        $script = str_replace($search, $replace, $script);
+        $count = 0;
+        $script = str_replace($search, $replace, $script, $count);
+
+        if ($count === 0) {
+            throw new LogicException("Failed to inject aggregation code into setter 'set{$relationName}'.");
+        }
     }
 
     /**

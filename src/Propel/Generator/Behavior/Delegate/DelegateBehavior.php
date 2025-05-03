@@ -177,7 +177,7 @@ if (method_exists({$ARFQCN}::class, \$name)) {
     }
 
     return \$delegate->\$name(...\$params);
-}";
+}\n";
         }
 
         return $script;

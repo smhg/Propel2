@@ -8,8 +8,8 @@
 
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
-use Propel\Generator\Builder\Om\NameProducer;
-use Propel\Generator\Builder\Om\ReferencedClasses;
+use Propel\Generator\Builder\Util\NameProducer;
+use Propel\Generator\Builder\Util\ReferencedClasses;
 use Propel\Generator\Model\CrossRelation;
 
 class CrossRelationNames
@@ -20,12 +20,12 @@ class CrossRelationNames
     protected $crossRelation;
 
     /**
-     * @var \Propel\Generator\Builder\Om\NameProducer
+     * @var \Propel\Generator\Builder\Util\NameProducer
      */
     protected $nameProducer;
 
     /**
-     * @var \Propel\Generator\Builder\Om\ReferencedClasses
+     * @var \Propel\Generator\Builder\Util\ReferencedClasses
      */
     protected $referencedClasses;
 
@@ -52,8 +52,8 @@ class CrossRelationNames
     /**
      * @param \Propel\Generator\Model\CrossRelation $crossRelation
      * @param string $attributePrefix
-     * @param \Propel\Generator\Builder\Om\NameProducer $nameProducer
-     * @param \Propel\Generator\Builder\Om\ReferencedClasses $referencedClasses
+     * @param \Propel\Generator\Builder\Util\NameProducer $nameProducer
+     * @param \Propel\Generator\Builder\Util\ReferencedClasses $referencedClasses
      */
     public function __construct(
         CrossRelation $crossRelation,
@@ -105,14 +105,6 @@ class CrossRelationNames
     }
 
     /**
-     * @return string
-     */
-    public function getMiddleTableModelClass(): string
-    {
-        return $this->referencedClasses->getInternalNameOfTable($this->crossRelation->getMiddleTable());
-    }
-
-    /**
      * @param bool $plural
      *
      * @return string
@@ -120,14 +112,6 @@ class CrossRelationNames
     public function getMiddleTableIdentifier(bool $plural): string
     {
         return $this->nameProducer->buildForeignKeyBackReferenceNameAffix($this->crossRelation->getIncomingForeignKey(), $plural);
-    }
-
-    /**
-     * @return string
-     */
-    public function getMiddleModelClassName(): string
-    {
-        return $this->referencedClasses->getInternalNameOfTable($this->crossRelation->getMiddleTable());
     }
 
     /**
