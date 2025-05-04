@@ -118,8 +118,7 @@ class ManyToManyRelationCodeTest extends AbstractManyToManyCodeTest
      */
     public function initTeams(): void
     {
-        $collectionClassName = TeamTableMap::getTableMap()->getCollectionClassName();
-        $this->collTeams = new $collectionClassName();
+        $this->collTeams = new TeamCollection();
         $this->collTeamsIsPartial = true;
         $this->collTeams->setModel(\'\Team\');
     }
@@ -197,7 +196,7 @@ class ManyToManyRelationCodeTest extends AbstractManyToManyCodeTest
             } else {
                 $query = ChildTeamQuery::create(null, $criteria)
                     ->filterByUser($this);
-                $collTeams = $query->find($con);
+                $collTeams = $query->findObjects($con);
                 if ($criteria !== null) {
                     return $collTeams;
                 }
@@ -231,7 +230,7 @@ class ManyToManyRelationCodeTest extends AbstractManyToManyCodeTest
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<Team> $teams A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<\Base\Team> $teams A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
      * @return static

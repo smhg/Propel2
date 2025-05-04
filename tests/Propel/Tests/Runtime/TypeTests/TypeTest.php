@@ -52,6 +52,7 @@ class TypeTest extends BookstoreTestBase
      */
     public function testInterface()
     {
+        $this->markTestSkipped('Setting interface on fk-relations was removed');
         $reflection = new ReflectionClass(TypeObject::class);
         $method = $reflection->getMethod('setTypeObject');
         $param = $method->getParameters()[0];

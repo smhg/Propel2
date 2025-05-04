@@ -29,7 +29,7 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, string, int}>|null Objects in TeamDayType relation.
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{\Base\Team, string, int}>|null Objects in TeamDayType relation.
      */
     protected ?ObjectCombinationCollection $combinationTeamDayTypes = null;
 
@@ -50,7 +50,7 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
     /**
      * Items of TeamDayType relation marked for deletion.
      *
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, string, int}>|null
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{\Base\Team, string, int}>|null
      */
     protected ?ObjectCombinationCollection $teamDayTypesScheduledForDeletion = null;
 ';
@@ -230,7 +230,7 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * Gets a combined collection of array{Team, string, int} objects related by a many-to-many relationship
+     * Gets a combined collection of array{\Base\Team, string, int} objects related by a many-to-many relationship
      * to the current object by way of the team_user cross-reference table.
      *
      * If the $criteria is not null, it is used to always fetch the results from the database.
@@ -242,7 +242,7 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, string, int}>
+     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{\Base\Team, string, int}>
      */
     public function getTeamDayTypes(?Criteria $criteria = null, ?ConnectionInterface $con = null): ObjectCombinationCollection
     {
@@ -328,7 +328,7 @@ class ManyToManyRelationWithParameterCodeTest extends AbstractManyToManyCodeTest
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<array{Team, string, int}> $teamDayTypes A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<array{\Base\Team, string, int}> $teamDayTypes A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
      * @return static

@@ -21,6 +21,9 @@ use Propel\Tests\TestCaseFixtures;
  */
 class ActiveRecordConvertTest extends TestCaseFixtures
 {
+    /**
+     * @var \Propel\Tests\Bookstore\Book
+     */
     private $book;
 
     /**

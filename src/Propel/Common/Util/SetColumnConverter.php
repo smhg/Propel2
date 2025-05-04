@@ -20,60 +20,50 @@ class SetColumnConverter
     /**
      * Converts set column values to the corresponding integer.
      *
-     * @param mixed $val
+     * @param array<string>|string|null $val
      * @param array<int, string> $valueSet
      *
      * @throws \Propel\Common\Exception\SetColumnConverterException
      *
-     * @return string Integer value as string.
+     * @return int
      */
-    public static function convertToInt($val, array $valueSet): string
+    public static function convertToInt($val, array $valueSet): int
     {
         if ($val === null) {
-            return '0';
+            return 0;
         }
-        if (!is_array($val)) {
-            $val = [$val];
-        }
-        $bitValue = str_repeat('0', count($valueSet));
-        foreach ($val as $value) {
-            $index = array_search($value, $valueSet);
-            if ($index === false) {
-                throw new SetColumnConverterException(sprintf('Value "%s" is not among the valueSet', $value), $value);
-            }
-            $bitValue[$index] = '1';
-        }
+        $setValues = array_intersect($valueSet, (array)$val);
 
-        return base_convert(strrev($bitValue), 2, 10);
+        $missingValues = array_diff((array)$val, $setValues);
+        if ($missingValues) {
+            throw new SetColumnConverterException(sprintf('Value "%s" is not among the valueSet', $missingValues[0]), $missingValues[0]);
+        }
+        $keys = array_keys($setValues);
+
+        return array_reduce($keys, fn (int $bitVector, int $ix): int => $bitVector | (1 << $ix), 0);
     }
 
     /**
      * Converts set column integer value to corresponding array.
      *
-     * @param string|null $val
+     * @param int|null $val
      * @param array<int, string> $valueSet
      *
      * @throws \Propel\Common\Exception\SetColumnConverterException
      *
      * @return list<string>
      */
-    public static function convertIntToArray(?string $val, array $valueSet): array
+    public static function convertIntToArray(?int $val, array $valueSet): array
     {
         if ($val === null) {
             return [];
         }
-        $bitValueStr = strrev(base_convert($val, 10, 2));
-        $bitLength = strlen($bitValueStr);
-        $valueArr = [];
-        for ($bit = 0; $bit < $bitLength; $bit++) {
-            if (!isset($valueSet[$bit])) {
-                throw new SetColumnConverterException(sprintf('Unknown value key `%s` for value `%s`', $bit, $val), $bit);
-            }
-            if ($bitValueStr[$bit] === '1') {
-                $valueArr[] = $valueSet[$bit];
-            }
+        $availableBits = (1 << count($valueSet)) - 1; // 00100 -1 = 00011
+        $bitsOutOfRange = $val & ~$availableBits;
+        if ($bitsOutOfRange) {
+            throw new SetColumnConverterException("Unknown value key `$bitsOutOfRange` for value `$val`", $bitsOutOfRange);
         }
 
-        return $valueArr;
+        return array_values(array_filter($valueSet, fn ($ix) => (bool)($val & (1 << $ix)), ARRAY_FILTER_USE_KEY));
     }
 }

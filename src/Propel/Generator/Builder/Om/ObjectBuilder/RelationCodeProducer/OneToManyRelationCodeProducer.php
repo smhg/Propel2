@@ -226,23 +226,17 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      */
     protected function addAdd(string &$script): void
     {
-        $refFK = $this->relation;
-        $tblFK = $refFK->getTable();
-
         $className = $this->targetTableNames->useObjectBaseClassName();
         $classNameFq = $this->targetTableNames->useObjectBaseClassName(false);
 
-        if ($tblFK->getChildrenColumn()) {
-            $className = $this->getClassNameFromTable($refFK->getTable()); // same as above?
-        }
         $modelVar = '$' . lcfirst($className);
 
         $attributeName = $this->getAttributeName();
 
-        $scheduledForDeletion = lcfirst($this->getRefFKPhpNameAffix($refFK, true)) . 'ScheduledForDeletion';
+        $scheduledForDeletion = lcfirst($this->getRefFKPhpNameAffix($this->relation, true)) . 'ScheduledForDeletion';
 
-        $relationIdentifierSingular = $refFK->getIdentifierReversed();
-        $relationIdentifierPlural = $refFK->getIdentifierReversed($this->getPluralizer());
+        $relationIdentifierSingular = $this->relation->getIdentifierReversed();
+        $relationIdentifierPlural = $this->relation->getIdentifierReversed($this->getPluralizer());
 
         $script .= "
     /**
@@ -346,7 +340,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
 
         $script .= "
     /**
-     * Gets an array of $targetModelClassName objects which contain a foreign key that references this object.
+     * Gets $targetModelClassName objects which contain a foreign key that references this object.
      *
      * If the \$criteria is not null, it is used to always fetch the results from the database.
      * Otherwise the results are fetched from the database the first time, then cached.
@@ -382,7 +376,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
 
         \$$attributeName = $relationQueryClassName::create(null, \$criteria)
             ->filterBy{$relationIdentifierSingular}(\$this)
-            ->find(\$con);
+            ->findObjects(\$con);
 
         if (\$criteria) {
             if (\$this->{$attributeName}Partial !== false && count(\$$attributeName)) {
@@ -509,7 +503,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
      */
     protected function doAdd{$relatedObjectClassName}($targetClassName \${$lowerRelatedObjectClassName}): void
     {
-        \$this->{$varName}[] = \${$lowerRelatedObjectClassName};
+        \$this->{$varName}->append(\${$lowerRelatedObjectClassName});
         \${$lowerRelatedObjectClassName}->set{$reversedRelationIdentifier}(\$this);
     }
 ";
@@ -533,6 +527,7 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
 
         $collName = $this->getAttributeName();
         $reversedRelationIdentifierSingular = $this->relation->getIdentifier();
+        $maybeClone = $this->relation->isComposite() || $this->relation->getLocalColumn()->isNotNull() ? 'clone ' : '';
 
         $script .= "
     /**
@@ -548,17 +543,8 @@ class OneToManyRelationCodeProducer extends AbstractIncomingRelationCode
             if (\$this->{$inputCollection} === null) {
                 \$this->{$inputCollection} = clone \$this->{$collName};
                 \$this->{$inputCollection}->clear();
-            }";
-
-        if (!$this->relation->isComposite() && !$this->relation->getLocalColumn()->isNotNull()) {
-            $script .= "
-            \$this->{$inputCollection}[] = \${$lowerRelatedObjectClassName};";
-        } else {
-            $script .= "
-            \$this->{$inputCollection}[] = clone \${$lowerRelatedObjectClassName};";
-        }
-
-        $script .= "
+            }
+            \$this->{$inputCollection}->append($maybeClone\${$lowerRelatedObjectClassName});
             \${$lowerRelatedObjectClassName}->set{$reversedRelationIdentifierSingular}(null);
         }
 

@@ -106,6 +106,7 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
             '$relationIdentifierSingular' => \$this->init$relationIdentifierPlural(),";
         }
         $script .= "
+            default => null
         };
     }\n";
     }

@@ -59,6 +59,27 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
     }
 
     /**
+     * Get target class data, possibly intersected with 'interface' attribute declared on foreign-key tag in schema.xml.
+     *
+     * @return array{string, string}
+     */
+    protected function getTargetClassNameOrInterface(): array
+    {
+        $className = $this->targetTableNames->useObjectBaseClassName();
+        $classNameFq = $this->targetTableNames->useObjectBaseClassName(false);
+
+        /*
+        $interface = $this->relation->getInterface();
+        if ($interface) {
+            $className .= '&' . $this->declareClass($interface);
+            $classNameFq .= '&\\' . trim($interface, '\\');
+        }
+        */
+
+        return [$className, $classNameFq];
+    }
+
+    /**
      * Adds the class attributes that are needed to store fkey related objects.
      *
      * @param string $script The script will be modified in this method.
@@ -101,14 +122,18 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
     #[\Override]
     public function addDeleteScheduledItemsCode(string &$script): void
     {
+        $isReadOnly = $this->relation->getForeignTable()->isReadOnly();
+
         $attributeName = $this->getAttributeName();
         $relationIdentifierSingular = $this->relation->getIdentifier();
 
+        $maybeWriteTarget = $isReadOnly ? '' : "
+            if (\$this->{$attributeName}->isModified() || \$this->{$attributeName}->isNew()) {
+                \$affectedRows += \$this->{$attributeName}->save(\$con);
+            }";
+
         $script .= "
-        if (\$this->$attributeName !== null) {
-            if (\$this->" . $attributeName . '->isModified() || $this->' . $attributeName . "->isNew()) {
-                \$affectedRows += \$this->" . $attributeName . "->save(\$con);
-            }
+        if (\$this->$attributeName !== null) {{$maybeWriteTarget}
             \$this->set{$relationIdentifierSingular}(\$this->$attributeName);
         }\n";
     }
@@ -137,34 +162,27 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
      */
     protected function addMutator(string &$script): void
     {
-        $fk = $this->relation;
-        $fkTable = $fk->getForeignTable();
-        $interface = $fk->getInterface();
-        $relationIdentifierSingular = $fk->getIdentifier();
+        $relationIdentifierSingular = $this->relation->getIdentifier();
         $varName = '$' . lcfirst($relationIdentifierSingular);
-        $reverseIdentifierSingular = $fk->getIdentifierReversed();
+        $reverseIdentifierSingular = $this->relation->getIdentifierReversed();
 
-        $className = $interface
-            ? $this->declareClass($interface)
-            : $this->targetTableNames->useObjectBaseClassName();
-
-        $classNameFqcn = $this->targetTableNames->useObjectBaseClassName(false);
+        [$targetClassName, $targetType] = $this->getTargetClassNameOrInterface();
 
         $attributeName = $this->getAttributeName();
-        $setAdd = $fk->isLocalPrimaryKey() ? 'set' : 'add'; // one-to-one or one-to-many
+        $setAdd = $this->relation->isLocalPrimaryKey() ? 'set' : 'add'; // one-to-one or one-to-many
 
         $script .= "
     /**
-     * Declares an association between this object and a $className object.
+     * Declares an association between this object and a $targetClassName object.
      *
-     * @param {$classNameFqcn}|null $varName
+     * @param {$targetType}|null $varName
      *
      * @return \$this
      */
-    public function set{$relationIdentifierSingular}(?$className $varName = null)
+    public function set{$relationIdentifierSingular}(?$targetClassName $varName = null)
     {";
 
-        foreach ($fk->getMapping() as $map) {
+        foreach ($this->relation->getMapping() as $map) {
             [$column, $rightValueOrColumn] = $map;
             $columnName = $column->getPhpName();
             $valueVarName = '$' . lcfirst($columnName);
@@ -202,19 +220,11 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
     {
         $fk = $this->relation;
         $varName = $this->getAttributeName();
-        $targetBaseObjectBuilder = $this->getNewObjectBuilder($fk->getForeignTable());
         $relationIdentifierSingular = $fk->getIdentifier();
 
         $relationIdentifierReversedSingular = $fk->getIdentifierReversed();
         $relationIdentifierReversedPlural = $fk->getIdentifierReversed($this->getPluralizer());
-
-        $interface = $fk->getInterface();
-        $className = $interface
-            ? $this->declareClass($interface)
-            : $this->targetTableNames->useObjectBaseClassName();
-
-        $classNameFqcn = $this->targetTableNames->useObjectBaseClassName(false);
-        $orNull = $fk->getLocalColumn()->isNotNull() ? '' : '|null';
+        [$_, $targetType] = $this->getTargetClassNameOrInterface();
 
         // If the related columns are a primary key on the foreign table
         // then use findPk() instead of doSelect() to take advantage
@@ -227,11 +237,11 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
 
         $script .= "
     /**
-     * Get the associated $className object
+     * Get the associated $relationIdentifierSingular object
      *
      * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con Optional Connection object.
      *
-     * @return {$classNameFqcn}{$orNull}
+     * @return {$targetType}|null
      */
     public function get{$relationIdentifierSingular}(?ConnectionInterface \$con = null)
     {";

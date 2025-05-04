@@ -82,10 +82,11 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
     #[\Override]
     protected function addInit(string &$script): void
     {
+        $collectionClassName = $this->targetTableNames->useCollectionClassName();
         $relatedObjectClassName = $this->targetTableNames->useObjectStubClassName(false);
         $foreignTableMapName = $this->targetTableNames->useTablemapClassName();
 
-        $script .= $this->buildInitCode(null, $foreignTableMapName, $relatedObjectClassName);
+        $script .= $this->buildInitCode($collectionClassName, $foreignTableMapName, $relatedObjectClassName);
     }
 
     /**
@@ -164,7 +165,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
             } else {
                 \$query = $targetQueryClassName::create(null, \$criteria)
                     ->filterBy{$sourceIdentifierSingular}(\$this);
-                \$$attributeName = \$query->find(\$con);
+                \$$attributeName = \$query->findObjects(\$con);
                 if (\$criteria !== null) {
                     return \$$attributeName;
                 }

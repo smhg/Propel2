@@ -7,12 +7,12 @@
      * to the cache in order to ensure that the same objects are always returned by find*()
      * and findPk*() calls.
      *
-     * @param <?=    $objectClassName ?> $obj A <?= $objectClassName ?> object.
+     * @param <?= $modelClassNameFq ?> $obj
      * @param string|null $key Key (optional) to use for instance map (for performance boost if key was already calculated externally).
      *
      * @return void
      */
-    public static function addInstanceToPool(<?= substr($objectClassName, strrpos( $objectClassName, '\\' ) + 1 ) ?> $obj, ?string $key = null): void
+    public static function addInstanceToPool(<?= $modelClassName ?> $obj, ?string $key = null): void
     {
         if (Propel::isInstancePoolingEnabled()) {
             if (null === $key) {
@@ -30,14 +30,14 @@
      * methods in your stub classes -- you may need to explicitly remove objects
      * from the cache in order to prevent returning objects that no longer exist.
      *
-     * @param mixed $value A <?= $objectClassName ?> object or a primary key value.
+     * @param mixed $value A <?= $modelClassName ?> object or a primary key value.
      *
      * @return void
      */
     public static function removeInstanceFromPool($value): void
     {
         if (Propel::isInstancePoolingEnabled() && null !== $value) {
-            if (is_object($value) && $value instanceof <?= $objectClassName ?>) {
+            if (is_object($value) && $value instanceof <?= $modelClassName ?>) {
                 $key = <?= $removeInstancePoolKeySnippetObjects ?>;
 
             } elseif (is_array($value) && count($value) === <?= $countPks ?>) {
@@ -48,7 +48,7 @@
 
                 return;
             } else {
-                $e = new PropelException("Invalid value passed to removeInstanceFromPool().  Expected primary key or <?= $objectClassName ?> object; got " . (is_object($value) ? get_class($value) . ' object.' : var_export($value, true)));
+                $e = new PropelException("Invalid value passed to removeInstanceFromPool().  Expected primary key or <?= $modelClassNameFq ?> object; got " . (is_object($value) ? get_class($value) . ' object.' : var_export($value, true)));
                 throw $e;
             }
 

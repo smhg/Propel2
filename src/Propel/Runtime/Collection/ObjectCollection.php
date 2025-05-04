@@ -178,7 +178,7 @@ class ObjectCollection extends Collection
      *                                        TableMap::TYPE_CAMELNAME, TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME,
      *                                        TableMap::TYPE_NUM. Defaults to TableMap::TYPE_PHPNAME.
      * @param bool $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
-     * @param array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param array<string, array<string|bool>> $alreadyDumpedObjects List of objects to skip to avoid recursion
      *
      * <code>
      * $bookCollection->toArray();

@@ -12,5 +12,5 @@ use Propel\Tests\Bookstore\Book;
 
 class TestableActiveRecord extends Book
 {
-    public $virtualColumns = [];
+    public array $virtualColumns = [];
 }

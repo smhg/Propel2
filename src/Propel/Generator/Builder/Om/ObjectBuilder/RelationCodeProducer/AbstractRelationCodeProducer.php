@@ -72,7 +72,7 @@ abstract class AbstractRelationCodeProducer extends DataModelBuilder
     /**
      * @param string $script
      *
-     * @return string
+     * @return string Attribute name used by ObjectBuilder.
      */
     abstract public function addClearReferencesCode(string &$script): string;
 }

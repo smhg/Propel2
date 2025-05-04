@@ -1146,19 +1146,19 @@ class QueryBuilder extends AbstractOMBuilder
             throw new PropelException(sprintf('Value \"%s\" is not accepted in this set column', \$e->getValue()), \$e->getCode(), \$e);
         }
         if (\$comparison === null || \$comparison == Criteria::CONTAINS_ALL) {
-            if (\${$variableName} === '0') {
+            if (\${$variableName} === 0) {
                 return \$this;
             }
             \$comparison = Criteria::BINARY_ALL;
         } elseif (\$comparison == Criteria::CONTAINS_SOME || \$comparison == Criteria::IN) {
-            if (\${$variableName} === '0') {
+            if (\${$variableName} === 0) {
                 return \$this;
             }
             \$comparison = Criteria::BINARY_AND;
         } elseif (\$comparison == Criteria::CONTAINS_NONE) {
             \$resolvedColumn = \$this->resolveLocalColumnByName('$colName');
-            if (\${$variableName} !== '0') {
-                \$this->add(\$resolvedColumn, \${$variableName}, Criteria::BINARY_NONE);
+            if (\${$variableName} !== 0) {
+                \$this->addFilter(\$resolvedColumn, \${$variableName}, Criteria::BINARY_NONE);
             }
             \$this->addOr(\$resolvedColumn, null, Criteria::ISNULL);
 
@@ -1298,12 +1298,11 @@ class QueryBuilder extends AbstractOMBuilder
             '\Propel\Runtime\Exception\PropelException',
         );
         $fkTable = $fk->getForeignTable();
-        $fkStubObjectBuilder = $this->getNewStubObjectBuilder($fkTable);
+        $fkStubObjectBuilder = $this->getNewObjectBuilder($fkTable);
         $this->declareClassFromBuilder($fkStubObjectBuilder);
         $fkPhpName = $this->getClassNameFromBuilder($fkStubObjectBuilder, true);
         $relationName = $this->getFKPhpNameAffix($fk);
         $objectName = '$' . $fkTable->getCamelCaseName();
-        $tableMapClassName = $this->getTableMapClassName();
         $script .= "
     /**
      * Filter the query by a related $fkPhpName object
@@ -1383,24 +1382,23 @@ class QueryBuilder extends AbstractOMBuilder
             '\Propel\Runtime\Exception\PropelException',
         );
         $fkTable = $this->getTable()->getDatabase()->getTable($fk->getTableName());
-        $fkStubObjectBuilder = $this->getNewStubObjectBuilder($fkTable);
-        $this->declareClassFromBuilder($fkStubObjectBuilder);
-        $fkPhpName = $this->getClassNameFromBuilder($fkStubObjectBuilder, true);
-        $relationName = $this->getRefFKPhpNameAffix($fk);
+        $fkStubObjectBuilder = $this->getNewObjectBuilder($fkTable);
+        $targetClassName = $this->declareClassFromBuilder($fkStubObjectBuilder);
+        $targetClassNameFq = $this->getClassNameFromBuilder($fkStubObjectBuilder, true);
+        $relationName = $fk->getIdentifierReversed();
         $objectName = '$' . $fkTable->getCamelCaseName();
-        $tableMapClassName = $this->getTableMapClassName();
         $script .= "
     /**
-     * Filter the query by a related $fkPhpName object
+     * Filter the query by a related $relationName object
      *
-     * @param $fkPhpName|ObjectCollection $objectName the related object to use as filter
+     * @param $targetClassNameFq|\Propel\Runtime\Collection\ObjectCollection<$targetClassNameFq> $objectName the related object to use as filter
      * @param string|null \$comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return \$this
      */
-    public function filterBy$relationName($objectName, ?string \$comparison = null)
+    public function filterBy$relationName($targetClassName|ObjectCollection $objectName, ?string \$comparison = null)
     {
-        if ($objectName instanceof $fkPhpName) {
+        if ($objectName instanceof $targetClassNameFq) {
             \$this";
         foreach ($fk->getInverseMapping() as $mapping) {
             /** @var \Propel\Generator\Model\Column $foreignColumn */
@@ -1418,30 +1416,28 @@ class QueryBuilder extends AbstractOMBuilder
                 ->where(\"$leftValue = ?\", $rightValue, $bindingType)";
             }
         }
-        $script .= ';
-
-            return $this;';
+        $script .= ';';
         if (!$fk->isComposite()) {
             $script .= "
         } elseif ($objectName instanceof ObjectCollection) {
             \$this
                 ->use{$relationName}Query()
                 ->filterByPrimaryKeys({$objectName}->getPrimaryKeys())
-                ->endUse();
-
-            return \$this;";
+                ->endUse();";
         }
         $script .= "
         } else {";
         if ($fk->isComposite()) {
             $script .= "
-            throw new PropelException('filterBy$relationName() only accepts arguments of type $fkPhpName');";
+            throw new PropelException('filterBy$relationName() only accepts arguments of type $targetClassNameFq');";
         } else {
             $script .= "
-            throw new PropelException('filterBy$relationName() only accepts arguments of type $fkPhpName or Collection');";
+            throw new PropelException('filterBy$relationName() only accepts arguments of type $targetClassNameFq or Collection');";
         }
         $script .= "
         }
+
+        return \$this;
     }
 ";
     }

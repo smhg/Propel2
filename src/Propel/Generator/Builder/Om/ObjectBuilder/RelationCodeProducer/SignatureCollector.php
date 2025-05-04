@@ -280,7 +280,7 @@ class SignatureCollector
      */
     public function buildCombinedType(): string
     {
-        $relationTargetTypes = array_map(fn ($imp) => $imp->useObjectBaseClassName(), $this->nameImporters);
+        $relationTargetTypes = array_map(fn ($imp) => $imp->useObjectBaseClassName(false), $this->nameImporters);
         $columnTypes = array_map(fn ($col) => $col->getPhpType(), $this->relation->getUnclassifiedPrimaryKeys());
         $types = array_merge($relationTargetTypes, $columnTypes);
 

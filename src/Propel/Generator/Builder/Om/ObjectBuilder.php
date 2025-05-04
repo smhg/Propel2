@@ -284,7 +284,7 @@ class ObjectBuilder extends AbstractObjectBuilder
             }
             $defaultValue = (string)array_search($val, $valueSet);
         } elseif ($column->isSetType()) {
-            $defaultValue = SetColumnConverter::convertToInt($val, $column->getValueSet());
+            $defaultValue = (string)SetColumnConverter::convertToInt($val, $column->getValueSet());
         } elseif ($column->isPhpPrimitiveType()) {
             settype($val, $column->getPhpType());
             $defaultValue = var_export($val, true);
@@ -445,6 +445,10 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
 
         $this->addColumnAccessorMethods($script);
         $this->addColumnMutatorMethods($script);
+
+        if (array_any($table->getColumns(), fn (Column $col) => $col->isLobType())) {
+            $this->addWriteResource($script);
+        }
 
         $this->addHasOnlyDefaultValues($script);
 
@@ -613,9 +617,13 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
      */
     protected function addColumnAttributeComment(string &$script, Column $column): void
     {
-        $columnType = $column->isTemporalType()
-            ? $this->getDateTimeClass($column)
-            : $column->getPhpType();
+        if ($column->isTemporalType()) {
+            $columnType = $this->getDateTimeClass($column);
+        } elseif ($column->getType() === PropelTypes::PHP_ARRAY) {
+            $columnType = 'string';
+        } else {
+            $columnType = $column->getPhpType() ?: 'mixed';
+        }
 
         $clo = $column->getLowercasedName();
 
@@ -701,15 +709,16 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
     protected function addColumnAttributeUnserialized(string &$script, Column $column): void
     {
         $columnName = $column->getLowercasedName();
-        $attributeName = "\${$columnName}_unserialized";
+        $type = $column->getTypeHint() ?: ($column->getType() == PropelTypes::PHP_ARRAY ? 'array' : 'object');
+
         $script .= "
     /**
      * The unserialized \$$columnName value - i.e. the persisted object.
      * This is necessary to avoid repeated calls to unserialize() at runtime.
      *
-     * @var object|null
+     * @var $type|null
      */
-    protected $attributeName;\n";
+    protected \${$columnName}_unserialized;\n";
     }
 
     /**
@@ -824,7 +833,11 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
             'ReflectionClass',
             'ReflectionProperty',
         );
-        $script .= $this->renderTemplate('baseObjectMethods', ['className' => $this->getUnqualifiedClassName()]);
+        $script .= $this->renderTemplate('baseObjectMethods', [
+            'className' => $this->getUnqualifiedClassName(),
+            'hasArrayKey' => count($this->getTable()->getPrimaryKey()) > 1,
+            'hasFks' => $this->getTable()->hasRelations(),
+        ]);
     }
 
     /**
@@ -1266,6 +1279,10 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
     {
         $clo = $column->getLowercasedName();
         $cloUnserialized = $clo . '_unserialized';
+        $typeHint = $column->getTypeHint();
+        $docHint = !$typeHint ? '' : "
+                /** @var $typeHint \$unserializedString */";
+
         if ($column->isLazyLoad()) {
             $script .= $this->getAccessorLazyLoadSnippet($column);
         }
@@ -1273,8 +1290,9 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
         $script .= "
         if (!\$this->$cloUnserialized && is_resource(\$this->$clo)) {
             \$serialisedString = stream_get_contents(\$this->$clo);
-            if (\$serialisedString) {
-                \$this->$cloUnserialized = unserialize(\$serialisedString);
+            if (\$serialisedString) {{$docHint}
+                \$unserializedString = unserialize(\$serialisedString);
+                \$this->$cloUnserialized = \$unserializedString;
             }
         }
 
@@ -1729,7 +1747,6 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
         $clo = $column->getLowercasedName();
 
         $returnType = $column->getTypeHint() ?: $column->getPhpType() ?: 'mixed';
-        $orNull = $column->isNotNull() ? '' : '|null';
 
         $script .= "
     /**
@@ -1741,7 +1758,7 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
         }
         $script .= "
      *
-     * @return {$returnType}{$orNull}
+     * @return {$returnType}|null
      */";
     }
 
@@ -1899,10 +1916,8 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
             \$dataFetcher->close();";
         }
 
-        $script .= "
-
-            \$firstColumn = \$row ? current(\$row) : null;
-";
+        $script .= "\n
+            \$firstColumn = is_bool(\$row) ? null : current(\$row);\n";
 
         if ($column->getType() === PropelTypes::CLOB && $platform instanceof OraclePlatform) {
             // PDO_OCI returns a stream for CLOB objects, while other PDO adapters return a string...
@@ -1912,13 +1927,7 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
             }";
         } elseif ($column->isLobType() && !$platform->hasStreamBlobImpl()) {
             $script .= "
-            if (\$firstColumn !== null) {
-                \$this->$clo = fopen('php://memory', 'r+');
-                fwrite(\$this->$clo, \$firstColumn);
-                rewind(\$this->$clo);
-            } else {
-                \$this->$clo = null;
-            }";
+            \$this->$clo = \$this->writeResource(\$firstColumn);";
         } elseif ($column->isPhpPrimitiveType()) {
             $script .= "
             \$this->$clo = (\$firstColumn !== null) ? (" . $column->getPhpType() . ')$firstColumn : null;';
@@ -2022,7 +2031,19 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
     public function addMutatorComment(string &$script, Column $column): void
     {
         $clo = $column->getLowercasedName();
-        $type = $column->getPhpType() ?: 'mixed';
+        if ($column->getTypeHint()) {
+            $type = $column->getTypeHint();
+        } elseif ($column->getType() === PropelTypes::OBJECT) {
+            $type = 'mixed';
+        } elseif ($column->isLobType()) {
+            $phpType = $column->getPhpType();
+            $type = $phpType && $phpType !== 'string' ? "$phpType|string" : 'string';
+        } elseif ($column->getPhpType()) {
+            $type = $column->getPhpType();
+        } else {
+            $type = 'mixed';
+        }
+
         if (!$column->isNotNull()) {
             $type .= '|null';
         }
@@ -2031,7 +2052,13 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
     /**
      * Set the value of [$clo] column.{$this->getColumnDescriptionDoc($column)}
      *
-     * @param $type \$v New value
+     * @param $type \$v New value";
+        if ($column->getType() === PropelTypes::OBJECT) {
+            $script .= "
+     *
+     * @throws \RuntimeException";
+        }
+        $script .= "
      *
      * @return \$this
      */";
@@ -2204,18 +2231,15 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
     {
         $this->addMutatorOpen($script, $col);
         $clo = $col->getLowercasedName();
+        $columnConstant = $this->getColumnConstant($col);
+
         $script .= "
         // Because BLOB columns are streams in PDO we have to assume that they are
         // always modified when a new value is passed in.  For example, the contents
         // of the stream itself may have changed externally.
-        if (!is_resource(\$v) && \$v !== null) {
-            \$this->$clo = fopen('php://memory', 'r+');
-            fwrite(\$this->$clo, \$v);
-            rewind(\$this->$clo);
-        } else { // it's already a stream
-            \$this->$clo = \$v;
-        }
-        \$this->modifiedColumns[" . $this->getColumnConstant($col) . "] = true;
+        \$this->$clo = \$this->writeResource(\$v);
+
+        \$this->modifiedColumns[$columnConstant] = true;
 ";
         $this->addMutatorClose($script, $col);
     }
@@ -2316,16 +2340,22 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
      */
     protected function addObjectMutator(string &$script, Column $col): void
     {
+        $this->declareClass('\RuntimeException');
+
         $clo = $col->getLowercasedName();
         $cloUnserialized = $clo . '_unserialized';
         $this->addMutatorOpen($script, $col);
+        $columnConstant = $this->getColumnConstant($col);
 
         $script .= "
         if (\$this->$clo === null || stream_get_contents(\$this->$clo) !== serialize(\$v)) {
             \$this->$cloUnserialized = \$v;
             \$this->$clo = fopen('php://memory', 'r+');
+            if (\$this->$clo === false) {
+                throw new RuntimeException('Could not open memory stream');
+            }
             fwrite(\$this->$clo, serialize(\$v));
-            \$this->modifiedColumns[" . $this->getColumnConstant($col) . "] = true;
+            \$this->modifiedColumns[$columnConstant] = true;
         }
         rewind(\$this->$clo);
 ";
@@ -2514,10 +2544,11 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
         $script .= "
         if (\$v !== null) {
             \$valueSet = " . $this->getTableMapClassName() . '::getValueSet(' . $this->getColumnConstant($col) . ");
-            if (!in_array(\$v, \$valueSet)) {
+            \$keyId = array_search(\$v, \$valueSet);
+            if (!is_int(\$keyId)) {
                 throw new PropelException(sprintf('Value \"%s\" is not accepted in this enumerated column', \$v));
             }
-            \$v = array_search(\$v, \$valueSet);
+            \$v = \$keyId;
         }
 
         if (\$this->$clo !== \$v) {
@@ -2924,13 +2955,7 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
             \$this->$clo = stream_get_contents(\$col);";
                 } elseif ($col->isLobType() && !$platform->hasStreamBlobImpl()) {
                     $script .= "
-            if (\$col !== null) {
-                \$this->$clo = fopen('php://memory', 'r+');
-                fwrite(\$this->$clo, \$col);
-                rewind(\$this->$clo);
-            } else {
-                \$this->$clo = null;
-            }";
+            \$this->$clo = \$this->writeResource(\$col);";
                 } elseif ($col->isTemporalType()) {
                     $dateTimeClass = $this->getDateTimeClass($col);
                     $handleMysqlDate = false;
@@ -3238,7 +3263,7 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
     {
         $fks = $this->getTable()->getForeignKeys();
         $referrers = $this->getTable()->getReferrers();
-        $hasFks = count($fks) > 0 || count($referrers) > 0;
+        $hasFks = $this->getTable()->hasRelations();
         $objectClassName = $this->getUnqualifiedClassName();
         $defaultKeyType = $this->getDefaultKeyType();
         $script .= "
@@ -3252,7 +3277,7 @@ abstract class {$this->getUnqualifiedClassName()}$parentClass implements ActiveR
      *                    TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *                    Defaults to TableMap::$defaultKeyType.
      * @param bool \$includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
-     * @param array<string, array<string>> \$alreadyDumpedObjects List of objects to skip to avoid recursion";
+     * @param array<string, array<string|bool>> \$alreadyDumpedObjects List of objects to skip to avoid recursion";
         if ($hasFks) {
             $script .= "
      * @param bool \$includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.";
@@ -3808,7 +3833,7 @@ $indent};";
         \$dataFetcher = {$queryClassName}::create(null, \$this->buildPkeyCriteria())->fetch(\$con);
         \$row = \$dataFetcher->fetch();
         \$dataFetcher->close();
-        if (!\$row) {
+        if (!\$row || \$row === true) {
             throw new PropelException('Cannot find matching row in the database to reload object values.');
         }
         \$this->hydrate(\$row, 0, true, \$dataFetcher->getIndexType()); // rehydrate
@@ -3872,10 +3897,28 @@ $indent};";
      */
     protected function addHashCode(string &$script): void
     {
+        $this->declareClass('\RuntimeException');
+        $primaryKeyFKNames = [];
+        $foreignKeyPKCount = 0;
+        foreach ($this->getTable()->getForeignKeys() as $foreignKey) {
+            $foreignKeyPKCount += count($foreignKey->getLocalPrimaryKeys());
+            if ($foreignKey->getLocalPrimaryKeys()) {
+                $primaryKeyFKNames[] = 'a' . $this->getFKPhpNameAffix($foreignKey);
+            }
+        }
+
         $script .= "
     /**
      * If the primary key is not null, return the hashcode of the
-     * primary key. Otherwise, return the hash code of the object.
+     * primary key. Otherwise, return the hash code of the object.";
+
+        if ($this->getTable()->hasPrimaryKey() || $foreignKeyPKCount > 0) {
+            $script .= "
+     *
+     * @throws \RuntimeException";
+        }
+
+        $script .= "
      *
      * @return string|int Hashcode
      */
@@ -3891,20 +3934,17 @@ $indent};";
         \$pkIsValid = $checkExpression;
         
         if (\$pkIsValid) {
-            return crc32(json_encode(\$this->getPrimaryKey(), JSON_UNESCAPED_UNICODE));
+            \$json = json_encode(\$this->getPrimaryKey(), JSON_UNESCAPED_UNICODE);
+            if (\$json === false) {
+                throw new RuntimeException('Failed to encode PK as JSON.');
+            }
+ 
+            return crc32(\$json);
         }
 ";
         }
 
         // use foreign object hashes if available
-        $primaryKeyFKNames = [];
-        $foreignKeyPKCount = 0;
-        foreach ($this->getTable()->getForeignKeys() as $foreignKey) {
-            $foreignKeyPKCount += count($foreignKey->getLocalPrimaryKeys());
-            if ($foreignKey->getLocalPrimaryKeys()) {
-                $primaryKeyFKNames[] = 'a' . $this->getFKPhpNameAffix($foreignKey);
-            }
-        }
         if ($foreignKeyPKCount > 0) {
             $fkNamesString = "['" . implode("', '", $primaryKeyFKNames) . "']";
             $script .= "
@@ -3923,7 +3963,12 @@ $indent};";
 ";
             $script .= "
         if (\$foreignPksAreValid) {
-            return crc32(json_encode(\$primaryKeyFKs, JSON_UNESCAPED_UNICODE));
+            \$json = json_encode(\$primaryKeyFKs, JSON_UNESCAPED_UNICODE);
+            if (\$json === false) {
+                throw new RuntimeException('Failed to encode combined PK as JSON.');
+            }
+
+            return crc32(\$json);
         }\n";
         }
         $script .= "
@@ -3970,7 +4015,7 @@ $indent};";
     /**
      * Returns the primary key for this object (row).
      *
-     * @return $type
+     * @return $type|null
      */
     public function getPrimaryKey()
     {
@@ -4234,7 +4279,7 @@ $indent};";
             $script .= "
         // We call the save method on the following object(s) if they
         // were passed to this object by their corresponding set
-        // method.  This object relates to these object(s) by a
+        // method. This object relates to these object(s) by a
         // foreign key reference.\n";
 
             foreach ($this->fkRelationCodeProducers as $producer) {
@@ -4312,15 +4357,28 @@ $indent};";
     protected function addDoInsert(): string
     {
         $table = $this->getTable();
+        $isMssql = $this->getPlatform() instanceof MssqlPlatform;
+
         $script = "
     /**
      * Insert the row in the database.
      *
      * @see static::doSave()
      *
-     * @param \Propel\Runtime\Connection\ConnectionInterface \$con
+     * @param \Propel\Runtime\Connection\ConnectionInterface \$con";
+        if ($isMssql && $this->getTable()->getIdMethod() != IdMethod::NO_ID_METHOD) {
+            $script .= "
      *
-     * @throws \Propel\Runtime\Exception\PropelException
+     * @throws \Propel\Runtime\Exception\PropelException";
+        }
+        if (!$isMssql) {
+            $script .= "
+     *
+     * @throws \RuntimeException
+     * @throws \Propel\Runtime\Exception\PropelException";
+        }
+
+        $script .= "
      *
      * @return void
      */
@@ -4503,6 +4561,9 @@ $indent};";
 
         try {
             \$stmt = \$con->prepare(\$sql);
+            if (!\$stmt) {
+                throw new RuntimeException(\"Failed to build PreparedStatement for SQL '\$sql'\");
+            }
             foreach (\$modifiedColumns as \$identifier => \$columnName) {
                 switch (\$columnName) {";
 
@@ -4538,14 +4599,16 @@ $indent};";
         }";
             $column = $table->getFirstPrimaryKeyColumn();
             if ($column) {
+                $columnName = $column->getPhpName();
+                $cast = $column->isNumericType() ? '(int)' : '(string)';
                 if ($table->isAllowPkInsert()) {
                     $script .= "
         if (\$pk !== null) {
-            \$this->set" . $column->getPhpName() . "(\$pk);
+            \$this->set{$columnName}($cast\$pk);
         }";
                 } else {
                     $script .= "
-        \$this->set" . $column->getPhpName() . '($pk);';
+        \$this->set{$columnName}($cast\$pk);";
                 }
             }
             $script .= "
@@ -4622,7 +4685,7 @@ $indent};";
      *
      * @var bool
      */
-    protected \$alreadyInSave = false;
+    protected bool \$alreadyInSave = false;
 ";
     }
 
@@ -5052,10 +5115,14 @@ $indent};";
 
         foreach ($table->getForeignKeys() as $fk) {
             $attributeName = $this->getFKVarName($fk);
-            $removeMethod = 'remove' . $this->getRefFKPhpNameAffix($fk, false);
+            $relationIdentifier = $fk->getIdentifierReversed();
+            $removeMethodCall = $fk->isOneToOne()
+            ? "set{$relationIdentifier}(null)"
+            : "remove{$relationIdentifier}(\$this)";
+
             $script .= "
         if (\$this->$attributeName !== null) {
-            \$this->$attributeName->$removeMethod(\$this);
+            \$this->$attributeName->$removeMethodCall;
         }";
         }
 
@@ -5224,6 +5291,7 @@ $indent};";
 
         $script .= $this->renderTemplate('baseObjectMethodMagicCall', [
             'behaviorCallScript' => $behaviorCallScript,
+            'hasGenericMutators' => $this->isAddGenericMutators(),
         ]);
     }
 
@@ -5244,5 +5312,38 @@ $indent};";
         }
 
         return $dateTimeClass;
+    }
+
+    /**
+     * @param string $script
+     *
+     * @return void
+     */
+    protected function addWriteResource(string &$script)
+    {
+        $this->declareClass('\RuntimeException');
+
+        $script .= "
+    /**
+     * @param resource|string|null \$value
+     *
+     * @throws \RuntimeException
+     *
+     * @return resource|null
+     */
+    protected function writeResource(\$value)
+    {
+        if (!is_string(\$value)) {
+            return \$value;
+        }
+        \$stream = fopen('php://memory', 'r+');
+        if (is_bool(\$stream)) {
+            throw new RuntimeException('Could not open memory stream');
+        }
+        fwrite(\$stream, \$value);
+        rewind(\$stream);
+
+        return \$stream;
+    }\n";
     }
 }

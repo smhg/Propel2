@@ -149,14 +149,6 @@ abstract class AbstractManyToManyCodeProducer extends AbstractRelationCodeProduc
     abstract protected function setterItemIsArray(): bool;
 
     /**
-     * @param string $script
-     *
-     * @return void
-     */
-    #[\Override]
-    abstract public function addDeleteScheduledItemsCode(string &$script): void;
-
-    /**
      * @return string
      */
     abstract protected function buildAdditionalCountMethods(): string;

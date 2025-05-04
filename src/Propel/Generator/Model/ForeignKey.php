@@ -1274,4 +1274,12 @@ class ForeignKey extends MappingModel
 
         return "RelatedBy$relCol";
     }
+
+    /**
+     * @return bool
+     */
+    public function isOneToOne(): bool
+    {
+        return $this->isLocalPrimaryKey() && !$this->isForeignNonPrimaryKey();
+    }
 }

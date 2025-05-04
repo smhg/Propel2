@@ -47,7 +47,7 @@ class ReferencedClasses
      *
      * @var array<string>
      */
-    protected $whiteListOfDeclaredClasses = ['PDO', 'Exception', 'DateTime', 'ReflectionClass', 'ReflectionProperty', 'DateTimeInterface'];
+    protected $whiteListOfDeclaredClasses = ['PDO', 'Exception', 'RuntimeException', 'DateTime', 'ReflectionClass', 'ReflectionProperty', 'DateTimeInterface'];
 
     /**
      * @param \Propel\Generator\Builder\Om\AbstractOMBuilder $builder

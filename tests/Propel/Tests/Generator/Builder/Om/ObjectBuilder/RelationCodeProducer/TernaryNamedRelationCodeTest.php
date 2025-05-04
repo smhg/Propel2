@@ -29,7 +29,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event, string}>|null Objects in LeTeamLeEventDate relation.
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{\Base\Team, \Base\Event, string}>|null Objects in LeTeamLeEventDate relation.
      */
     protected ?ObjectCombinationCollection $combinationLeTeamLeEventDates = null;
 
@@ -50,7 +50,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Items of LeTeamLeEventDate relation marked for deletion.
      *
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event, string}>|null
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{\Base\Team, \Base\Event, string}>|null
      */
     protected ?ObjectCombinationCollection $leTeamLeEventDatesScheduledForDeletion = null;
 ';
@@ -264,7 +264,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * Gets a combined collection of array{Team, Event, string} objects related by a many-to-many relationship
+     * Gets a combined collection of array{\Base\Team, \Base\Event, string} objects related by a many-to-many relationship
      * to the current object by way of the team_user cross-reference table.
      *
      * If the $criteria is not null, it is used to always fetch the results from the database.
@@ -276,7 +276,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event, string}>
+     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{\Base\Team, \Base\Event, string}>
      */
     public function getLeTeamLeEventDates(?Criteria $criteria = null, ?ConnectionInterface $con = null): ObjectCombinationCollection
     {
@@ -380,7 +380,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<array{Team, Event, string}> $leTeamLeEventDates A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<array{\Base\Team, \Base\Event, string}> $leTeamLeEventDates A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
      * @return static
