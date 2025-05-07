@@ -25,29 +25,11 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * @return void
      */
-    public function testRegisterClasses()
-    {
-        $producer = $this->getCodeProducer();
-        $producer->registerTargetClasses();
-        $referencedClasses = $this->getObjectPropertyValue($producer, 'referencedClasses');
-
-        $aliasedClasses = $referencedClasses->getDeclaredClasses('');
-        $expectedAliasedClasses = ['ChildEvent', 'ChildEventQuery', 'ChildTeam', 'ChildTeamQuery'];
-        $this->assertEqualsCanonicalizing($expectedAliasedClasses, $aliasedClasses);
-
-        $collectionClasses = $referencedClasses->getDeclaredClasses('Propel\Runtime\Collection');
-        $expectedCollections = ['Collection', 'ObjectCombinationCollection'];
-        $this->assertEqualsCanonicalizing($expectedCollections, $collectionClasses);
-    }
-
-    /**
-     * @return void
-     */
     public function testAttributes()
     {
         $expected = '
     /**
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event, string}>|null Objects in LeTeamLeEventDate relation.
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{\Base\Team, \Base\Event, string}>|null Objects in LeTeamLeEventDate relation.
      */
     protected ?ObjectCombinationCollection $combinationLeTeamLeEventDates = null;
 
@@ -68,7 +50,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Items of LeTeamLeEventDate relation marked for deletion.
      *
-     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event, string}>|null
+     * @var \Propel\Runtime\Collection\ObjectCombinationCollection<array{\Base\Team, \Base\Event, string}>|null
      */
     protected ?ObjectCombinationCollection $leTeamLeEventDatesScheduledForDeletion = null;
 ';
@@ -207,13 +189,13 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Returns a new query object pre configured with filters from current object and given arguments to query the database.
      *
-     * @param Event $leEvent
+     * @param \Base\Event $leEvent
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      *
      * @return ChildTeamQuery
      */
-    public function createLeTeamsQuery(ChildEvent $leEvent, ?string $date = null, ?Criteria $criteria = null): ChildTeamQuery
+    public function createLeTeamsQuery(Event $leEvent, ?string $date = null, ?Criteria $criteria = null): ChildTeamQuery
     {
         $query = ChildTeamQuery::create($criteria)
             ->filterByLeUser($this);
@@ -236,13 +218,13 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Returns a new query object pre configured with filters from current object and given arguments to query the database.
      *
-     * @param Team $leTeam
+     * @param \Base\Team $leTeam
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      *
      * @return ChildEventQuery
      */
-    public function createLeEventsQuery(ChildTeam $leTeam, ?string $date = null, ?Criteria $criteria = null): ChildEventQuery
+    public function createLeEventsQuery(Team $leTeam, ?string $date = null, ?Criteria $criteria = null): ChildEventQuery
     {
         $query = ChildEventQuery::create($criteria)
             ->filterByLeUser($this);
@@ -282,7 +264,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * Gets a combined collection of ChildTeam, ChildEvent objects related by a many-to-many relationship
+     * Gets a combined collection of array{\Base\Team, \Base\Event, string} objects related by a many-to-many relationship
      * to the current object by way of the team_user cross-reference table.
      *
      * If the $criteria is not null, it is used to always fetch the results from the database.
@@ -294,7 +276,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria Optional query object to filter the query
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
-     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{Team, Event, string}>
+     * @return \Propel\Runtime\Collection\ObjectCombinationCollection<array{\Base\Team, \Base\Event, string}>
      */
     public function getLeTeamLeEventDates(?Criteria $criteria = null, ?ConnectionInterface $con = null): ObjectCombinationCollection
     {
@@ -350,35 +332,35 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     }
 
     /**
-     * Returns a not cached ObjectCollection of ChildTeam objects. This will hit always the databases.
-     * If you have attached new ChildTeam object to this object you need to call `save` first to get
+     * Returns a not cached ObjectCollection of Team objects. This will hit always the databases.
+     * If you have attached new Team object to this object you need to call `save` first to get
      * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
      *
-     * @param Event $leEvent
+     * @param \Base\Event $leEvent
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
      * @return \Base\Collection\TeamCollection
      */
-    public function getLeTeams(ChildEvent $leEvent, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    public function getLeTeams(Event $leEvent, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
     {
         return $this->createLeTeamsQuery($leEvent, $date, $criteria)->find($con);
     }
 
     /**
-     * Returns a not cached ObjectCollection of ChildEvent objects. This will hit always the databases.
-     * If you have attached new ChildEvent object to this object you need to call `save` first to get
+     * Returns a not cached ObjectCollection of Event objects. This will hit always the databases.
+     * If you have attached new Event object to this object you need to call `save` first to get
      * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
      *
-     * @param Team $leTeam
+     * @param \Base\Team $leTeam
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
      * @return \Base\Collection\EventCollection
      */
-    public function getLeEvents(ChildTeam $leTeam, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    public function getLeEvents(Team $leTeam, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null)
     {
         return $this->createLeEventsQuery($leTeam, $date, $criteria)->find($con);
     }
@@ -398,7 +380,7 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<array{Team, Event, string}> $leTeamLeEventDates A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<array{\Base\Team, \Base\Event, string}> $leTeamLeEventDates A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
      * @return static
@@ -472,35 +454,35 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     }
 
     /**
-     * Returns the not cached count of ChildTeam objects. This will hit always the databases.
-     * If you have attached new ChildTeam object to this object you need to call `save` first to get
+     * Returns the not cached count of Team objects. This will hit always the databases.
+     * If you have attached new Team object to this object you need to call `save` first to get
      * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
      *
-     * @param Event $leEvent
+     * @param \Base\Event $leEvent
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
      * @return int
      */
-    public function countLeTeams(ChildEvent $leEvent, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
+    public function countLeTeams(Event $leEvent, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
     {
         return $this->createLeTeamsQuery($leEvent, $date, $criteria)->count($con);
     }
 
     /**
-     * Returns the not cached count of ChildEvent objects. This will hit always the databases.
-     * If you have attached new ChildEvent object to this object you need to call `save` first to get
+     * Returns the not cached count of Event objects. This will hit always the databases.
+     * If you have attached new Event object to this object you need to call `save` first to get
      * the correct return value. Use getLeTeamLeEventDates() to get the current internal state.
      *
-     * @param Team $leTeam
+     * @param \Base\Team $leTeam
      * @param string|null $date
      * @param \Propel\Runtime\ActiveQuery\Criteria|null $criteria
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con
      *
      * @return int
      */
-    public function countLeEvents(ChildTeam $leTeam, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
+    public function countLeEvents(Team $leTeam, ?string $date = null, ?Criteria $criteria = null, ?ConnectionInterface $con = null): int
     {
         return $this->createLeEventsQuery($leTeam, $date, $criteria)->count($con);
     }
@@ -517,13 +499,13 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Associate a LeTeam with this object through the team_user cross reference table.
      *
-     * @param Team $leTeam
-     * @param Event $leEvent
+     * @param \Base\Team $leTeam
+     * @param \Base\Event $leEvent
      * @param string $date
      *
      * @return static
      */
-    public function addLeTeam(ChildTeam $leTeam, ChildEvent $leEvent, string $date): static
+    public function addLeTeam(Team $leTeam, Event $leEvent, string $date): static
     {
         if ($this->combinationLeTeamLeEventDates === null) {
             $this->initLeTeamLeEventDates();
@@ -541,13 +523,13 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Associate a LeEvent with this object through the team_user cross reference table.
      *
-     * @param Event $leEvent
-     * @param Team $leTeam
+     * @param \Base\Event $leEvent
+     * @param \Base\Team $leTeam
      * @param string $date
      *
      * @return static
      */
-    public function addLeEvent(ChildEvent $leEvent, ChildTeam $leTeam, string $date): static
+    public function addLeEvent(Event $leEvent, Team $leTeam, string $date): static
     {
         if ($this->combinationLeTeamLeEventDates === null) {
             $this->initLeTeamLeEventDates();
@@ -572,13 +554,13 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @param Team $leTeam
-     * @param Event $leEvent
+     * @param \Base\Team $leTeam
+     * @param \Base\Event $leEvent
      * @param string $date
      *
      * return void
      */
-    protected function doAddLeTeamLeEventDate(ChildTeam $leTeam, ChildEvent $leEvent, string $date): void
+    protected function doAddLeTeamLeEventDate(Team $leTeam, Event $leEvent, string $date): void
     {
         $teamUser = new ChildTeamUser();
         $teamUser->setLeTeam($leTeam);
@@ -620,13 +602,13 @@ class TernaryNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Remove leTeam, leEvent, date of this object through the team_user cross reference table.
      *
-     * @param Team $leTeam
-     * @param Event $leEvent
+     * @param \Base\Team $leTeam
+     * @param \Base\Event $leEvent
      * @param string $date
      *
      * @return static
      */
-    public function removeLeTeamLeEventDate(ChildTeam $leTeam, ChildEvent $leEvent, string $date): static
+    public function removeLeTeamLeEventDate(Team $leTeam, Event $leEvent, string $date): static
     {
         if (!$this->getLeTeamLeEventDates()->contains([$leTeam, $leEvent, $date])) {
             return $this;

@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Propel\Generator\Builder\Om;
+namespace Propel\Generator\Builder\Util;
 
 use Propel\Common\Pluralizer\PluralizerInterface;
 use Propel\Generator\Model\ForeignKey;

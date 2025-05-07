@@ -23,18 +23,6 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * @return void
      */
-    public function testRegisterClasses()
-    {
-        $producer = $this->getCodeProducer();
-        $producer->registerTargetClasses();
-        $declaredClasses = $this->getObjectPropertyValue($producer, 'referencedClasses')->getDeclaredClasses('');
-        $expected = ['ChildTeam', 'ChildTeamQuery'];
-        $this->assertEqualsCanonicalizing($expected, $declaredClasses);
-    }
-
-    /**
-     * @return void
-     */
     public function testAttributes()
     {
         $expected = '
@@ -128,8 +116,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
      */
     public function initLeTeams(): void
     {
-        $collectionClassName = TeamTableMap::getTableMap()->getCollectionClassName();
-        $this->collLeTeams = new $collectionClassName();
+        $this->collLeTeams = new TeamCollection();
         $this->collLeTeamsIsPartial = true;
         $this->collLeTeams->setModel(\'\Team\');
     }
@@ -181,7 +168,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * Gets a collection of ChildTeam objects related by a many-to-many relationship
+     * Gets a collection of Team objects related by a many-to-many relationship
      * to the current object by way of the team_user cross-reference table.
      *
      * If the $criteria is not null, it is used to always fetch the results from the database.
@@ -207,7 +194,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
             } else {
                 $query = ChildTeamQuery::create(null, $criteria)
                     ->filterByLeUser($this);
-                $collLeTeams = $query->find($con);
+                $collLeTeams = $query->findObjects($con);
                 if ($criteria !== null) {
                     return $collLeTeams;
                 }
@@ -241,7 +228,7 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
      * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
      * and new objects from the given Propel collection.
      *
-     * @param \Propel\Runtime\Collection\Collection<Team> $leTeams A Propel collection.
+     * @param \Propel\Runtime\Collection\Collection<\Base\Team> $leTeams A Propel collection.
      * @param \Propel\Runtime\Connection\ConnectionInterface|null $con Optional connection object
      *
      * @return static
@@ -320,11 +307,11 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Associate a LeTeam with this object through the team_user cross reference table.
      *
-     * @param Team $leTeam
+     * @param \Base\Team $leTeam
      *
      * @return static
      */
-    public function addLeTeam(ChildTeam $leTeam): static
+    public function addLeTeam(Team $leTeam): static
     {
         if ($this->collLeTeams === null) {
             $this->initLeTeams();
@@ -346,11 +333,11 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     {
         $expected = '
     /**
-     * @param Team $leTeam
+     * @param \Base\Team $leTeam
      *
      * @return void
      */
-    protected function doAddLeTeam(ChildTeam $leTeam): void
+    protected function doAddLeTeam(Team $leTeam): void
     {
         $teamUser = new ChildTeamUser();
         $teamUser->setLeTeam($leTeam);
@@ -377,11 +364,11 @@ class ManyToManyNamedRelationCodeTest extends AbstractManyToManyCodeTest
     /**
      * Remove leTeam of this object through the team_user cross reference table.
      *
-     * @param Team $leTeam
+     * @param \Base\Team $leTeam
      *
      * @return static
      */
-    public function removeLeTeam(ChildTeam $leTeam): static
+    public function removeLeTeam(Team $leTeam): static
     {
         if (!$this->getLeTeams()->contains($leTeam)) {
             return $this;

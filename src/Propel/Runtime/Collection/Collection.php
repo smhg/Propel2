@@ -427,7 +427,7 @@ class Collection implements ArrayAccess, IteratorAggregate, Countable, Serializa
      *
      * @param \Propel\Runtime\Collection\Collection<RowFormat> $collection A Propel collection.
      *
-     * @return \Propel\Runtime\Collection\Collection<RowFormat> An array of Propel objects from the collection that are not presents in the given collection.
+     * @return static An array of Propel objects from the collection that are not presents in the given collection.
      */
     public function diff(Collection $collection): self
     {

@@ -11,6 +11,7 @@ namespace Propel\Generator\Builder\Om;
 use Propel\Common\Util\PathTrait;
 use Propel\Generator\Builder\DataModelBuilder;
 use Propel\Generator\Builder\Util\PropelTemplate;
+use Propel\Generator\Builder\Util\ReferencedClasses;
 use Propel\Generator\Exception\InvalidArgumentException;
 use Propel\Generator\Model\Column;
 use Propel\Generator\Model\ForeignKey;

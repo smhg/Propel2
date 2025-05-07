@@ -9,16 +9,21 @@
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use Propel\Generator\Builder\Om\ObjectBuilder;
-use Propel\Generator\Config\GeneratorConfig;
+use Propel\Generator\Builder\Util\EntityObjectClassNames;
 use Propel\Generator\Model\Column;
 use Propel\Generator\Model\ForeignKey;
 
 class FkRelationCodeProducer extends AbstractRelationCodeProducer
 {
- /**
-  * @var \Propel\Generator\Model\ForeignKey
-  */
+    /**
+     * @var \Propel\Generator\Model\ForeignKey
+     */
     protected $relation;
+
+    /**
+     * @var \Propel\Generator\Builder\Util\EntityObjectClassNames
+     */
+    protected EntityObjectClassNames $targetTableNames;
 
     /**
      * @param \Propel\Generator\Model\ForeignKey $relation
@@ -28,6 +33,7 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
     {
         $this->relation = $relation;
         parent::__construct($relation->getTable(), $parentBuilder);
+        $this->targetTableNames = $this->referencedClasses->useEntityObjectClassNames($relation->getForeignTable());
     }
 
     /**
@@ -37,18 +43,7 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
      */
     public function getAttributeName(): string
     {
-        return 'a' . $this->nameProducer->resolveRelationIdentifier($this->relation, false);
-    }
-
-    /**
-     * @return void
-     */
-    public function registerTargetClasses(): void
-    {
-        $targetTable = $this->relation->getForeignTable();
-
-        $this->declareClassFromBuilder($this->getNewStubObjectBuilder($targetTable), 'Child');
-        $this->declareClassFromBuilder($this->getNewStubQueryBuilder($targetTable));
+        return 'a' . $this->relation->getIdentifier();
     }
 
     /**
@@ -59,10 +54,29 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
     #[\Override]
     public function addMethods(string &$script): void
     {
-        $this->registerTargetClasses();
-
         $this->addMutator($script);
         $this->addAccessor($script);
+    }
+
+    /**
+     * Get target class data, possibly intersected with 'interface' attribute declared on foreign-key tag in schema.xml.
+     *
+     * @return array{string, string}
+     */
+    protected function getTargetClassNameOrInterface(): array
+    {
+        $className = $this->targetTableNames->useObjectBaseClassName();
+        $classNameFq = $this->targetTableNames->useObjectBaseClassName(false);
+
+        /*
+        $interface = $this->relation->getInterface();
+        if ($interface) {
+            $className .= '&' . $this->declareClass($interface);
+            $classNameFq .= '&\\' . trim($interface, '\\');
+        }
+        */
+
+        return [$className, $classNameFq];
     }
 
     /**
@@ -75,15 +89,16 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
     #[\Override]
     public function addAttributes(string &$script): void
     {
-        $className = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $this->relation->getForeignTable(), true);
-        $varName = $this->getAttributeName();
+        $className = $this->targetTableNames->useObjectBaseClassName();
+        $classNameFq = $this->targetTableNames->useObjectBaseClassName(false);
+
+        $varName = '$' . $this->getAttributeName();
 
         $script .= "
     /**
-     * @var $className|null
+     * @var $classNameFq|null
      */
-    protected $" . $varName . ";
-";
+    protected ?$className $varName = null;\n";
     }
 
     /**
@@ -107,14 +122,18 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
     #[\Override]
     public function addDeleteScheduledItemsCode(string &$script): void
     {
+        $isReadOnly = $this->relation->getForeignTable()->isReadOnly();
+
         $attributeName = $this->getAttributeName();
-        $relationIdentifierSingular = $this->nameProducer->resolveRelationIdentifier($this->relation, false);
+        $relationIdentifierSingular = $this->relation->getIdentifier();
+
+        $maybeWriteTarget = $isReadOnly ? '' : "
+            if (\$this->{$attributeName}->isModified() || \$this->{$attributeName}->isNew()) {
+                \$affectedRows += \$this->{$attributeName}->save(\$con);
+            }";
 
         $script .= "
-        if (\$this->$attributeName !== null) {
-            if (\$this->" . $attributeName . '->isModified() || $this->' . $attributeName . "->isNew()) {
-                \$affectedRows += \$this->" . $attributeName . "->save(\$con);
-            }
+        if (\$this->$attributeName !== null) {{$maybeWriteTarget}
             \$this->set{$relationIdentifierSingular}(\$this->$attributeName);
         }\n";
     }
@@ -143,32 +162,27 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
      */
     protected function addMutator(string &$script): void
     {
-        $fk = $this->relation;
-        $fkTable = $fk->getForeignTable();
-        $interface = $fk->getInterface();
-        $relationIdentifierSingular = $fk->getIdentifier();
+        $relationIdentifierSingular = $this->relation->getIdentifier();
         $varName = '$' . lcfirst($relationIdentifierSingular);
-        $reverseIdentifierSingular = $fk->getIdentifierReversed();
-        $className = $interface
-            ? $this->declareClass($interface)
-            : $this->getClassNameFromTable($fkTable);
-        $classNameFqcn = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $fkTable, true);
+        $reverseIdentifierSingular = $this->relation->getIdentifierReversed();
+
+        [$targetClassName, $targetType] = $this->getTargetClassNameOrInterface();
 
         $attributeName = $this->getAttributeName();
-        $setAdd = $fk->isLocalPrimaryKey() ? 'set' : 'add'; // one-to-one or one-to-many
+        $setAdd = $this->relation->isLocalPrimaryKey() ? 'set' : 'add'; // one-to-one or one-to-many
 
         $script .= "
     /**
-     * Declares an association between this object and a $className object.
+     * Declares an association between this object and a $targetClassName object.
      *
-     * @param {$classNameFqcn}|null $varName
+     * @param {$targetType}|null $varName
      *
      * @return \$this
      */
-    public function set{$relationIdentifierSingular}(?$className $varName = null)
+    public function set{$relationIdentifierSingular}(?$targetClassName $varName = null)
     {";
 
-        foreach ($fk->getMapping() as $map) {
+        foreach ($this->relation->getMapping() as $map) {
             [$column, $rightValueOrColumn] = $map;
             $columnName = $column->getPhpName();
             $valueVarName = '$' . lcfirst($columnName);
@@ -206,83 +220,39 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
     {
         $fk = $this->relation;
         $varName = $this->getAttributeName();
-        $fkQueryBuilder = $this->getNewStubQueryBuilder($fk->getForeignTable());
-        $fkObjectBuilder = $this->getNewObjectBuilder($fk->getForeignTable())->getStubObjectBuilder();
-        $returnDesc = '';
         $relationIdentifierSingular = $fk->getIdentifier();
 
         $relationIdentifierReversedSingular = $fk->getIdentifierReversed();
         $relationIdentifierReversedPlural = $fk->getIdentifierReversed($this->getPluralizer());
-
-        $interface = $fk->getInterface();
-
-        if ($interface) {
-            $className = $this->declareClass($interface);
-        } else {
-            $className = $this->getClassNameFromBuilder($fkObjectBuilder); // get the ClassName that has maybe a prefix
-            $returnDesc = "The associated $className object.";
-        }
-
-        $and = '';
-        $conditional = '';
-        $localColumns = []; // foreign key local attributes names
+        [$_, $targetType] = $this->getTargetClassNameOrInterface();
 
         // If the related columns are a primary key on the foreign table
         // then use findPk() instead of doSelect() to take advantage
         // of instance pooling
         $findPk = $fk->isForeignPrimaryKey();
+        $valueIsEmpty = $this->buildPropertyIsNotEmptyConditionExpression($fk);
+        $targetGetPkArgs = $this->buildTargetGetPkArgs($fk);
 
-        foreach ($fk->getMapping() as $mapping) {
-            [$column, $rightValueOrColumn] = $mapping;
+        $targetQueryClassName = $this->targetTableNames->useQueryStubClassName();
 
-            $cptype = $column->getPhpType();
-            $clo = $column->getLowercasedName();
-
-            if ($rightValueOrColumn instanceof Column) {
-                $localColumns[$rightValueOrColumn->getPosition()] = '$this->' . $clo;
-
-                if ($cptype === 'int' || $cptype === 'float' || $cptype === 'double') {
-                    $conditional .= "$and\$this->$clo != 0";
-                } elseif ($cptype === 'string') {
-                    $conditional .= "$and(\$this->$clo !== '' && \$this->$clo !== null)";
-                } else {
-                    $conditional .= "$and\$this->$clo !== null";
-                }
-            } else {
-                $val = var_export($rightValueOrColumn, true);
-                $conditional .= $and . '$this->' . $clo . ' === ' . $val;
-            }
-
-            $and = ' && ';
-        }
-
-        ksort($localColumns); // restoring the order of the foreign PK
-        $localColumns = count($localColumns) > 1 ?
-            ('[' . implode(', ', $localColumns) . ']')
-            : reset($localColumns);
-
-        $orNull = $fk->getLocalColumn()->isNotNull() ? '' : '|null';
-        $queryClassName = $this->getClassNameFromBuilder($fkQueryBuilder);
-
-        $classNameFqcn = $this->getClassNameFromBuilder($fkObjectBuilder, true);
         $script .= "
     /**
-     * Get the associated $className object
+     * Get the associated $relationIdentifierSingular object
      *
      * @param \Propel\Runtime\Connection\ConnectionInterface|null \$con Optional Connection object.
      *
-     * @return {$classNameFqcn}{$orNull} $returnDesc
+     * @return {$targetType}|null
      */
     public function get{$relationIdentifierSingular}(?ConnectionInterface \$con = null)
     {";
         $script .= "
-        if (\$this->$varName === null && ($conditional)) {";
+        if (\$this->$varName === null && ($valueIsEmpty)) {";
         if ($findPk) {
             $script .= "
-            \$this->$varName = {$queryClassName}::create()->findPk($localColumns, \$con);";
+            \$this->$varName = {$targetQueryClassName}::create()->findPk($targetGetPkArgs, \$con);";
         } else {
             $script .= "
-            \$this->$varName = {$queryClassName}::create()
+            \$this->$varName = {$targetQueryClassName}::create()
                 ->filterBy{$relationIdentifierReversedSingular}(\$this) // here
                 ->findOne(\$con);";
         }
@@ -307,5 +277,63 @@ class FkRelationCodeProducer extends AbstractRelationCodeProducer
         return \$this->$varName;
     }
 ";
+    }
+
+    /**
+     * @param \Propel\Generator\Model\ForeignKey $fk
+     *
+     * @return string
+     */
+    protected function buildPropertyIsNotEmptyConditionExpression(ForeignKey $fk): string
+    {
+        $conditions = [];
+
+        foreach ($fk->getMapping() as $mapping) {
+            [$column, $rightValueOrColumn] = $mapping;
+
+            $cptype = $column->getPhpType();
+            $clo = $column->getLowercasedName();
+
+            if ($rightValueOrColumn instanceof Column) {
+                if (in_array($cptype, ['int', 'float', 'double'])) {
+                    $conditions[] = "\$this->$clo !== null && \$this->$clo !== 0";
+                } elseif ($cptype === 'string') {
+                    $conditions[] = "\$this->$clo !== '' && \$this->$clo !== null";
+                } else {
+                    $conditions[] = "\$this->$clo !== null";
+                }
+            } else {
+                $val = var_export($rightValueOrColumn, true);
+                $conditions[] = "\$this->$clo === $val";
+            }
+        }
+
+        return implode(' && ', $conditions);
+    }
+
+    /**
+     * @param \Propel\Generator\Model\ForeignKey $fk
+     *
+     * @return string
+     */
+    protected function buildTargetGetPkArgs(ForeignKey $fk): string
+    {
+        $localColumns = [];
+
+        foreach ($fk->getMapping() as $mapping) {
+            [$column, $rightValueOrColumn] = $mapping;
+
+            if (!$rightValueOrColumn instanceof Column) {
+                continue;
+            }
+            $clo = $column->getLowercasedName();
+            $localColumns[$rightValueOrColumn->getPosition()] = '$this->' . $clo;
+        }
+
+        ksort($localColumns); // restoring the order of the foreign PK
+
+        return count($localColumns) === 1
+            ? reset($localColumns)
+            : '[' . implode(', ', $localColumns) . ']';
     }
 }

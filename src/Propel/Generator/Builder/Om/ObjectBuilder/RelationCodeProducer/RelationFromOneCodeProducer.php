@@ -8,8 +8,6 @@
 
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
-use Propel\Generator\Config\GeneratorConfig;
-
 /**
  * A one-to-one relation from an incoming FK
  */
@@ -34,8 +32,6 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
     #[\Override]
     public function addMethods(string &$script): void
     {
-        $this->registerTargetClasses();
-
         $this->addGet($script);
         $this->addSet($script);
     }
@@ -52,14 +48,15 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
     #[\Override]
     public function addAttributes(string &$script): void
     {
-        $className = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $this->relation->getTable(), true);
+        $varName = '$' . $this->getAttributeName();
+        $className = $this->targetTableNames->useObjectBaseClassName();
+        $classNameFq = $this->targetTableNames->useObjectBaseClassName(false);
 
         $script .= "
     /**
-     * @var $className|null one-to-one related $className object
+     * @var $classNameFq|null one-to-one related $className object
      */
-    protected $" . $this->getAttributeName() . ";
-";
+    protected ?$className $varName = null;\n";
     }
 
     /**
@@ -106,13 +103,11 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
      */
     protected function addGet(string &$script): void
     {
-        $referrer = $this->relation;
-        $modelClassName = $this->getClassNameFromTable($referrer->getTable());
-        $modelClassNameFq = $this->referencedClasses->resolveQualifiedModelClassNameForTable($referrer->getTable());
-
-        $queryClassName = $this->getClassNameFromBuilder($this->getNewStubQueryBuilder($referrer->getTable()));
-
+        $modelClassName = $this->targetTableNames->useObjectBaseClassName();
+        $modelClassNameFq = $this->targetTableNames->useObjectBaseClassName(false);
+        $queryClassName = $this->targetTableNames->useQueryStubClassName();
         $varName = $this->getAttributeName();
+        $relationIdentifier = $this->relation->getIdentifierReversed();
 
         $script .= "
     /**
@@ -122,15 +117,14 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
      *
      * @return $modelClassNameFq|null
      */
-    public function get" . $this->getRefFKPhpNameAffix($referrer, false) . "(?ConnectionInterface \$con = null)
+    public function get{$relationIdentifier}(?ConnectionInterface \$con = null)
     {
         if (\$this->$varName === null && !\$this->isNew()) {
             \$this->$varName = $queryClassName::create()->findPk(\$this->getPrimaryKey(), \$con);
         }
 
         return \$this->$varName;
-    }
-";
+    }\n";
     }
 
     /**
@@ -144,11 +138,11 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
     protected function addSet(string &$script): void
     {
         $referrer = $this->relation;
-        $modelClassName = $this->getClassNameFromTable($referrer->getTable());
-        $modelClassNameFq = $this->referencedClasses->resolveQualifiedModelClassNameForTable($referrer->getTable());
+        $modelClassName = $this->targetTableNames->useObjectBaseClassName();
+        $modelClassNameFq = $this->targetTableNames->useObjectBaseClassName(false);
 
         $ownIdentifier = $referrer->getIdentifier();
-        $targetIdentifier = $referrer->getIdentifierReversed();
+        $relationIdentifier = $referrer->getIdentifierReversed();
 
         $varName = $this->getAttributeName();
 
@@ -160,7 +154,7 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
      *
      * @return \$this
      */
-    public function set{$targetIdentifier}(?$modelClassName \$v = null)
+    public function set{$relationIdentifier}(?$modelClassName \$v = null)
     {
         \$this->$varName = \$v;
 
@@ -170,7 +164,6 @@ class RelationFromOneCodeProducer extends AbstractIncomingRelationCode
         }
 
         return \$this;
-    }
-";
+    }\n";
     }
 }

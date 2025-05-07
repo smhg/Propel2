@@ -4,14 +4,14 @@
      *
      * @var bool
      */
-    protected $new = true;
+    protected bool $new = true;
 
     /**
      * attribute to determine whether this object has been deleted.
      *
      * @var bool
      */
-    protected $deleted = false;
+    protected bool $deleted = false;
 
     /**
      * The columns that have been modified in current object.
@@ -19,7 +19,7 @@
      *
      * @var array<bool>
      */
-    protected $modifiedColumns = [];
+    protected array $modifiedColumns = [];
 
     /**
      * The (virtual) columns that are added at runtime
@@ -27,4 +27,4 @@
      *
      * @var array<mixed>
      */
-    protected $virtualColumns = [];
+    protected array $virtualColumns = [];

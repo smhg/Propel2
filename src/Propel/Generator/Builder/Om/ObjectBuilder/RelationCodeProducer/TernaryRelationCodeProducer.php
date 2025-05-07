@@ -8,9 +8,7 @@
 
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
-use Propel\Generator\Config\GeneratorConfig;
 use Propel\Generator\Model\ForeignKey;
-use Propel\Generator\Model\Table;
 use Propel\Runtime\Collection\ObjectCombinationCollection;
 
 /**
@@ -25,16 +23,6 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      * @var string
      */
     protected const ATTRIBUTE_PREFIX = 'combination';
-
-    /**
-     * @return void
-     */
-    #[\Override]
-    public function registerTargetClasses(): void
-    {
-        parent::registerTargetClasses();
-        $this->referencedClasses->registerClassByFullyQualifiedName(ObjectCombinationCollection::class);
-    }
 
     /**
      * Adds the method that initializes the referrer fkey collection.
@@ -71,11 +59,11 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
     protected function buildCreateQueryForRelation(string &$script, ForeignKey $relationFk): void
     {
         $sourceIdentifierSingular = $this->names->getSourceIdentifier(false);
-        $relationIdentifier = $this->nameProducer->resolveRelationIdentifier($relationFk, true);
+        $relationIdentifierPlural = $relationFk->getIdentifier($this->getPluralizer());
 
-        $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $relationFk->getForeignTable());
+        $relatedQueryClassName = $this->signature->getClassNameImporter($relationFk)->useQueryStubClassName();
 
-        [$signature, $_, $phpDoc] = $this->collectSignature($relationFk, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
+        [$signature, $_, $phpDoc] = $this->signature->buildFullSignature(['fkToIgnore' => $relationFk, 'withDefaultValues' => SignatureCollector::USE_DEFAULT_NULL]);
 
         $relatedUseQueryClassName = $this->getNewStubQueryBuilder($this->crossRelation->getMiddleTable())->getUnqualifiedClassName();
         $relatedUseQueryGetter = 'use' . ucfirst($relatedUseQueryClassName);
@@ -89,7 +77,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
      *
      * @return $relatedQueryClassName
      */
-    public function create{$relationIdentifier}Query($signature, ?Criteria \$criteria = null): $relatedQueryClassName
+    public function create{$relationIdentifierPlural}Query($signature, ?Criteria \$criteria = null): $relatedQueryClassName
     {
         \$query = $relatedQueryClassName::create(\$criteria)
             ->filterBy{$sourceIdentifierSingular}(\$this);
@@ -178,17 +166,13 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
         $attributeName = $this->names->getAttributeWithCollectionName();
         $attributeIsPartialName = $this->names->getAttributeIsPartialName();
 
-        $classNames = [];
-        foreach ($this->crossRelation->getCrossForeignKeys() as $crossFK) {
-            $classNames[] = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $crossFK->getForeignTable());
-        }
-        $classNames = implode(', ', $classNames);
-        $relatedQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $this->crossRelation->getMiddleTable());
+        $combinedType = $this->signature->buildCombinedType();
+        $relatedQueryClassName = $this->middleTableNames->useQueryStubClassName();
         $ownModelClassName = $this->getTable()->getPhpName();
 
         $script .= "
     /**
-     * Gets a combined collection of $classNames objects related by a many-to-many relationship
+     * Gets a combined collection of $combinedType objects related by a many-to-many relationship
      * to the current object by way of the $crossRefTableName cross-reference table.
      *
      * If the \$criteria is not null, it is used to always fetch the results from the database.
@@ -287,10 +271,10 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
         $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
         $relationIdentifier = $this->nameProducer->resolveRelationIdentifier($relationFk, true);
 
-        $relatedObjectClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $relationFk->getForeignTable());
+        $relatedObjectClassName = $this->signature->getClassNameImporter($relationFk)->useObjectBaseClassName();
 
-        [$argumentDeclaration, $functionParameters, $phpDoc] = $this->collectSignature($relationFk, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
-        [$_, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType($relationFk->getForeignTable());
+        [$argumentDeclaration, $functionParameters, $phpDoc] = $this->signature->buildFullSignature(['fkToIgnore' => $relationFk, 'withDefaultValues' => SignatureCollector::USE_DEFAULT_NULL]);
+        $objectCollectionType = $this->signature->getClassNameImporter($relationFk)->useCollectionClassName(false);
 
         $script .= "
     /**
@@ -320,19 +304,14 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
     }
 
     /**
-     * @param \Propel\Generator\Model\Table|null $table
-     *
      * @return array{string, string}
      */
     #[\Override]
-    protected function resolveObjectCollectionClassNameAndType(?Table $table = null): array
+    protected function resolveObjectCollectionClassNameAndType(): array
     {
-        if ($table) {
-            return parent::resolveObjectCollectionClassNameAndType($table);
-        }
-
+        $this->referencedClasses->registerClassByFullyQualifiedName(ObjectCombinationCollection::class);
         $className = 'ObjectCombinationCollection';
-        $collectionType = $this->getCollectionContentType();
+        $collectionType = $this->signature->buildCombinedType();
         $typeString = '\\' . ObjectCombinationCollection::class . "<$collectionType>";
 
         return [$className, $typeString];
@@ -347,7 +326,7 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
     public function addDeleteScheduledItemsCode(string &$script): void
     {
         $scheduledForDeletionVarName = $this->names->getAttributeScheduledForDeletionName();
-        $middleQueryClassName = $this->resolveMiddleQueryClassName();
+        $middleQueryClassName = $this->middleTableNames->useQueryStubClassName();
 
         $crossPks = $this->crossRelation->getMiddleTable()->getPrimaryKey();
 
@@ -442,9 +421,9 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
         $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
         $relationIdentifier = $this->nameProducer->resolveRelationIdentifier($fk, true);
 
-        $argsCsv = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $fk->getForeignTable());
+        $argsCsv = $this->signature->getClassNameImporter($fk)->useObjectBaseClassName();
 
-        [$argumentDeclarations, $functionParameters, $phpDoc] = $this->collectSignature($fk, FunctionArgumentSignatureCollector::USE_DEFAULT_NULL)->buildFullSignature();
+        [$argumentDeclarations, $functionParameters, $phpDoc] = $this->signature->buildFullSignature(['fkToIgnore' => $fk, 'withDefaultValues' => SignatureCollector::USE_DEFAULT_NULL]);
 
         return "
     /**
@@ -474,13 +453,13 @@ class TernaryRelationCodeProducer extends AbstractManyToManyCodeProducer
     {
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
         $sourceIdentifierSingular = $this->names->getSourceIdentifier(false);
-        $middleModelClassName = $this->names->getMiddleModelClassName();
+        $middleModelClassName = $this->middleTableNames->useObjectStubClassName();
 
         $refKObjectClassName = $this->nameProducer->buildForeignKeyBackReferenceNameAffix($this->crossRelation->getIncomingForeignKey(), false);
         $tblFK = $this->crossRelation->getIncomingForeignKey()->getTable();
         $foreignObjectName = '$' . $tblFK->getCamelCaseName();
 
-        [$argumentDeclarations, $shortSignature, $phpDoc] = $this->collectSignature()->buildFullSignature();
+        [$argumentDeclarations, $_, $phpDoc] = $this->signature->buildFullSignature();
 
         $script .= "
     /**{$phpDoc}

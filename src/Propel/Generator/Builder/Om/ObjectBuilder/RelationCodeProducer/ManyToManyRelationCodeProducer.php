@@ -8,9 +8,10 @@
 
 namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
-use Propel\Generator\Config\GeneratorConfig;
+use Propel\Generator\Builder\Om\ObjectBuilder;
+use Propel\Generator\Builder\Util\EntityObjectClassNames;
+use Propel\Generator\Model\CrossRelation;
 use Propel\Generator\Model\ForeignKey;
-use Propel\Generator\Model\Table;
 
 /**
  * Produces code for cross/many-to-many relations that requires only an element
@@ -21,6 +22,21 @@ use Propel\Generator\Model\Table;
 class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
 {
     /**
+     * @var \Propel\Generator\Builder\Util\EntityObjectClassNames
+     */
+    protected EntityObjectClassNames $targetTableNames;
+
+    /**
+     * @param \Propel\Generator\Model\CrossRelation $crossRelation
+     * @param \Propel\Generator\Builder\Om\ObjectBuilder $parentBuilder
+     */
+    public function __construct(CrossRelation $crossRelation, ObjectBuilder $parentBuilder)
+    {
+        parent::__construct($crossRelation, $parentBuilder);
+        $this->targetTableNames = $this->referencedClasses->useEntityObjectClassNames($this->getFkToTarget()->getForeignTable());
+    }
+
+    /**
      * @return \Propel\Generator\Model\ForeignKey
      */
     protected function getFkToTarget(): ForeignKey
@@ -29,14 +45,15 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
     }
 
     /**
-     * @param \Propel\Generator\Model\Table|null $table
-     *
      * @return array{string, string}
      */
     #[\Override]
-    protected function resolveObjectCollectionClassNameAndType(?Table $table = null): array
+    protected function resolveObjectCollectionClassNameAndType(): array
     {
-        return parent::resolveObjectCollectionClassNameAndType($table ?? $this->getFkToTarget()->getForeignTable());
+        return [
+            $this->targetTableNames->useCollectionClassName(),
+            $this->targetTableNames->useCollectionClassName(false),
+        ];
     }
 
     /**
@@ -65,15 +82,11 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
     #[\Override]
     protected function addInit(string &$script): void
     {
-        $fk = $this->getFkToTarget();
-        $relatedObjectClassName = $this->referencedClasses->getInternalNameOfBuilderResultClass(
-            $this->getNewStubObjectBuilder($fk->getForeignTable()),
-            true,
-        );
+        $collectionClassName = $this->targetTableNames->useCollectionClassName();
+        $relatedObjectClassName = $this->targetTableNames->useObjectStubClassName(false);
+        $foreignTableMapName = $this->targetTableNames->useTablemapClassName();
 
-        $foreignTableMapName = $this->resolveClassNameForTable(GeneratorConfig::KEY_TABLEMAP, $fk->getForeignTable());
-
-        $script .= $this->buildInitCode(null, $foreignTableMapName, $relatedObjectClassName);
+        $script .= $this->buildInitCode($collectionClassName, $foreignTableMapName, $relatedObjectClassName);
     }
 
     /**
@@ -115,14 +128,13 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
 
         $targetIdentifierPlural = $this->names->getTargetIdentifier(true);
 
-        $targetTable = $this->getFkToTarget()->getForeignTable();
-        $targetModelClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $targetTable);
-        $targetQueryClassName = $this->resolveClassNameForTable(GeneratorConfig::KEY_QUERY_STUB, $targetTable);
+        $targetModelClassName = $this->targetTableNames->useObjectBaseClassName();
+        $targetQueryClassName = $this->targetTableNames->useQueryStubClassName();
 
         $attributeName = $this->names->getAttributeWithCollectionName();
         $attributeIsPartialName = $this->names->getAttributeIsPartialName();
 
-        [$objectCollectionClass, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType($this->getFkToTarget()->getForeignTable());
+        [$objectCollectionClass, $objectCollectionType] = $this->resolveObjectCollectionClassNameAndType();
         $ownModelClassName = $this->getTable()->getPhpName();
 
         $script .= "
@@ -153,7 +165,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
             } else {
                 \$query = $targetQueryClassName::create(null, \$criteria)
                     ->filterBy{$sourceIdentifierSingular}(\$this);
-                \$$attributeName = \$query->find(\$con);
+                \$$attributeName = \$query->findObjects(\$con);
                 if (\$criteria !== null) {
                     return \$$attributeName;
                 }
@@ -195,7 +207,7 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
     public function addDeleteScheduledItemsCode(string &$script): void
     {
         $scheduledForDeletionVarName = $this->names->getAttributeScheduledForDeletionName();
-        $middleQueryClassName = $this->resolveMiddleQueryClassName();
+        $middleQueryClassName = $this->middleTableNames->useQueryStubClassName();
 
         $crossPks = $this->crossRelation->getMiddleTable()->getPrimaryKey();
 
@@ -264,13 +276,13 @@ class ManyToManyRelationCodeProducer extends AbstractManyToManyCodeProducer
     #[\Override]
     protected function buildDoAdd(string &$script): void
     {
-        $middleTableModelClass = $this->names->getMiddleTableModelClass();
+        $middleTableModelClass = $this->middleTableNames->useObjectStubClassName(true, 'Child');
 
         $middleTableIdentifierSingular = $this->names->getMiddleTableIdentifier(false);
         $middleTableObject = '$' . $this->crossRelation->getMiddleTable()->getCamelCaseName();
 
-        [$parameterDeclaration, $_, $phpDoc] = $this->collectSignature()->buildFullSignature();
-        $targetGetterParameters = $this->collectSignature($this->getFkToTarget())->buildFunctionParameterVariables();
+        [$parameterDeclaration, $_, $phpDoc] = $this->signature->buildFullSignature();
+        $targetGetterParameters = $this->signature->buildFunctionParameterVariables(['fkToIgnore' => $this->getFkToTarget()]);
 
         $targetIdentifierSingular = $this->names->getTargetIdentifier(false);
         $targetObject = '$' . $this->names->getTargetIdentifier(false, true);

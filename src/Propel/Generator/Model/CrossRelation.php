@@ -240,7 +240,8 @@ class CrossRelation
     }
 
     /**
-     * The source table.
+     * The table owning this instance of CrossRelation (all of of the target
+     * tables have their own).
      *
      * @return \Propel\Generator\Model\Table
      */

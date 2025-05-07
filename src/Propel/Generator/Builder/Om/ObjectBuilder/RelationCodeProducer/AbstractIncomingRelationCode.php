@@ -10,8 +10,9 @@ namespace Propel\Generator\Builder\Om\ObjectBuilder\RelationCodeProducer;
 
 use Propel\Common\Pluralizer\PluralizerInterface;
 use Propel\Generator\Builder\Om\ObjectBuilder;
-use Propel\Generator\Config\GeneratorConfig;
+use Propel\Generator\Builder\Util\EntityObjectClassNames;
 use Propel\Generator\Model\ForeignKey;
+use Propel\Runtime\Collection\ObjectCollection;
 
 /**
  * An incoming relation ("refFK"), to a single row (incoming one-to-one)
@@ -25,6 +26,11 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
     protected $relation;
 
     /**
+     * @var \Propel\Generator\Builder\Util\EntityObjectClassNames
+     */
+    protected EntityObjectClassNames $targetTableNames;
+
+    /**
      * @param \Propel\Generator\Model\ForeignKey $relation
      * @param \Propel\Generator\Builder\Om\ObjectBuilder $parentBuilder
      */
@@ -32,6 +38,7 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
     {
         $this->relation = $relation;
         parent::__construct($relation->getForeignTable(), $parentBuilder);
+        $this->targetTableNames = $this->referencedClasses->useEntityObjectClassNames($relation->getTable());
     }
 
     /**
@@ -66,16 +73,6 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
     abstract public function getAttributeName(): string;
 
     /**
-     * @return void
-     */
-    public function registerTargetClasses(): void
-    {
-        $targetTable = $this->relation->getTable();
-        $this->declareClassFromBuilder($this->getNewStubObjectBuilder($targetTable), 'Child');
-        $this->declareClassFromBuilder($this->getNewStubQueryBuilder($targetTable));
-    }
-
-    /**
      * @param string $script
      * @param array<\Propel\Generator\Model\ForeignKey> $referrers
      * @param \Propel\Common\Pluralizer\PluralizerInterface $pluralizer
@@ -95,7 +92,8 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
      * @return void
      */
     public function initRelation(\$relationName): void
-    {";
+    {
+        match (\$relationName) {";
         foreach ($referrers as $refFK) {
             if ($refFK->isLocalPrimaryKey()) {
                 continue;
@@ -105,13 +103,11 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
             $relationIdentifierPlural = $refFK->getIdentifierReversed($pluralizer);
 
             $script .= "
-        if (\$relationName === '$relationIdentifierSingular') {
-            \$this->init$relationIdentifierPlural();
-
-            return;
-        }";
+            '$relationIdentifierSingular' => \$this->init$relationIdentifierPlural(),";
         }
         $script .= "
+            default => null
+        };
     }\n";
     }
 
@@ -136,14 +132,17 @@ abstract class AbstractIncomingRelationCode extends AbstractRelationCodeProducer
      */
     public function addScheduledForDeletionAttribute(string &$script): void
     {
+        $this->declareClass(ObjectCollection::class);
+
         $refFK = $this->relation;
-        $className = $this->resolveClassNameForTable(GeneratorConfig::KEY_OBJECT_STUB, $refFK->getTable(), true);
+        $classNameFq = $this->targetTableNames->useObjectBaseClassName(false);
+
         $fkName = lcfirst($this->getRefFKPhpNameAffix($refFK, true));
 
         $script .= "
     /**
-     * @var \Propel\Runtime\Collection\ObjectCollection<{$className}>|null
+     * @var \Propel\Runtime\Collection\ObjectCollection<{$classNameFq}>|null
      */
-    protected \${$fkName}ScheduledForDeletion;\n";
+    protected ObjectCollection|null \${$fkName}ScheduledForDeletion = null;\n";
     }
 }

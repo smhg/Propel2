@@ -40,22 +40,6 @@ abstract class AbstractRelationCodeProducer extends DataModelBuilder
     }
 
     /**
-     * @param \Propel\Generator\Model\Table|null $table
-     *
-     * @return array{string, string}
-     */
-    protected function resolveObjectCollectionClassNameAndType(?Table $table = null): array
-    {
-        $table ??= $this->getTable();
-        $builder = $this->builderFactory->createObjectCollectionBuilder($table);
-        $fqcn = $builder->resolveTableCollectionClassNameFq();
-        $className = $this->declareClass($fqcn);
-        $typeString = $builder->resolveTableCollectionClassType();
-
-        return [$className, $typeString];
-    }
-
-    /**
      * @param string $script
      *
      * @return void
@@ -88,7 +72,7 @@ abstract class AbstractRelationCodeProducer extends DataModelBuilder
     /**
      * @param string $script
      *
-     * @return string
+     * @return string Attribute name used by ObjectBuilder.
      */
     abstract public function addClearReferencesCode(string &$script): string;
 }

@@ -113,8 +113,13 @@
         if ($this === $obj) {
             return true;
         }
-
+<?php if (!$hasArrayKey): ?>
         if ($this->getPrimaryKey() === null || $obj->getPrimaryKey() === null) {
+<?php else: ?>
+        $checkNull = fn (mixed $v): bool => $v === null;
+        $allNull = fn (array $array): bool => array_all($array, $checkNull);
+        if ($allNull($this->getPrimaryKey()) || $allNull($obj->getPrimaryKey())) {
+<?php endif; ?>
             return false;
         }
 
@@ -209,7 +214,11 @@
             $parser = AbstractParser::getParser($parser);
         }
 
+<?php if ($hasFks): ?>
         return $parser->fromArray($this->toArray($keyType, $includeLazyLoadColumns, [], true));
+<?php else: ?>
+        return $parser->fromArray($this->toArray($keyType, $includeLazyLoadColumns));
+<?php endif?>
     }
 
     /**

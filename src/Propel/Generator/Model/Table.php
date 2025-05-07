@@ -2398,4 +2398,12 @@ class Table extends ScopedMappingModel implements IdMethod
     {
         return $this->makeNamespaceAbsolute($this->namespace) . '\\' . $this->getPhpName();
     }
+
+    /**
+     * @return bool
+     */
+    public function hasRelations(): bool
+    {
+        return $this->foreignKeys || $this->referrers;
+    }
 }
