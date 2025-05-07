@@ -14,6 +14,7 @@
     {
         /** @var <?= $queryClass ?><static> $q */
         $q = $this->useInQuery('<?= $relationName ?>', $modelAlias, $queryClass, $typeOfIn);
+
         return $q;
     }
 
@@ -31,5 +32,6 @@
     {
         /** @var <?= $queryClass ?><static> $q */
         $q = $this->useInQuery('<?= $relationName ?>', $modelAlias, $queryClass, '<?= $notInType ?>');
+
         return $q;
     }
