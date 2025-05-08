@@ -8,6 +8,7 @@
 
 namespace Propel\Generator\Builder\Om;
 
+use LogicException;
 use Propel\Generator\Builder\Util\EntityObjectClassNames;
 use Propel\Generator\Builder\Util\PropelTemplate;
 use Propel\Generator\Model\Column;
@@ -15,8 +16,7 @@ use Propel\Generator\Model\CrossRelation;
 use Propel\Generator\Model\ForeignKey;
 use Propel\Generator\Model\PropelTypes;
 use Propel\Generator\Model\Table;
-use Propel\Runtime\ActiveQuery\Criteria;
-use Propel\Runtime\ActiveQuery\Criterion\ExistsQueryCriterion;
+use Propel\Runtime\ActiveQuery\FilterExpression\ExistsFilter;
 
 /**
  * Generates a base Query class for user object model (OM).
@@ -444,20 +444,26 @@ class QueryBuilder extends AbstractOMBuilder
         $objectClassNameFq = $this->tableNames->useObjectBaseClassName(false);
         $tableMapClassName = $this->getTableMapClassName();
         $table = $this->getTable();
-
-        if (!$table->hasCompositePrimaryKey()) {
-            $pkType = 'mixed';
+        if (!$table->hasPrimaryKey()) {
+            $pkType = 'never';
+            $codeExample = '';
+        } elseif (!$table->hasCompositePrimaryKey()) {
+            $pkType = $table->getPrimaryKey()[0]->resolveQualifiedType();
             $codeExample = '$obj = $c->findPk(12, $con);';
         } else {
-            $colNames = array_map(fn (Column $col) => '$' . $col->getName(), $table->getPrimaryKey());
-            $pkType = 'array[' . implode(', ', $colNames) . ']';
-            $randomPkValues = array_slice([12, 34, 56, 78, 91], 0, count($colNames));
+            $columnTypes = array_map(fn (Column $col) => $col->resolveQualifiedType(), $table->getPrimaryKey());
+            $pkType = 'array{' . implode(', ', $columnTypes) . '}';
 
+            $colNames = array_map(fn (Column $col) => '$' . $col->getName(), $table->getPrimaryKey());
+            $randomPkValues = array_slice([12, 34, 56, 78, 91], 0, count($colNames));
             $pkCsv = implode(', ', $randomPkValues);
-            $codeExample = "\$obj = \$c->findPk(array($pkCsv), \$con);";
+            $codeExample = "\$obj = \$c->findPk([$pkCsv], \$con);";
         }
 
-        $buildPoolKeyStatement = $this->getBuildPoolKeyStatement($table->getPrimaryKey());
+        if ($table->hasPrimaryKey()) {
+            $buildPoolKeyStatement = $this->getBuildPoolKeyStatement($table->getPrimaryKey());
+            $buildPoolKeyStatement = str_replace('$key === null || ', '', $buildPoolKeyStatement); // remove null check to appease analyzer
+        }
 
         $script .= "
     /**
@@ -484,10 +490,6 @@ class QueryBuilder extends AbstractOMBuilder
         }
 
         $script .= "
-        if (\$key === null) {
-            return null;
-        }
-
         if (\$con === null) {
             \$con = Propel::getServiceContainer()->getReadConnection({$this->getTableMapClass()}::DATABASE_NAME);
         }
@@ -620,8 +622,10 @@ class QueryBuilder extends AbstractOMBuilder
 
             $script .= "
         \$poolKey = $buildPoolKeyStatementFromKey;
+        /** @var $objectClassNameFq \$model */
+        \$model = {$tableMapClassName}::getInstanceFromPool(\$poolKey);
 
-        return {$tableMapClassName}::getInstanceFromPool(\$poolKey);
+        return \$model;
     }\n";
         }
     }
@@ -691,18 +695,20 @@ class QueryBuilder extends AbstractOMBuilder
      * @param array<\Propel\Generator\Model\Column> $pkColumns Columns used to build hash.
      * @param string $varLiteral The literal for the variable holding the key in the script.
      *
+     * @throws \LogicException
+     *
      * @return string
      */
     protected function getBuildPoolKeyStatement(array $pkColumns, string $varLiteral = '$key'): string
     {
         $numberOfPks = count($pkColumns);
-        if ($numberOfPks === 1) {
-            return $this->getTableMapBuilder()->getInstancePoolKeySnippet($varLiteral);
+        if ($numberOfPks === 0) {
+            throw new LogicException("PoolKeyStatement cannot be created for table without PKs (in {$this->getQualifiedClassName()}).");
         }
-        $pkIndexes = range(0, $numberOfPks - 1);
-        $pkVariableLiteral = preg_filter('/(\d+)/', $varLiteral . '[${1}]', $pkIndexes); // put ids into "$key[]"
 
-        return $this->getTableMapBuilder()->getInstancePoolKeySnippet($pkVariableLiteral);
+        return $numberOfPks === 1
+            ? "(string)$varLiteral"
+            : "serialize(array_map(fn(\$k) => (string)\$k, $varLiteral))";
     }
 
     /**
@@ -897,11 +903,11 @@ class QueryBuilder extends AbstractOMBuilder
     /**
      * Filter the query by a list of primary keys
      *
-     * @param array|int \$keys The list of primary key to use for the query
+     * @param array \$keys The list of primary key values to use for the query
      *
      * @return \$this
      */
-    public function filterByPrimaryKeys(\$keys)
+    public function filterByPrimaryKeys(array \$keys)
     {";
 
         if (!$table->hasPrimaryKey()) {
@@ -1347,9 +1353,7 @@ class QueryBuilder extends AbstractOMBuilder
     protected function addFilterByRefFk(string &$script, ForeignKey $fk): void
     {
         $this->declareClass('\Propel\Runtime\Exception\PropelException');
-        if (!$fk->isComposite()) {
-            $this->declareClass('\Propel\Runtime\Collection\ObjectCollection');
-        }
+        $this->declareClass('\Propel\Runtime\Collection\ObjectCollection');
 
         $fkTable = $this->getTable()->getDatabase()->getTable($fk->getTableName());
         $targetObjectBuilder = $this->getNewObjectBuilder($fkTable);
@@ -1487,7 +1491,7 @@ class QueryBuilder extends AbstractOMBuilder
         \$leftAlias = \$this->useAliasInSQL ? \$this->getModelAlias() : null;
         \$join->setupJoinCondition(\$this, \$relationMap, \$leftAlias, \$relationAlias);
         \$previousJoin = \$this->getPreviousJoin();
-        if (\$previousJoin) {
+        if (\$previousJoin instanceof ModelJoin) {
             \$join->setPreviousJoin(\$previousJoin);
         }
 
@@ -1600,8 +1604,8 @@ class QueryBuilder extends AbstractOMBuilder
             'queryClass' => $queryClass,
             'relationDescription' => $this->getRelationDescription($relationName, $fkTable),
             'relationName' => $relationName,
-            'existsType' => ExistsQueryCriterion::TYPE_EXISTS,
-            'notExistsType' => ExistsQueryCriterion::TYPE_NOT_EXISTS,
+            'existsType' => ExistsFilter::TYPE_EXISTS,
+            'notExistsType' => ExistsFilter::TYPE_NOT_EXISTS,
         ];
         $templatePath = $this->getTemplatePath(__DIR__);
 
@@ -1628,8 +1632,6 @@ class QueryBuilder extends AbstractOMBuilder
             'queryClass' => $queryClass,
             'relationDescription' => $this->getRelationDescription($relationName, $fkTable),
             'relationName' => $relationName,
-            'inType' => trim(Criteria::IN),
-            'notInType' => trim(Criteria::NOT_IN),
         ];
         $templatePath = $this->getTemplatePath(__DIR__);
 
@@ -1670,7 +1672,7 @@ class QueryBuilder extends AbstractOMBuilder
     /**
      * Use the {$relationName} relation {$fkTable->getPhpName()} object
      *
-     * @param callable({$queryClass}):{$queryClass} \$callable A function working on the related query
+     * @param callable({$queryClass}<mixed>):{$queryClass}<mixed> \$callable A function working on the related query
      * @param string|null \$relationAlias optional alias for the relation
      * @param string|null \$joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
@@ -1819,6 +1821,8 @@ class QueryBuilder extends AbstractOMBuilder
      * Code to execute before every SELECT statement
      *
      * @param \Propel\Runtime\Connection\ConnectionInterface \$con The connection object used by the query
+     *
+     * @return void
      */
     protected function basePreSelect(ConnectionInterface \$con): void
     {" . $behaviorCode . "
@@ -1847,7 +1851,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @param \Propel\Runtime\Connection\ConnectionInterface \$con The connection object used by the query
      *
-     *  @return int|null
+     * @return int|null
      */
     protected function basePreDelete(ConnectionInterface \$con): ?int
     {" . $behaviorCode . "
@@ -1876,6 +1880,7 @@ class QueryBuilder extends AbstractOMBuilder
      *
      * @param int \$affectedRows the number of deleted rows
      * @param \Propel\Runtime\Connection\ConnectionInterface \$con The connection object used by the query
+     *
      * @return int|null
      */
     protected function basePostDelete(int \$affectedRows, ConnectionInterface \$con): ?int

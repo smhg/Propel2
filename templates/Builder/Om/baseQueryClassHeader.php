@@ -78,7 +78,7 @@
  * @method <?= $objectCollectionType ?> findObjects(\Propel\Runtime\Connection\ConnectionInterface|null $con = null) Get <?= $modelClass ?> objects in ObjectCollection
  *
 <?php foreach($columns as $column):?>
- * @method array<<?= $modelClass ?>>|\Propel\Runtime\Collection\Collection<<?= $modelClass ?>> findBy<?= $column->getPhpName() ?>(<?= $column->getPhpType() ?>|array<<?= $column->getPhpType() ?>> $<?= $column->getName() ?>) Return <?= $modelClass ?> objects filtered by the <?= $column->getName() ?> column
+ * @method array<<?= $modelClass ?>>|\Propel\Runtime\Collection\Collection<<?= $modelClass ?>> findBy<?= $column->getPhpName() ?>(<?= $column->getTypeHint() ?: $column->resolveQualifiedType() ?>|array<<?= $column->resolveQualifiedType() ?>> $<?= $column->getName() ?>) Return <?= $modelClass ?> objects filtered by the <?= $column->getName() ?> column
 <?php endforeach;?>
  *
  * @method array<<?= $modelClass ?>>|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, \Propel\Runtime\Connection\ConnectionInterface|null $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
