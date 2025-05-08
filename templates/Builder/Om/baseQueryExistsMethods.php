@@ -2,9 +2,9 @@
     /**
      * Use the <?= $relationDescription ?> for an EXISTS query.
      *
-     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
-     *     
      * @phpstan-param \Propel\Runtime\ActiveQuery\FilterExpression\ExistsFilter::TYPE_* $typeOfExists
+     *     
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
      *
      * @param string|null $modelAlias sets an alias for the nested query
      * @param class-string<\Propel\Runtime\ActiveQuery\ModelCriteria>|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class

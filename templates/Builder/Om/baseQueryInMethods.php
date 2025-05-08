@@ -2,9 +2,9 @@
     /**
      * Use the <?= $relationDescription ?> for an IN query.
      *
-     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
-     *
      * @phpstan-param \Propel\Runtime\ActiveQuery\Criteria::*IN $typeOfIn
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
      *
      * @param string|null $modelAlias sets an alias for the nested query
      * @param class-string<\Propel\Runtime\ActiveQuery\ModelCriteria>|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class

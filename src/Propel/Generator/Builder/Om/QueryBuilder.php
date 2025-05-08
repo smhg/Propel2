@@ -451,7 +451,7 @@ class QueryBuilder extends AbstractOMBuilder
             $pkType = $table->getPrimaryKey()[0]->resolveQualifiedType();
             $codeExample = '$obj = $c->findPk(12, $con);';
         } else {
-            $columnTypes = array_map(fn (Column $col) => $col->resolveQualifiedType(), $table->getPrimaryKey());
+            $columnTypes = array_map(fn (Column $col) => "{$col->resolveQualifiedType()}|null", $table->getPrimaryKey());
             $pkType = 'array{' . implode(', ', $columnTypes) . '}';
 
             $colNames = array_map(fn (Column $col) => '$' . $col->getName(), $table->getPrimaryKey());
@@ -708,7 +708,7 @@ class QueryBuilder extends AbstractOMBuilder
 
         return $numberOfPks === 1
             ? "(string)$varLiteral"
-            : "serialize(array_map(fn(\$k) => (string)\$k, $varLiteral))";
+            : "serialize(array_map(fn (\$k) => (string)\$k, $varLiteral))";
     }
 
     /**
