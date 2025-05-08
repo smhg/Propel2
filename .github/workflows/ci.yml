@@ -180,4 +180,4 @@ jobs:
             - name: Analyze Model Code
               run: |
                 bin/propel test:prepare --vendor=sqlite --dsn='sqlite:/tmp/perpl.sq3' --exclude-database \
-                && composer stan -a autoload.php.dist tests/Fixtures/bookstore/build/classes/Propel/Tests/Bookstore/Base/*[^Query].php
+                && composer stan -- -a autoload.php.dist tests/Fixtures/bookstore/build/classes/Propel/Tests/Bookstore/Base/*[^Query].php
