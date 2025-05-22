@@ -14,7 +14,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                php-version: [ '7.4', '8.2', '8.3', '8.4' ]
+                php-version: [ '7.4', '8.1', '8.2', '8.3', '8.4' ]
                 db-type: [ sqlite, mysql, pgsql, agnostic ]
                 symfony-version: [ '5-latest', '6-latest', '7-latest']
                 exclude:
@@ -22,6 +22,7 @@ jobs:
                     php-version: '7.4'
                   - symfony-version: '7-latest'
                     php-version: '7.4'
+                    php-version: '8.1'
         env:
             DB_NAME: 'propel_tests'
             DB_USER: 'propel'
