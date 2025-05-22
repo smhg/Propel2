@@ -26,6 +26,7 @@ jobs:
                     php-version: '7.4'
                   - symfony-version: '7-max'
                     php-version: '7.4'
+                  - symfony-version: '7-latest'
                     php-version: '8.1'
         env:
             DB_NAME: 'propel_tests'
