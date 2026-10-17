@@ -23,13 +23,21 @@ class Unique extends Constraint
     public $column = '';
 
     /**
-     * @param string|null $message
+     * @param array|string|null $message Message, or an array of options (BC)
      * @param string|null $column
      * @param array|null $groups
      * @param mixed $payload
      */
-    public function __construct(?string $message = null, ?string $column = null, ?array $groups = null, $payload = null)
+    public function __construct(array|string|null $message = null, ?string $column = null, ?array $groups = null, $payload = null)
     {
+        if (is_array($message)) {
+            $options = $message;
+            $message = $options['message'] ?? null;
+            $column = $options['column'] ?? $column;
+            $groups = $options['groups'] ?? $groups;
+            $payload = $options['payload'] ?? $payload;
+        }
+
         parent::__construct(null, $groups, $payload);
 
         $this->message = $message ?? $this->message;
